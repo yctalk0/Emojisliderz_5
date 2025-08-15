@@ -7,7 +7,7 @@ import Game from '@/components/game/game';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
-export default function Home() {
+export default function Home(props: {}) {
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
   const [unlockedLevels, setUnlockedLevels] = useState<string[]>(['easy-1']);
 
