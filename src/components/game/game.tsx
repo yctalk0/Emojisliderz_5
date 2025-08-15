@@ -58,14 +58,30 @@ const Game = ({
   useEffect(() => {
     const audio = audioRef.current;
     if (audio) {
-      if (isStarted && !isSolved) {
-        audio.play().catch(error => console.error("Audio play failed:", error));
-      } else {
+      audio.loop = true;
+      audio.play().catch(error => console.error("Audio play failed:", error));
+    }
+    
+    // Cleanup function to pause music when component unmounts (e.g., exiting level)
+    return () => {
+      if (audio) {
         audio.pause();
         audio.currentTime = 0;
       }
-    }
-  }, [isStarted, isSolved]);
+    };
+  }, [level]); // Re-run when level changes
+  
+  useEffect(() => {
+      const audio = audioRef.current;
+      if (audio) {
+          if (isSolved) {
+              audio.pause();
+              audio.currentTime = 0;
+          } else if(!isMuted) {
+              audio.play().catch(error => console.error("Audio play failed on un-mute:", error));
+          }
+      }
+  }, [isSolved, isMuted]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -96,7 +112,7 @@ const Game = ({
 
   return (
     <div className="flex flex-col items-center gap-6">
-       <audio ref={audioRef} src="/assets/emoji/music/bgmusic.mp3.mp3" loop preload="auto" />
+       <audio ref={audioRef} src="/assets/emoji/music/bgmusic.mp3.mp3" preload="auto" />
       <GameControls
         moves={moves}
         time={time}
