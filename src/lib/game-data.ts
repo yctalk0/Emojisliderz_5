@@ -23,10 +23,9 @@ const difficulties = {
 
 export const levels: Level[] = [];
 
-let emojiIndex = 0;
-let imageCounter = 1;
-
 Object.entries(difficulties).forEach(([difficulty, config]) => {
+  let emojiIndex = 0;
+  let imageCounter = 1;
   for (let i = 1; i <= config.count; i++) {
     const emoji = emojiList[emojiIndex % emojiList.length];
     const difficultyTyped = difficulty as 'Easy' | 'Hard';
