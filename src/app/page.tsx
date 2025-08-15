@@ -6,7 +6,7 @@ import { levels, emojiList } from '@/lib/game-data';
 import LevelSelect from '@/components/game/level-select';
 import Game from '@/components/game/game';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, Volume2, VolumeX, Puzzle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -108,7 +108,7 @@ export default function Home({ params, searchParams }: { params: {}; searchParam
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground font-body">
-      <audio ref={audioRef} src="/assets/emoji/music/bgmusic.mp3.mp3" preload="auto" />
+      <audio ref={audioRef} src="/assets/emoji/music/bgmusic.mp3" preload="auto" />
       <main className="flex-grow flex flex-col items-center justify-center p-4 -mt-7">
         <div className="w-full max-w-md mx-auto">
           <header className="relative text-center mb-8">
@@ -117,7 +117,10 @@ export default function Home({ params, searchParams }: { params: {}; searchParam
                     <ArrowLeft className="h-8 w-8" strokeWidth={2.5} />
                 </Button>
             )}
-            <h1 className="text-5xl md:text-6xl font-extrabold tracking-tighter text-primary font-headline">EmojiSliderz</h1>
+            <div className="flex justify-center items-center gap-3">
+              <Puzzle className="w-12 h-12 text-primary" />
+              <h1 className="text-5xl md:text-6xl font-extrabold tracking-tighter text-primary font-headline">EmojiSliderz</h1>
+            </div>
             <p className="text-muted-foreground mt-2 text-lg">Slide the tiles to solve the emoji puzzle!</p>
           </header>
           
