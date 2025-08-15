@@ -62,12 +62,10 @@ const WinModal = ({
           </div>
         </div>
         <AlertDialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0">
-          {hasNextLevel && (
-            <Button onClick={onNextLevel} className="w-full h-12" disabled={!isNextLevelUnlocked}>
+          <Button onClick={onNextLevel} className="w-full h-12">
               <SkipForward className="mr-2 h-5 w-5" />
-              Next Level
-            </Button>
-          )}
+              Next Emoji
+          </Button>
           <Button onClick={onPlayAgain} variant="secondary" className="w-full h-12">
             <Play className="mr-2 h-5 w-5" />
             Play Again

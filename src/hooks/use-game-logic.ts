@@ -40,15 +40,12 @@ const useGameLogic = (gridSize: number, onWin: () => void) => {
 
   const shuffleTiles = useCallback(() => {
     let shuffledTiles: TileType[];
-    do {
-      shuffledTiles = [...createSolvedTiles()].sort(() => Math.random() - 0.5);
-    } while (!isSolvable(shuffledTiles));
-    
     // For even grids, ensure solvability by making random moves
     if (gridSize % 2 === 0) {
       let tempTiles = createSolvedTiles();
       let emptyIndex = tempTiles.findIndex(t => t.value === emptyTileValue);
-      for (let i = 0; i < 200; i++) {
+      // Increased shuffles for more randomness
+      for (let i = 0; i < gridSize * gridSize * 10; i++) {
         const emptyRow = Math.floor(emptyIndex / gridSize);
         const emptyCol = emptyIndex % gridSize;
 
@@ -63,6 +60,10 @@ const useGameLogic = (gridSize: number, onWin: () => void) => {
         emptyIndex = moveIndex;
       }
       shuffledTiles = tempTiles;
+    } else {
+       do {
+        shuffledTiles = [...createSolvedTiles()].sort(() => Math.random() - 0.5);
+      } while (!isSolvable(shuffledTiles));
     }
 
     setTiles(shuffledTiles);
@@ -139,13 +140,13 @@ const useGameLogic = (gridSize: number, onWin: () => void) => {
     }
   };
 
-  const resetGame = () => {
+  const resetGame = useCallback(() => {
     shuffleTiles();
-  };
+  }, [shuffleTiles]);
   
   const canUndo = useMemo(() => history.length > 0, [history]);
 
-  return { tiles, moves, time, isSolved, isStarted, canUndo, startGame, handleTileClick, undoMove, resetGame };
+  return { tiles, moves, time, isSolved, isStarted, canUndo, startGame, handleTileClick, undoMove, resetGame, setTiles };
 };
 
 export default useGameLogic;

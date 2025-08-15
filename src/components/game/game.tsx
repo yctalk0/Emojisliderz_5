@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Level } from '@/lib/game-data';
 import useGameLogic from '@/hooks/use-game-logic';
 import GameBoard from './game-board';
@@ -30,9 +30,15 @@ const Game = ({ level, onWin, onExit, onNextLevel, nextLevelId, isNextLevelUnloc
     handleTileClick,
     undoMove,
     resetGame,
+    setTiles: setGameTiles,
   } = useGameLogic(level.gridSize, onWin);
 
   const [isHintModalOpen, setIsHintModalOpen] = useState(false);
+
+  // This effect will re-initialize the game logic when the level (e.g. emoji) changes.
+  useEffect(() => {
+    resetGame();
+  }, [level, resetGame]);
 
   const handleRestart = () => {
     resetGame();
@@ -48,6 +54,10 @@ const Game = ({ level, onWin, onExit, onNextLevel, nextLevelId, isNextLevelUnloc
         startGame();
     }
     handleTileClick(tileValue);
+  }
+
+  const handleNextLevelWithReset = () => {
+    onNextLevel();
   }
 
   return (
@@ -71,7 +81,7 @@ const Game = ({ level, onWin, onExit, onNextLevel, nextLevelId, isNextLevelUnloc
         moves={moves}
         time={time}
         onPlayAgain={handleRestart}
-        onNextLevel={onNextLevel}
+        onNextLevel={handleNextLevelWithReset}
         onExit={onExit}
         hasNextLevel={!!nextLevelId}
         isNextLevelUnlocked={isNextLevelUnlocked}

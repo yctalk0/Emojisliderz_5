@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import type { Level } from '@/lib/game-data';
-import { levels } from '@/lib/game-data';
+import { levels, emojiList } from '@/lib/game-data';
 import LevelSelect from '@/components/game/level-select';
 import Game from '@/components/game/game';
 import { Button } from '@/components/ui/button';
@@ -50,7 +50,16 @@ export default function Home() {
   const handleNextLevel = () => {
     if (currentLevel) {
       const currentIndex = levels.findIndex(l => l.id === currentLevel.id);
-      if (currentIndex < levels.length - 1) {
+      // Logic to stay on the same level but change emoji
+      if (unlockedLevels.includes(currentLevel.id)) {
+        const randomEmoji = emojiList[Math.floor(Math.random() * emojiList.length)];
+        const newLevelData: Level = {
+            ...currentLevel,
+            emoji: randomEmoji,
+            imageSrc: `https://placehold.co/400x400.png?text=${randomEmoji}`,
+        };
+        setCurrentLevel(newLevelData);
+      } else if (currentIndex < levels.length - 1) { // Fallback to original logic if needed
         const nextLevel = levels[currentIndex + 1];
         if (unlockedLevels.includes(nextLevel.id)) {
             setCurrentLevel(nextLevel);
@@ -79,7 +88,7 @@ export default function Home() {
             onExit={handleExitGame}
             onNextLevel={handleNextLevel}
             nextLevelId={levels[levels.findIndex(l => l.id === currentLevel.id) + 1]?.id}
-            isNextLevelUnlocked={unlockedLevels.includes(levels[levels.findIndex(l => l.id === currentLevel.id) + 1]?.id)}
+            isNextLevelUnlocked={unlockedLevels.includes(currentLevel.id)}
           />
         ) : (
           <LevelSelect 
