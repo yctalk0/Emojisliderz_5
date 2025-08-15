@@ -76,7 +76,7 @@ export default function Home(props: {}) {
           <header className="relative text-center mb-8">
             {currentLevel && (
                 <Button variant="ghost" size="icon" className="absolute top-1/2 left-0 -translate-y-1/2" onClick={handleExitGame}>
-                    <ArrowLeft className="h-6 w-6" />
+                    <ArrowLeft className="h-8 w-8" strokeWidth={2.5} />
                 </Button>
             )}
             <h1 className="text-5xl md:text-6xl font-extrabold tracking-tighter text-primary font-headline">EmojiSliderz</h1>
