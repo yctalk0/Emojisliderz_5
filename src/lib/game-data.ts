@@ -1,7 +1,7 @@
 export type Level = {
   id: string;
-  difficulty: 'Easy' | 'Medium' | 'Hard';
-  gridSize: 3 | 4 | 5;
+  difficulty: 'Very Easy' | 'Easy' | 'Medium' | 'Hard';
+  gridSize: 2 | 3 | 4 | 5;
   emoji: string;
   imageSrc: string;
   imageHint: string;
@@ -9,6 +9,13 @@ export type Level = {
 };
 
 export const levels: Level[] = [
+  // Very Easy - 2x2
+  { id: 'very-easy-1', difficulty: 'Very Easy', gridSize: 2, levelNumber: 1, emoji: '😊', imageSrc: 'https://placehold.co/400x400.png?text=😊', imageHint: 'smiling face' },
+  { id: 'very-easy-2', difficulty: 'Very Easy', gridSize: 2, levelNumber: 2, emoji: '👍', imageSrc: 'https://placehold.co/400x400.png?text=👍', imageHint: 'thumbs up' },
+  { id: 'very-easy-3', difficulty: 'Very Easy', gridSize: 2, levelNumber: 3, emoji: '❤️', imageSrc: 'https://placehold.co/400x400.png?text=❤️', imageHint: 'red heart' },
+  { id: 'very-easy-4', difficulty: 'Very Easy', gridSize: 2, levelNumber: 4, emoji: '⭐', imageSrc: 'https://placehold.co/400x400.png?text=⭐', imageHint: 'star' },
+  { id: 'very-easy-5', difficulty: 'Very Easy', gridSize: 2, levelNumber: 5, emoji: '🚀', imageSrc: 'https://placehold.co/400x400.png?text=🚀', imageHint: 'rocket' },
+
   // Easy - 3x3
   { id: 'easy-1', difficulty: 'Easy', gridSize: 3, levelNumber: 1, emoji: '😀', imageSrc: 'https://placehold.co/400x400.png?text=😀', imageHint: 'grinning face' },
   { id: 'easy-2', difficulty: 'Easy', gridSize: 3, levelNumber: 2, emoji: '😂', imageSrc: 'https://placehold.co/400x400.png?text=😂', imageHint: 'laughing crying' },
@@ -49,5 +56,6 @@ export const levels: Level[] = [
 export const emojiList = [
   '😀', '😂', '😍', '😎', '🤓', '🤠', '😡', '🤩', '😢', '😇', '🥳', '🤯',
   '🤔', '😴', '😭', '😱', '😈', '👻', '👽', '🤖', '👾', '🎃', '😺', '🐶',
-  '🦊', '🐼', '🦄', '🦁', '🐸', '🐙', '🐵', '🚀', '🔥', '💯', '👍', '👎'
+  '🦊', '🐼', '🦄', '🦁', '🐸', '🐙', '🐵', '🚀', '🔥', '💯', '👍', '👎',
+  '😊', '❤️', '⭐'
 ];

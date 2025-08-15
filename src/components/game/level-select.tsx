@@ -13,32 +13,39 @@ interface LevelSelectProps {
 }
 
 const difficultyConfig = {
+  'Very Easy': {
+    cardClass: "bg-[#E8F5E9] border-[#A5D6A7]",
+    titleClass: "text-[#2E7D32]",
+    gridClass: "2x2 Grid",
+    numberClass: "bg-[#66BB6A] text-white",
+    levelButtonClass: "bg-teal-400 hover:bg-teal-500 text-teal-900",
+  },
   Easy: {
-    cardClass: "bg-[#E9F9EE] border-[#A7E6BB]",
-    titleClass: "text-[#1E462E]",
+    cardClass: "bg-[#E3F2FD] border-[#90CAF9]",
+    titleClass: "text-[#1565C0]",
     gridClass: "3x3 Grid",
-    numberClass: "bg-[#4CAF50] text-white",
-    levelButtonClass: "bg-green-400 hover:bg-green-500 text-green-900",
+    numberClass: "bg-[#42A5F5] text-white",
+    levelButtonClass: "bg-blue-400 hover:bg-blue-500 text-blue-900",
   },
   Medium: {
-    cardClass: "bg-[#FFF4E0] border-[#FFD5A1]",
-    titleClass: "text-[#66461D]",
+    cardClass: "bg-[#FFF3E0] border-[#FFCC80]",
+    titleClass: "text-[#EF6C00]",
     gridClass: "4x4 Grid",
-    numberClass: "bg-[#FF9800] text-white",
+    numberClass: "bg-[#FFA726] text-white",
     levelButtonClass: "bg-orange-400 hover:bg-orange-500 text-orange-900",
   },
   Hard: {
-    cardClass: "bg-[#FDEDED] border-[#F8BABA]",
-    titleClass: "text-[#5C2121]",
+    cardClass: "bg-[#FFEBEE] border-[#EF9A9A]",
+    titleClass: "text-[#C62828]",
     gridClass: "5x5 Grid",
-    numberClass: "bg-[#F44336] text-white",
+    numberClass: "bg-[#EF5350] text-white",
     levelButtonClass: "bg-red-400 hover:bg-red-500 text-red-900",
   },
 } as const;
 
 
 const LevelSelect = ({ levels, unlockedLevels, onLevelSelect }: LevelSelectProps) => {
-  const difficulties: ('Easy' | 'Medium' | 'Hard')[] = ['Easy', 'Medium', 'Hard'];
+  const difficulties: ('Very Easy' | 'Easy' | 'Medium' | 'Hard')[] = ['Very Easy', 'Easy', 'Medium', 'Hard'];
   
   const levelsByDifficulty = difficulties.map(difficulty => ({
     difficulty,
@@ -48,6 +55,7 @@ const LevelSelect = ({ levels, unlockedLevels, onLevelSelect }: LevelSelectProps
   return (
     <div className="space-y-6">
       {levelsByDifficulty.map(({ difficulty, levels }) => {
+        if (levels.length === 0) return null;
         const config = difficultyConfig[difficulty];
         return (
           <Card key={difficulty} className={cn("overflow-hidden border-2 shadow-lg rounded-2xl", config.cardClass)}>
