@@ -1,3 +1,4 @@
+
 'use client';
 import {
   AlertDialog,
@@ -53,8 +54,8 @@ const WinModal = ({
           <AlertDialogDescription className="text-lg">Congratulations, you solved the puzzle!</AlertDialogDescription>
         </AlertDialogHeader>
 
-        <div className="flex justify-center my-4 rounded-lg overflow-hidden border-2 border-primary/50 shadow-lg">
-            <Image src={imageSrc} alt="Solved puzzle" width={192} height={192} className="w-48 h-48 object-contain" />
+        <div className="flex justify-center my-4 p-2 rounded-lg overflow-hidden border-2 border-primary/50 shadow-lg">
+            <Image src={imageSrc} alt="Solved puzzle" width={192} height={192} className="w-full h-auto object-contain" />
         </div>
 
         <div className="flex justify-center gap-8 my-4">

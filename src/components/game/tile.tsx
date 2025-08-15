@@ -1,3 +1,4 @@
+
 'use client';
 
 interface TileProps {
@@ -28,7 +29,7 @@ const Tile = ({ value, gridSize, imageSrc, onClick, tileSize, correctPosition, c
     height: `${tileSize}px`,
     transform: `translate(${col * (tileSize + gap)}px, ${row * (tileSize + gap)}px)`,
     backgroundImage: `url(${imageSrc})`,
-    backgroundSize: `${gridSize * 100}% ${gridSize * 100}%`,
+    backgroundSize: `auto ${gridSize * 100}%`,
     backgroundPosition: `${bgPosX}% ${bgPosY}%`,
     transition: 'transform 0.2s ease-in-out',
   };

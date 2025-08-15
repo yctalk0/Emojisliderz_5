@@ -77,7 +77,7 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
                 disabled={!isUnlocked}
                 onClick={() => onLevelSelect(level)}
                 className={cn(
-                  "h-14 text-2xl font-bold flex items-center justify-center transition-all duration-200 ease-in-out hover:scale-110",
+                  "h-14 text-2xl font-bold flex items-center justify-center transition-all duration-200 ease-in-out hover:scale-110 p-2",
                   isUnlocked ? config.levelButtonClass : "bg-gray-300 cursor-not-allowed",
                   !isUnlocked && "opacity-50"
                 )}
@@ -87,9 +87,9 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
                   <Image
                     src={level.imageSrc}
                     alt={`Level ${level.levelNumber}`}
-                    width={40}
-                    height={40}
-                    className="w-10 h-10 object-contain"
+                    width={48}
+                    height={48}
+                    className="w-full h-full object-contain"
                   />
                 ) : (
                   <Lock className="w-6 h-6 text-gray-500" />

@@ -1,3 +1,4 @@
+
 'use client';
 import {
   AlertDialog,
@@ -13,6 +14,7 @@ import { useEffect, useState } from 'react';
 import { getPuzzleTip, type PuzzleTipInput } from '@/ai/flows/puzzle-tip-flow';
 import { Skeleton } from '../ui/skeleton';
 import type { TileType } from '@/hooks/use-game-logic';
+import Image from 'next/image';
 
 interface HintModalProps {
   isOpen: boolean;
@@ -64,8 +66,8 @@ const HintModal = ({ isOpen, onClose, imageSrc, emoji, tiles, gridSize }: HintMo
           <AlertDialogTitle className="text-center text-3xl font-bold mt-4">Hint</AlertDialogTitle>
           <AlertDialogDescription className="text-center text-lg">Here's what the solved puzzle looks like.</AlertDialogDescription>
         </AlertDialogHeader>
-        <div className="flex justify-center my-4 rounded-lg overflow-hidden">
-            <img src={imageSrc} alt="Hint" className="w-full max-w-xs h-auto object-contain" />
+        <div className="flex justify-center my-4 p-2 rounded-lg overflow-hidden border">
+            <Image src={imageSrc} alt="Hint" width={256} height={256} className="w-full h-auto object-contain" />
         </div>
         <div className="my-2 p-3 bg-secondary/50 rounded-lg">
             <h4 className="font-bold text-center mb-2">💡 Pro Tip</h4>
