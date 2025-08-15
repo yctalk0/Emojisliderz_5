@@ -6,6 +6,7 @@ import LevelSelect from '@/components/game/level-select';
 import Game from '@/components/game/game';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 
 export default function Home(props: {}) {
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
@@ -69,35 +70,42 @@ export default function Home(props: {}) {
   }
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen bg-background text-foreground p-4 font-body">
-      <div className="w-full max-w-md mx-auto relative">
-        {currentLevel && (
-            <Button variant="ghost" size="icon" className="absolute -top-12 left-0" onClick={handleExitGame}>
-                <ArrowLeft className="h-6 w-6" />
-            </Button>
-        )}
-        <header className="text-center mb-8">
-          <h1 className="text-5xl md:text-6xl font-extrabold tracking-tighter text-primary font-headline">EmojiSliderz</h1>
-          <p className="text-muted-foreground mt-2 text-lg">Slide the tiles to solve the emoji puzzle!</p>
-        </header>
-        
-        {currentLevel ? (
-          <Game 
-            level={currentLevel} 
-            onWin={handleGameWin}
-            onExit={handleExitGame}
-            onNextLevel={handleNextLevel}
-            nextLevelId={levels[levels.findIndex(l => l.id === currentLevel.id) + 1]?.id}
-            isNextLevelUnlocked={unlockedLevels.includes(currentLevel.id)}
-          />
-        ) : (
-          <LevelSelect 
-            levels={levels} 
-            unlockedLevels={unlockedLevels} 
-            onLevelSelect={handleLevelSelect} 
-          />
-        )}
-      </div>
-    </main>
+    <div className="flex flex-col min-h-screen bg-background text-foreground font-body">
+      <main className="flex-grow flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-md mx-auto relative">
+          {currentLevel && (
+              <Button variant="ghost" size="icon" className="absolute -top-12 left-0" onClick={handleExitGame}>
+                  <ArrowLeft className="h-6 w-6" />
+              </Button>
+          )}
+          <header className="text-center mb-8">
+            <h1 className="text-5xl md:text-6xl font-extrabold tracking-tighter text-primary font-headline">EmojiSliderz</h1>
+            <p className="text-muted-foreground mt-2 text-lg">Slide the tiles to solve the emoji puzzle!</p>
+          </header>
+          
+          {currentLevel ? (
+            <Game 
+              level={currentLevel} 
+              onWin={handleGameWin}
+              onExit={handleExitGame}
+              onNextLevel={handleNextLevel}
+              nextLevelId={levels[levels.findIndex(l => l.id === currentLevel.id) + 1]?.id}
+              isNextLevelUnlocked={unlockedLevels.includes(currentLevel.id)}
+            />
+          ) : (
+            <LevelSelect 
+              levels={levels} 
+              unlockedLevels={unlockedLevels} 
+              onLevelSelect={handleLevelSelect} 
+            />
+          )}
+        </div>
+      </main>
+      <footer className="w-full p-4">
+        <Card className="max-w-md mx-auto h-20 flex items-center justify-center bg-secondary/50 border-dashed">
+            <p className="text-muted-foreground">Advertisement</p>
+        </Card>
+      </footer>
+    </div>
   );
 }
