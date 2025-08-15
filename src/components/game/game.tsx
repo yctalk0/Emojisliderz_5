@@ -62,6 +62,7 @@ const Game = ({
         audio.play().catch(error => console.error("Audio play failed:", error));
       } else {
         audio.pause();
+        audio.currentTime = 0;
       }
     }
   }, [isStarted, isSolved]);
