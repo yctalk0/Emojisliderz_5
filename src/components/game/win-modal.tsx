@@ -64,7 +64,7 @@ const WinModal = ({
         <AlertDialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0">
           <Button onClick={onNextLevel} className="w-full h-12">
               <SkipForward className="mr-2 h-5 w-5" />
-              Next Emoji
+              Next Level
           </Button>
           <Button onClick={onPlayAgain} variant="secondary" className="w-full h-12">
             <Play className="mr-2 h-5 w-5" />
