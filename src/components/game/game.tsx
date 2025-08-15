@@ -105,6 +105,7 @@ const Game = ({
         isOpen={isHintModalOpen}
         onClose={() => setIsHintModalOpen(false)}
         imageSrc={level.imageSrc}
+        emoji={level.emoji}
       />
     </div>
   );

@@ -9,14 +9,39 @@ import {
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
 import { Lightbulb } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { getPuzzleTip } from '@/ai/flows/puzzle-tip-flow';
+import { Skeleton } from '../ui/skeleton';
 
 interface HintModalProps {
   isOpen: boolean;
   onClose: () => void;
   imageSrc: string;
+  emoji: string;
 }
 
-const HintModal = ({ isOpen, onClose, imageSrc }: HintModalProps) => {
+const HintModal = ({ isOpen, onClose, imageSrc, emoji }: HintModalProps) => {
+  const [tip, setTip] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && emoji) {
+      setLoading(true);
+      setTip(''); // Clear previous tip
+      getPuzzleTip({ emoji })
+        .then(response => {
+          setTip(response.tip);
+        })
+        .catch(error => {
+          console.error('Error getting puzzle tip:', error);
+          setTip("Try solving the first row, then the second, and so on!"); // Fallback tip
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  }, [isOpen, emoji]);
+
   if (!isOpen) return null;
 
   return (
@@ -31,6 +56,16 @@ const HintModal = ({ isOpen, onClose, imageSrc }: HintModalProps) => {
         </AlertDialogHeader>
         <div className="flex justify-center my-4 rounded-lg overflow-hidden">
             <img src={imageSrc} alt="Hint" className="w-full max-w-xs h-auto object-cover" />
+        </div>
+        <div className="my-2 p-3 bg-secondary/50 rounded-lg">
+            <h4 className="font-bold text-center mb-2">💡 Pro Tip</h4>
+            <div className="text-center text-muted-foreground italic">
+                {loading ? (
+                    <Skeleton className="h-4 w-3/4 mx-auto" />
+                ) : (
+                    `"${tip}"`
+                )}
+            </div>
         </div>
         <AlertDialogFooter className="sm:justify-center">
           <AlertDialogAction onClick={onClose} className="w-full sm:w-auto">Got it!</AlertDialogAction>
