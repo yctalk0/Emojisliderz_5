@@ -105,14 +105,9 @@ export default function Home(props: {}) {
       <main className="flex-grow flex flex-col items-center justify-center p-4 -mt-7">
         <div className="w-full max-w-md mx-auto">
           <header className="relative text-center mb-8">
-            {currentLevel ? (
+            {currentLevel && (
                 <Button variant="ghost" size="icon" className="absolute top-1/2 left-0 -translate-y-1/2" onClick={handleExitGame}>
                     <ArrowLeft className="h-8 w-8" strokeWidth={2.5} />
-                </Button>
-            ) : (
-                 <Button onClick={toggleMute} variant="ghost" size="icon" className="absolute top-1/2 left-0 -translate-y-1/2">
-                    {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
-                    <span className="sr-only">{isMuted ? 'Unmute' : 'Mute'}</span>
                 </Button>
             )}
             <h1 className="text-5xl md:text-6xl font-extrabold tracking-tighter text-primary font-headline">EmojiSliderz</h1>
@@ -135,11 +130,19 @@ export default function Home(props: {}) {
               isPreviousLevelAvailable={isPreviousLevelAvailable}
             />
           ) : (
-            <LevelSelect 
-              levels={levels} 
-              unlockedLevels={unlockedLevels} 
-              onLevelSelect={handleLevelSelect} 
-            />
+            <>
+              <LevelSelect 
+                levels={levels} 
+                unlockedLevels={unlockedLevels} 
+                onLevelSelect={handleLevelSelect} 
+              />
+               <div className="flex justify-center mt-4">
+                  <Button onClick={toggleMute} variant="secondary" className="px-6 py-4">
+                      {isMuted ? <VolumeX className="h-6 w-6 mr-2" /> : <Volume2 className="h-6 w-6 mr-2" />}
+                      <span>{isMuted ? 'Unmute' : 'Mute'}</span>
+                  </Button>
+               </div>
+            </>
           )}
         </div>
       </main>
