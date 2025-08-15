@@ -118,8 +118,8 @@ export default function Home({ params, searchParams }: { params: {}; searchParam
                 </Button>
             )}
             <div className="flex justify-center items-center gap-3">
-              <Puzzle className="w-12 h-12 text-primary" />
-              <h1 className="text-5xl md:text-6xl font-extrabold tracking-tighter text-primary font-headline">EmojiSliderz</h1>
+              <Puzzle className="w-10 h-10 text-primary" />
+              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tighter text-primary font-headline">EmojiSliderz</h1>
             </div>
             <p className="text-muted-foreground mt-2 text-lg">Slide the tiles to solve the emoji puzzle!</p>
           </header>
