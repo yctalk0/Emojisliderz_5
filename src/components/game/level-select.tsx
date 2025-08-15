@@ -39,11 +39,11 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
   const paginatedLevels = levels.slice(currentPage * levelsPerPage, (currentPage + 1) * levelsPerPage);
 
   const goToNextPage = () => {
-    setCurrentPage(current => (current + 1) % totalPages);
+    setCurrentPage(current => Math.min(current + 1, totalPages - 1));
   }
 
   const goToPrevPage = () => {
-    setCurrentPage(current => (current - 1 + totalPages) % totalPages);
+    setCurrentPage(current => Math.max(current - 1, 0));
   }
 
   return (
@@ -58,7 +58,7 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
       </div>
       <CardContent className="p-3 flex items-center justify-center gap-2">
         {totalPages > 1 && (
-          <Button size="icon" variant="ghost" onClick={goToPrevPage} aria-label="Previous levels" className="h-10 w-10">
+          <Button size="icon" variant="ghost" onClick={goToPrevPage} disabled={currentPage === 0} aria-label="Previous levels" className="h-10 w-10">
             <ArrowLeft className="w-5 h-5" />
           </Button>
         )}
@@ -98,7 +98,7 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
           })}
         </div>
         {totalPages > 1 && (
-          <Button size="icon" variant="ghost" onClick={goToNextPage} aria-label="Next levels" className="h-10 w-10">
+          <Button size="icon" variant="ghost" onClick={goToNextPage} disabled={currentPage === totalPages - 1} aria-label="Next levels" className="h-10 w-10">
             <ArrowRight className="w-5 h-5" />
           </Button>
         )}
