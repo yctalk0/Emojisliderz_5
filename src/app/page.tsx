@@ -10,7 +10,7 @@ import { Card } from '@/components/ui/card';
 
 export default function Home(props: {}) {
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
-  const [unlockedLevels, setUnlockedLevels] = useState<string[]>(['easy-1']);
+  const [unlockedLevels, setUnlockedLevels] = useState<string[]>(['easy-1', 'medium-1', 'hard-1']);
 
   useEffect(() => {
     const savedProgress = localStorage.getItem('unlockedLevels');
@@ -23,7 +23,7 @@ export default function Home(props: {}) {
       } catch (e) {
         console.error("Failed to parse unlocked levels from localStorage", e);
         // Reset to default if data is corrupted
-        localStorage.setItem('unlockedLevels', JSON.stringify(['easy-1']));
+        localStorage.setItem('unlockedLevels', JSON.stringify(['easy-1', 'medium-1', 'hard-1']));
       }
     }
   }, []);
