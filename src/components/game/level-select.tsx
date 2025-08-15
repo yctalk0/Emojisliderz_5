@@ -17,18 +17,18 @@ interface LevelSelectProps {
 
 const difficultyConfig = {
   Easy: {
-    cardClass: "bg-[#E3F2FD] border-[#90CAF9]",
-    titleClass: "text-[#1565C0]",
+    cardClass: "bg-secondary/50 border-secondary",
+    titleClass: "text-primary",
     gridClass: "2x2 Grid",
-    numberClass: "bg-[#42A5F5] text-white",
-    levelButtonClass: "bg-blue-400 hover:bg-blue-500 text-blue-900",
+    numberClass: "bg-primary text-primary-foreground",
+    levelButtonClass: "bg-primary/20 hover:bg-primary/30 text-primary-foreground",
   },
   Hard: {
-    cardClass: "bg-[#FFEBEE] border-[#EF9A9A]",
-    titleClass: "text-[#C62828]",
+    cardClass: "bg-secondary/50 border-secondary",
+    titleClass: "text-accent",
     gridClass: "3x3 Grid",
-    numberClass: "bg-[#EF5350] text-white",
-    levelButtonClass: "bg-red-400 hover:bg-red-500 text-red-900",
+    numberClass: "bg-accent text-accent-foreground",
+    levelButtonClass: "bg-accent/20 hover:bg-accent/30 text-accent-foreground",
   },
 } as const;
 
@@ -78,7 +78,7 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
                 onClick={() => onLevelSelect(level)}
                 className={cn(
                   "h-14 text-2xl font-bold flex items-center justify-center transition-all duration-200 ease-in-out hover:scale-110 p-2",
-                  isUnlocked ? config.levelButtonClass : "bg-gray-300 cursor-not-allowed",
+                  isUnlocked ? config.levelButtonClass : "bg-muted/50 cursor-not-allowed",
                   !isUnlocked && "opacity-50"
                 )}
                 aria-label={`Level ${level.levelNumber}`}
@@ -92,7 +92,7 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
                     className="w-full h-full object-contain"
                   />
                 ) : (
-                  <Lock className="w-6 h-6 text-gray-500" />
+                  <Lock className="w-6 h-6 text-muted-foreground" />
                 )}
               </Button>
             );
