@@ -50,21 +50,21 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
 
   return (
     <Card className={cn("overflow-hidden border-2 shadow-lg rounded-2xl", config.cardClass)}>
-      <div className="p-6 relative">
+      <div className="p-4 relative">
         <div className="flex justify-between items-start">
           <div>
-            <h2 className={cn("text-4xl font-bold", config.titleClass)}>{difficulty}</h2>
-            <p className="text-lg text-slate-400">{config.gridClass}</p>
+            <h2 className={cn("text-3xl font-bold", config.titleClass)}>{difficulty}</h2>
+            <p className="text-md text-slate-400">{config.gridClass}</p>
           </div>
         </div>
       </div>
-      <CardContent className="p-6 flex items-center justify-center gap-2">
+      <CardContent className="p-4 flex items-center justify-center gap-2">
         {totalPages > 1 && (
-          <Button size="icon" variant="ghost" onClick={goToPrevPage} aria-label="Previous levels" className="h-16 w-16">
-            <ArrowLeft className="w-8 h-8" />
+          <Button size="icon" variant="ghost" onClick={goToPrevPage} aria-label="Previous levels" className="h-12 w-12">
+            <ArrowLeft className="w-6 h-6" />
           </Button>
         )}
-        <div className="grid grid-cols-5 gap-4 flex-grow">
+        <div className="grid grid-cols-5 gap-3 flex-grow">
           {paginatedLevels.map(level => {
             const isUnlocked = unlockedLevels.includes(level.id);
             return (
@@ -74,7 +74,7 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
                 disabled={!isUnlocked}
                 onClick={() => onLevelSelect(level)}
                 className={cn(
-                  "h-24 w-full text-5xl font-bold flex items-center justify-center transition-all duration-200 ease-in-out hover:scale-110 p-2",
+                  "h-20 w-full text-5xl font-bold flex items-center justify-center transition-all duration-200 ease-in-out hover:scale-110 p-2",
                   isUnlocked ? config.levelButtonClass : "bg-slate-700/50 cursor-not-allowed",
                   !isUnlocked && "opacity-50"
                 )}
@@ -89,15 +89,15 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
                     className="w-full h-full object-contain"
                   />
                 ) : (
-                  <Lock className="w-10 h-10 text-slate-400" />
+                  <Lock className="w-8 h-8 text-slate-400" />
                 )}
               </Button>
             );
           })}
         </div>
         {totalPages > 1 && (
-          <Button size="icon" variant="ghost" onClick={goToNextPage} aria-label="Next levels" className="h-16 w-16">
-            <ArrowRight className="w-8 h-8" />
+          <Button size="icon" variant="ghost" onClick={goToNextPage} aria-label="Next levels" className="h-12 w-12">
+            <ArrowRight className="w-6 h-6" />
           </Button>
         )}
       </CardContent>
@@ -114,7 +114,7 @@ const LevelSelect = ({ levels, unlockedLevels, onLevelSelect }: LevelSelectProps
   }));
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {levelsByDifficulty.map(({ difficulty, levels }) => {
         if (levels.length === 0) return null;
         return (
