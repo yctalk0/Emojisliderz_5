@@ -9,7 +9,7 @@ import WinModal from './win-modal';
 import HintModal from './hint-modal';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Volume2, VolumeX } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface GameProps {
   level: Level;
@@ -47,48 +47,11 @@ const Game = ({
   } = useGameLogic(level.gridSize, onWin);
 
   const [isHintModalOpen, setIsHintModalOpen] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const audioRef = useRef<HTMLAudioElement>(null);
-
+  
   // This effect will re-initialize the game logic when the level (e.g. emoji) changes.
   useEffect(() => {
     resetGame();
   }, [level, resetGame]);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (audio) {
-      audio.loop = true;
-      audio.play().catch(error => console.error("Audio play failed:", error));
-    }
-    
-    // Cleanup function to pause music when component unmounts (e.g., exiting level)
-    return () => {
-      if (audio) {
-        audio.pause();
-        audio.currentTime = 0;
-      }
-    };
-  }, [level]); // Re-run when level changes
-  
-  useEffect(() => {
-      const audio = audioRef.current;
-      if (audio) {
-          if (isSolved) {
-              audio.pause();
-              audio.currentTime = 0;
-          } else if(!isMuted) {
-              audio.play().catch(error => console.error("Audio play failed on un-mute:", error));
-          }
-      }
-  }, [isSolved, isMuted]);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (audio) {
-        audio.muted = isMuted;
-    }
-  }, [isMuted]);
 
   const handleRestart = () => {
     resetGame();
@@ -106,13 +69,8 @@ const Game = ({
     handleTileClick(tileValue);
   }
   
-  const toggleMute = () => {
-      setIsMuted(!isMuted);
-  }
-
   return (
     <div className="flex flex-col items-center gap-6">
-       <audio ref={audioRef} src="/assets/emoji/music/bgmusic.mp3.mp3" preload="auto" />
       <GameControls
         moves={moves}
         time={time}
@@ -137,11 +95,6 @@ const Game = ({
             <ChevronRight className="h-8 w-8" />
         </Button>
       </div>
-
-       <Button onClick={toggleMute} variant="outline" size="icon">
-          {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
-          <span className="sr-only">{isMuted ? 'Unmute' : 'Mute'}</span>
-      </Button>
 
       <WinModal
         isOpen={isSolved}

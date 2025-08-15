@@ -1,12 +1,12 @@
 
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Level } from '@/lib/game-data';
 import { levels, emojiList } from '@/lib/game-data';
 import LevelSelect from '@/components/game/level-select';
 import Game from '@/components/game/game';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Volume2, VolumeX } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -14,6 +14,8 @@ export default function Home(props: {}) {
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
   const [unlockedLevels, setUnlockedLevels] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     // This code now only runs on the client
@@ -35,7 +37,21 @@ export default function Home(props: {}) {
     }
     setUnlockedLevels(initialUnlocked);
     setIsLoading(false);
+
+    // Play music on load
+    const audio = audioRef.current;
+    if (audio) {
+      audio.loop = true;
+      audio.play().catch(error => console.error("Audio play failed:", error));
+    }
   }, []);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio) {
+        audio.muted = isMuted;
+    }
+  }, [isMuted]);
 
   const handleLevelSelect = (level: Level) => {
     setCurrentLevel(level);
@@ -76,17 +92,27 @@ export default function Home(props: {}) {
     }
   }
 
+  const toggleMute = () => {
+      setIsMuted(!isMuted);
+  }
+
   const isNextLevelAvailable = currentLevel ? levels.findIndex(l => l.id === currentLevel.id) < levels.length - 1 : false;
   const isPreviousLevelAvailable = currentLevel ? levels.findIndex(l => l.id === currentLevel.id) > 0 : false;
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground font-body">
+      <audio ref={audioRef} src="/assets/emoji/music/bgmusic.mp3.mp3" preload="auto" />
       <main className="flex-grow flex flex-col items-center justify-center p-4 -mt-7">
         <div className="w-full max-w-md mx-auto">
           <header className="relative text-center mb-8">
-            {currentLevel && (
+            {currentLevel ? (
                 <Button variant="ghost" size="icon" className="absolute top-1/2 left-0 -translate-y-1/2" onClick={handleExitGame}>
                     <ArrowLeft className="h-8 w-8" strokeWidth={2.5} />
+                </Button>
+            ) : (
+                 <Button onClick={toggleMute} variant="ghost" size="icon" className="absolute top-1/2 left-0 -translate-y-1/2">
+                    {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
+                    <span className="sr-only">{isMuted ? 'Unmute' : 'Mute'}</span>
                 </Button>
             )}
             <h1 className="text-5xl md:text-6xl font-extrabold tracking-tighter text-primary font-headline">EmojiSliderz</h1>
