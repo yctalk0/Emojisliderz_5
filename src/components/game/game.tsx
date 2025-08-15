@@ -5,6 +5,7 @@ import useGameLogic from '@/hooks/use-game-logic';
 import GameBoard from './game-board';
 import GameControls from './game-controls';
 import WinModal from './win-modal';
+import HintModal from './hint-modal';
 import { useToast } from '@/hooks/use-toast';
 
 interface GameProps {
@@ -31,7 +32,7 @@ const Game = ({ level, onWin, onExit, onNextLevel, nextLevelId, isNextLevelUnloc
     resetGame,
   } = useGameLogic(level.gridSize, onWin);
 
-  const [isHintActive, setIsHintActive] = useState(false);
+  const [isHintModalOpen, setIsHintModalOpen] = useState(false);
 
   const handleRestart = () => {
     resetGame();
@@ -39,8 +40,7 @@ const Game = ({ level, onWin, onExit, onNextLevel, nextLevelId, isNextLevelUnloc
   }
 
   const handleHint = () => {
-    setIsHintActive(true);
-    setTimeout(() => setIsHintActive(false), 3000); // Hint shows for 3 seconds
+    setIsHintModalOpen(true);
   }
   
   const handleTileInteraction = (tileValue: number) => {
@@ -65,7 +65,6 @@ const Game = ({ level, onWin, onExit, onNextLevel, nextLevelId, isNextLevelUnloc
         gridSize={level.gridSize}
         onTileClick={handleTileInteraction}
         imageSrc={level.imageSrc}
-        isHintActive={isHintActive}
       />
       <WinModal
         isOpen={isSolved}
@@ -76,6 +75,11 @@ const Game = ({ level, onWin, onExit, onNextLevel, nextLevelId, isNextLevelUnloc
         onExit={onExit}
         hasNextLevel={!!nextLevelId}
         isNextLevelUnlocked={isNextLevelUnlocked}
+      />
+      <HintModal 
+        isOpen={isHintModalOpen}
+        onClose={() => setIsHintModalOpen(false)}
+        imageSrc={level.imageSrc}
       />
     </div>
   );

@@ -7,10 +7,9 @@ interface GameBoardProps {
   gridSize: number;
   onTileClick: (tileValue: number) => void;
   imageSrc: string;
-  isHintActive: boolean;
 }
 
-const GameBoard = ({ tiles, gridSize, onTileClick, imageSrc, isHintActive }: GameBoardProps) => {
+const GameBoard = ({ tiles, gridSize, onTileClick, imageSrc }: GameBoardProps) => {
   const boardSize = 400; // a fixed size for the board in px
   const TILE_GAP = 4; // gap between tiles in px
 
@@ -47,11 +46,6 @@ const GameBoard = ({ tiles, gridSize, onTileClick, imageSrc, isHintActive }: Gam
           />
         ))}
       </div>
-      {isHintActive && (
-        <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg overflow-hidden">
-          <img src={imageSrc} alt="Hint" className="w-full h-full object-cover" />
-        </div>
-      )}
     </div>
   );
 };
