@@ -74,7 +74,7 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
                 className={cn(
                   "h-16 w-full text-4xl font-bold flex items-center justify-center transition-all duration-200 ease-in-out hover:scale-110 p-0 relative overflow-hidden",
                   isUnlocked ? config.levelButtonClass : "bg-slate-700/50 cursor-not-allowed",
-                  !isUnlocked && "opacity-90"
+                  !isUnlocked && "opacity-100"
                 )}
                 aria-label={`Level ${level.levelNumber}`}
               >
@@ -85,11 +85,11 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
                   height={64}
                   className={cn(
                     "w-full h-full object-contain p-1",
-                    !isUnlocked && "opacity-30"
+                    !isUnlocked && "opacity-50"
                   )}
                 />
                 {!isUnlocked && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-md">
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-md">
                     <Lock className="w-8 h-8 text-slate-200" />
                   </div>
                 )}
