@@ -17,25 +17,25 @@ interface LevelSelectProps {
 
 const difficultyConfig = {
   Easy: {
-    cardClass: "bg-secondary/50 border-secondary",
-    titleClass: "text-primary",
+    cardClass: "bg-teal-900/50 border-teal-700",
+    titleClass: "text-teal-400",
     gridClass: "2x2 Grid",
-    numberClass: "bg-primary text-primary-foreground",
-    levelButtonClass: "bg-primary/20 hover:bg-primary/30 text-primary-foreground",
+    numberClass: "bg-teal-500 text-teal-950",
+    levelButtonClass: "bg-teal-500/20 hover:bg-teal-500/30 text-teal-200",
   },
   Hard: {
-    cardClass: "bg-secondary/50 border-secondary",
-    titleClass: "text-accent",
+    cardClass: "bg-amber-900/50 border-amber-700",
+    titleClass: "text-amber-400",
     gridClass: "3x3 Grid",
-    numberClass: "bg-accent text-accent-foreground",
-    levelButtonClass: "bg-accent/20 hover:bg-accent/30 text-accent-foreground",
+    numberClass: "bg-amber-500 text-amber-950",
+    levelButtonClass: "bg-amber-500/20 hover:bg-amber-500/30 text-amber-200",
   },
 } as const;
 
 const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: { difficulty: 'Easy' | 'Hard', levels: Level[], unlockedLevels: string[], onLevelSelect: (level: Level) => void }) => {
   const config = difficultyConfig[difficulty];
   const [currentPage, setCurrentPage] = React.useState(0);
-  const levelsPerPage = 5;
+  const levelsPerPage = 10; // Show 10 levels (2 rows of 5)
   const totalPages = Math.ceil(levels.length / levelsPerPage);
 
   const paginatedLevels = levels.slice(currentPage * levelsPerPage, (currentPage + 1) * levelsPerPage);
@@ -53,18 +53,18 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
       <div className="p-6 relative">
         <div className="flex justify-between items-start">
           <div>
-            <h2 className={cn("text-3xl font-bold", config.titleClass)}>{difficulty}</h2>
-            <p className="text-base text-muted-foreground">{config.gridClass}</p>
+            <h2 className={cn("text-4xl font-bold", config.titleClass)}>{difficulty}</h2>
+            <p className="text-lg text-slate-400">{config.gridClass}</p>
           </div>
-          <div className={cn("w-16 h-16 rounded-full flex items-center justify-center text-3xl font-bold", config.numberClass)}>
+          <div className={cn("w-20 h-20 rounded-full flex items-center justify-center text-4xl font-bold", config.numberClass)}>
             {levels[0].gridSize}
           </div>
         </div>
       </div>
-      <CardContent className="p-6 flex items-center justify-center gap-4">
+      <CardContent className="p-6 flex items-center justify-center gap-2">
         {totalPages > 1 && (
-          <Button size="icon" variant="ghost" onClick={goToPrevPage} aria-label="Previous levels">
-            <ArrowLeft className="w-6 h-6" />
+          <Button size="icon" variant="ghost" onClick={goToPrevPage} aria-label="Previous levels" className="h-16 w-16">
+            <ArrowLeft className="w-8 h-8" />
           </Button>
         )}
         <div className="grid grid-cols-5 gap-4 flex-grow">
@@ -77,8 +77,8 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
                 disabled={!isUnlocked}
                 onClick={() => onLevelSelect(level)}
                 className={cn(
-                  "h-16 text-3xl font-bold flex items-center justify-center transition-all duration-200 ease-in-out hover:scale-110 p-2",
-                  isUnlocked ? config.levelButtonClass : "bg-muted/50 cursor-not-allowed",
+                  "h-24 w-full text-5xl font-bold flex items-center justify-center transition-all duration-200 ease-in-out hover:scale-110 p-2",
+                  isUnlocked ? config.levelButtonClass : "bg-slate-700/50 cursor-not-allowed",
                   !isUnlocked && "opacity-50"
                 )}
                 aria-label={`Level ${level.levelNumber}`}
@@ -87,20 +87,20 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
                   <Image
                     src={level.imageSrc}
                     alt={`Level ${level.levelNumber}`}
-                    width={56}
-                    height={56}
+                    width={80}
+                    height={80}
                     className="w-full h-full object-contain"
                   />
                 ) : (
-                  <Lock className="w-8 h-8 text-muted-foreground" />
+                  <Lock className="w-10 h-10 text-slate-400" />
                 )}
               </Button>
             );
           })}
         </div>
         {totalPages > 1 && (
-          <Button size="icon" variant="ghost" onClick={goToNextPage} aria-label="Next levels">
-            <ArrowRight className="w-6 h-6" />
+          <Button size="icon" variant="ghost" onClick={goToNextPage} aria-label="Next levels" className="h-16 w-16">
+            <ArrowRight className="w-8 h-8" />
           </Button>
         )}
       </CardContent>
