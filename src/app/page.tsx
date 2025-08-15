@@ -72,13 +72,13 @@ export default function Home(props: {}) {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground font-body">
       <main className="flex-grow flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-md mx-auto relative">
-          {currentLevel && (
-              <Button variant="ghost" size="icon" className="absolute -top-12 left-0" onClick={handleExitGame}>
-                  <ArrowLeft className="h-6 w-6" />
-              </Button>
-          )}
-          <header className="text-center mb-8">
+        <div className="w-full max-w-md mx-auto">
+          <header className="relative text-center mb-8">
+            {currentLevel && (
+                <Button variant="ghost" size="icon" className="absolute top-1/2 left-0 -translate-y-1/2" onClick={handleExitGame}>
+                    <ArrowLeft className="h-6 w-6" />
+                </Button>
+            )}
             <h1 className="text-5xl md:text-6xl font-extrabold tracking-tighter text-primary font-headline">EmojiSliderz</h1>
             <p className="text-muted-foreground mt-2 text-lg">Slide the tiles to solve the emoji puzzle!</p>
           </header>
