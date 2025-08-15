@@ -17,8 +17,8 @@ export const emojiList = [
 ];
 
 const difficulties = {
-  'Easy': { gridSize: 2, count: 70 },
-  'Hard': { gridSize: 3, count: 75 },
+  'Easy': { gridSize: 2, count: 145 },
+  'Hard': { gridSize: 3, count: 145 },
 } as const;
 
 export const levels: Level[] = [];
