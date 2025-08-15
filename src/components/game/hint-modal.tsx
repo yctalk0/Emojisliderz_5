@@ -10,8 +10,7 @@ import {
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
 import { Lightbulb } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { getPuzzleTip, type PuzzleTipInput } from '@/ai/flows/puzzle-tip-flow';
+import { useState } from 'react';
 import { Skeleton } from '../ui/skeleton';
 import type { TileType } from '@/hooks/use-game-logic';
 import Image from 'next/image';
@@ -26,34 +25,7 @@ interface HintModalProps {
 }
 
 const HintModal = ({ isOpen, onClose, imageSrc, emoji, tiles, gridSize }: HintModalProps) => {
-  const [tip, setTip] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (isOpen && emoji) {
-      setLoading(true);
-      setTip(''); // Clear previous tip
-
-      const input: PuzzleTipInput = {
-        emoji,
-        tiles: JSON.stringify(tiles.map(t => t.value)),
-        gridSize,
-      }
-      
-      getPuzzleTip(input)
-        .then(response => {
-          setTip(response.tip);
-        })
-        .catch(error => {
-          console.error('Error getting puzzle tip:', error);
-          setTip("Try solving the first row, then the second, and so on!"); // Fallback tip
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    }
-  }, [isOpen, emoji, tiles, gridSize]);
-
+  const [tip] = useState("Try solving the first row, then the second, and so on!");
   if (!isOpen) return null;
 
   return (
@@ -72,11 +44,7 @@ const HintModal = ({ isOpen, onClose, imageSrc, emoji, tiles, gridSize }: HintMo
         <div className="my-2 p-3 bg-secondary/50 rounded-lg">
             <h4 className="font-bold text-center mb-2">💡 Pro Tip</h4>
             <div className="text-center text-muted-foreground italic">
-                {loading ? (
-                    <Skeleton className="h-4 w-3/4 mx-auto" />
-                ) : (
-                    `"${tip}"`
-                )}
+                "{tip}"
             </div>
         </div>
         <AlertDialogFooter className="sm:justify-center">

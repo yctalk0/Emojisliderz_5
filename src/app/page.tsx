@@ -10,7 +10,7 @@ import { ArrowLeft, Volume2, VolumeX, Smile } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function Home({ params, searchParams }: { params: {}; searchParams: {} }) {
+export default function Home() {
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
   const [unlockedLevels, setUnlockedLevels] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,6 +37,14 @@ export default function Home({ params, searchParams }: { params: {}; searchParam
       }
     }
     setUnlockedLevels(initialUnlocked);
+
+    const lastPlayedLevelId = localStorage.getItem('lastPlayedLevel');
+    if (lastPlayedLevelId) {
+      const lastPlayedLevel = levels.find(l => l.id === lastPlayedLevelId);
+      if (lastPlayedLevel && initialUnlocked.includes(lastPlayedLevel.id)) {
+        setCurrentLevel(lastPlayedLevel);
+      }
+    }
     setIsLoading(false);
   }, []);
   
@@ -59,6 +67,7 @@ export default function Home({ params, searchParams }: { params: {}; searchParam
         setHasInteracted(true);
     }
     setCurrentLevel(level);
+    localStorage.setItem('lastPlayedLevel', level.id);
   };
 
   const handleGameWin = () => {
@@ -70,19 +79,23 @@ export default function Home({ params, searchParams }: { params: {}; searchParam
         const newUnlocked = [...new Set([...unlockedLevels, nextLevel.id])];
         setUnlockedLevels(newUnlocked);
         localStorage.setItem('unlockedLevels', JSON.stringify(newUnlocked));
+        localStorage.setItem('lastPlayedLevel', nextLevel.id);
       }
     }
   };
 
   const handleExitGame = () => {
     setCurrentLevel(null);
+    localStorage.removeItem('lastPlayedLevel');
   }
 
   const handleNextLevel = () => {
     if (currentLevel) {
         const currentIndex = levels.findIndex(l => l.id === currentLevel.id);
         if (currentIndex < levels.length - 1) {
-            setCurrentLevel(levels[currentIndex + 1]);
+            const nextLevel = levels[currentIndex + 1];
+            setCurrentLevel(nextLevel);
+            localStorage.setItem('lastPlayedLevel', nextLevel.id);
         }
     }
   }
@@ -91,7 +104,9 @@ export default function Home({ params, searchParams }: { params: {}; searchParam
     if (currentLevel) {
         const currentIndex = levels.findIndex(l => l.id === currentLevel.id);
         if (currentIndex > 0) {
-            setCurrentLevel(levels[currentIndex - 1]);
+            const previousLevel = levels[currentIndex - 1];
+            setCurrentLevel(previousLevel);
+            localStorage.setItem('lastPlayedLevel', previousLevel.id);
         }
     }
   }
