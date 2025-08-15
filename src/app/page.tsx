@@ -81,7 +81,7 @@ export default function Home(props: {}) {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground font-body">
-      <main className="flex-grow flex flex-col items-center justify-center p-4">
+      <main className="flex-grow flex flex-col items-center justify-center p-4 -mt-7">
         <div className="w-full max-w-md mx-auto">
           <header className="relative text-center mb-8">
             {currentLevel && (
