@@ -1,8 +1,8 @@
 
 export type Level = {
   id: string;
-  difficulty: 'Very Easy' | 'Easy' | 'Hard';
-  gridSize: 2 | 3 | 5;
+  difficulty: 'Very Easy' | 'Easy';
+  gridSize: 2 | 3;
   emoji: string;
   imageSrc: string;
   imageHint: string;
@@ -19,7 +19,6 @@ export const emojiList = [
 const difficulties = {
   'Very Easy': { gridSize: 2, count: 35 },
   'Easy': { gridSize: 3, count: 40 },
-  'Hard': { gridSize: 5, count: 30 }
 } as const;
 
 export const levels: Level[] = [];
@@ -30,7 +29,7 @@ let imageCounter = 1;
 Object.entries(difficulties).forEach(([difficulty, config]) => {
   for (let i = 1; i <= config.count; i++) {
     const emoji = emojiList[emojiIndex % emojiList.length];
-    const difficultyTyped = difficulty as 'Very Easy' | 'Easy' | 'Hard';
+    const difficultyTyped = difficulty as 'Very Easy' | 'Easy';
     const id = `${difficultyTyped.toLowerCase().replace(' ', '-')}-${i}`;
     
     levels.push({
