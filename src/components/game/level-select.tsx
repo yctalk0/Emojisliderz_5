@@ -46,7 +46,7 @@ const LevelSelect = ({ levels, unlockedLevels, onLevelSelect }: LevelSelectProps
                   ) : (
                     <Lock className="w-8 h-8 text-muted-foreground" />
                   )}
-                  <span className="text-xs font-normal text-muted-foreground">{level.gridSize}x{level.gridSize}</span>
+                  <span className="text-xs font-normal text-muted-foreground">2x2</span>
                 </Button>
               );
             })}
