@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import type { Level } from '@/lib/game-data';
@@ -94,7 +95,7 @@ const Game = ({
 
   return (
     <div className="flex flex-col items-center gap-6">
-       <audio ref={audioRef} src="/music/game-music.mp3" loop preload="auto" />
+       <audio ref={audioRef} src="/assets/emoji/music/bgmusic.mp3" loop preload="auto" />
       <GameControls
         moves={moves}
         time={time}
