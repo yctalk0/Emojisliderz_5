@@ -135,6 +135,8 @@ export default function Home(props: {}) {
               onPreviousLevel={handlePreviousLevel}
               isNextLevelAvailable={isNextLevelAvailable}
               isPreviousLevelAvailable={isPreviousLevelAvailable}
+              isMuted={isMuted}
+              onToggleMute={toggleMute}
             />
           ) : (
             <>

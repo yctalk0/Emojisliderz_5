@@ -19,6 +19,8 @@ interface GameProps {
   onPreviousLevel: () => void;
   isNextLevelAvailable: boolean;
   isPreviousLevelAvailable: boolean;
+  isMuted: boolean;
+  onToggleMute: () => void;
 }
 
 const Game = ({ 
@@ -28,7 +30,9 @@ const Game = ({
   onNextLevel, 
   onPreviousLevel, 
   isNextLevelAvailable,
-  isPreviousLevelAvailable
+  isPreviousLevelAvailable,
+  isMuted,
+  onToggleMute
 }: GameProps) => {
   const { toast } = useToast();
   const {
@@ -80,6 +84,8 @@ const Game = ({
         onSolve={autoSolve}
         canUndo={canUndo}
         canSolve={canSolve}
+        isMuted={isMuted}
+        onToggleMute={onToggleMute}
       />
       <div className="flex items-center gap-2">
         <Button size="icon" variant="ghost" onClick={onPreviousLevel} disabled={!isPreviousLevelAvailable}>
