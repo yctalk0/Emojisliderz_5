@@ -10,7 +10,7 @@ import { ArrowLeft, Volume2, VolumeX } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function Home(props: {}) {
+export default function Home({ params, searchParams }: { params: {}; searchParams: {} }) {
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
   const [unlockedLevels, setUnlockedLevels] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
