@@ -118,7 +118,7 @@ export default function Home(props: {}) {
         </div>
       </main>
       <footer className="w-full p-4">
-        <Card className="max-w-md mx-auto h-20 flex items-center justify-center bg-secondary/50 border-dashed -mt-[7px]">
+        <Card className="max-w-md mx-auto h-20 flex items-center justify-center bg-secondary/50 border-dashed -mt-[12px]">
             <p className="text-muted-foreground">Advertisement</p>
         </Card>
         <div className="max-w-md mx-auto h-[5px] bg-secondary/50 mt-1 rounded-md"></div>
