@@ -16,6 +16,7 @@ export default function Home(props: {}) {
   const [isLoading, setIsLoading] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const [hasInteracted, setHasInteracted] = useState(false);
 
   useEffect(() => {
     // This code now only runs on the client
@@ -37,23 +38,26 @@ export default function Home(props: {}) {
     }
     setUnlockedLevels(initialUnlocked);
     setIsLoading(false);
-
-    // Play music on load
-    const audio = audioRef.current;
-    if (audio) {
-      audio.loop = true;
-      audio.play().catch(error => console.error("Audio play failed:", error));
-    }
   }, []);
-
+  
   useEffect(() => {
     const audio = audioRef.current;
     if (audio) {
-        audio.muted = isMuted;
+      if (hasInteracted && !isMuted) {
+        audio.loop = true;
+        audio.play().catch(error => console.error("Audio play failed:", error));
+      } else {
+        audio.pause();
+      }
+      audio.muted = isMuted;
     }
-  }, [isMuted]);
+  }, [isMuted, hasInteracted]);
+
 
   const handleLevelSelect = (level: Level) => {
+    if (!hasInteracted) {
+        setHasInteracted(true);
+    }
     setCurrentLevel(level);
   };
 
@@ -93,6 +97,9 @@ export default function Home(props: {}) {
   }
 
   const toggleMute = () => {
+      if (!hasInteracted) {
+        setHasInteracted(true);
+      }
       setIsMuted(!isMuted);
   }
 
