@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import Confetti from './confetti';
 import { Award, Clock, Move, Play, SkipForward } from 'lucide-react';
+import Image from 'next/image';
 
 interface WinModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ interface WinModalProps {
   onNextLevel: () => void;
   onExit: () => void;
   hasNextLevel: boolean;
+  imageSrc: string;
 }
 
 const WinModal = ({
@@ -29,6 +31,7 @@ const WinModal = ({
   onNextLevel,
   onExit,
   hasNextLevel,
+  imageSrc
 }: WinModalProps) => {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -49,6 +52,11 @@ const WinModal = ({
           <AlertDialogTitle className="text-3xl font-bold mt-4">You Win!</AlertDialogTitle>
           <AlertDialogDescription className="text-lg">Congratulations, you solved the puzzle!</AlertDialogDescription>
         </AlertDialogHeader>
+
+        <div className="flex justify-center my-4 rounded-lg overflow-hidden border-2 border-primary/50 shadow-lg">
+            <Image src={imageSrc} alt="Solved puzzle" width={200} height={200} className="w-48 h-48 object-cover" />
+        </div>
+
         <div className="flex justify-center gap-8 my-4">
           <div className="flex items-center gap-2">
             <Move className="w-5 h-5 text-muted-foreground" />

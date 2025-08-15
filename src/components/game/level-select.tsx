@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Lock, ArrowLeft, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 interface LevelSelectProps {
   levels: Level[];
@@ -96,7 +97,13 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
                 aria-label={`Level ${level.levelNumber}`}
               >
                 {isUnlocked ? (
-                  <span>{level.levelNumber}</span>
+                  <Image
+                    src={level.imageSrc}
+                    alt={`Level ${level.levelNumber}`}
+                    width={40}
+                    height={40}
+                    className="w-10 h-10"
+                  />
                 ) : (
                   <Lock className="w-6 h-6 text-gray-500" />
                 )}

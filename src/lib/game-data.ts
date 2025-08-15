@@ -40,7 +40,7 @@ Object.entries(difficulties).forEach(([difficulty, config]) => {
       gridSize: config.gridSize,
       levelNumber: i,
       emoji: emoji,
-      imageSrc: `/emoji/${imageCounter}.png`,
+      imageSrc: `/assets/emoji/${imageCounter}.png`,
       imageHint: 'emoji puzzle', // Generic hint for now
     });
     

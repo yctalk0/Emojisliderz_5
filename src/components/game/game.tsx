@@ -99,6 +99,7 @@ const Game = ({
         onNextLevel={onNextLevel}
         onExit={onExit}
         hasNextLevel={isNextLevelAvailable}
+        imageSrc={level.imageSrc}
       />
       <HintModal 
         isOpen={isHintModalOpen}
