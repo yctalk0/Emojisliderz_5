@@ -1,7 +1,7 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Clock, HelpCircle, Move, RotateCw, Undo2 } from 'lucide-react';
+import { Clock, HelpCircle, Move, RotateCw, WandSparkles, Undo2 } from 'lucide-react';
 
 interface GameControlsProps {
   moves: number;
@@ -9,10 +9,12 @@ interface GameControlsProps {
   onHint: () => void;
   onUndo: () => void;
   onRestart: () => void;
+  onSolve: () => void;
   canUndo: boolean;
+  canSolve: boolean;
 }
 
-const GameControls = ({ moves, time, onHint, onUndo, onRestart, canUndo }: GameControlsProps) => {
+const GameControls = ({ moves, time, onHint, onUndo, onRestart, onSolve, canUndo, canSolve }: GameControlsProps) => {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
     const secs = (seconds % 60).toString().padStart(2, '0');
@@ -39,7 +41,7 @@ const GameControls = ({ moves, time, onHint, onUndo, onRestart, canUndo }: GameC
           </div>
         </CardContent>
       </Card>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-4 gap-2">
         <Button variant="secondary" onClick={onHint} className="h-12 text-base font-bold">
           <HelpCircle className="w-5 h-5 mr-2" /> Hint
         </Button>
@@ -48,6 +50,9 @@ const GameControls = ({ moves, time, onHint, onUndo, onRestart, canUndo }: GameC
         </Button>
         <Button variant="secondary" onClick={onRestart} className="h-12 text-base font-bold">
           <RotateCw className="w-5 h-5 mr-2" /> Restart
+        </Button>
+         <Button variant="secondary" onClick={onSolve} disabled={!canSolve} className="h-12 text-base font-bold">
+          <WandSparkles className="w-5 h-5 mr-2" /> Solve
         </Button>
       </div>
     </div>

@@ -37,10 +37,12 @@ const Game = ({
     isSolved,
     isStarted,
     canUndo,
+    canSolve,
     startGame,
     handleTileClick,
     undoMove,
     resetGame,
+    autoSolve,
   } = useGameLogic(level.gridSize, onWin);
 
   const [isHintModalOpen, setIsHintModalOpen] = useState(false);
@@ -74,7 +76,9 @@ const Game = ({
         onHint={handleHint}
         onUndo={undoMove}
         onRestart={handleRestart}
+        onSolve={autoSolve}
         canUndo={canUndo}
+        canSolve={canSolve}
       />
       <div className="flex items-center gap-2">
         <Button size="icon" variant="ghost" onClick={onPreviousLevel} disabled={!isPreviousLevelAvailable}>
@@ -106,6 +110,8 @@ const Game = ({
         onClose={() => setIsHintModalOpen(false)}
         imageSrc={level.imageSrc}
         emoji={level.emoji}
+        tiles={tiles}
+        gridSize={level.gridSize}
       />
     </div>
   );

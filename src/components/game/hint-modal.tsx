@@ -10,17 +10,20 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Lightbulb } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { getPuzzleTip } from '@/ai/flows/puzzle-tip-flow';
+import { getPuzzleTip, type PuzzleTipInput } from '@/ai/flows/puzzle-tip-flow';
 import { Skeleton } from '../ui/skeleton';
+import type { TileType } from '@/hooks/use-game-logic';
 
 interface HintModalProps {
   isOpen: boolean;
   onClose: () => void;
   imageSrc: string;
   emoji: string;
+  tiles: TileType[];
+  gridSize: number;
 }
 
-const HintModal = ({ isOpen, onClose, imageSrc, emoji }: HintModalProps) => {
+const HintModal = ({ isOpen, onClose, imageSrc, emoji, tiles, gridSize }: HintModalProps) => {
   const [tip, setTip] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -28,7 +31,14 @@ const HintModal = ({ isOpen, onClose, imageSrc, emoji }: HintModalProps) => {
     if (isOpen && emoji) {
       setLoading(true);
       setTip(''); // Clear previous tip
-      getPuzzleTip({ emoji })
+
+      const input: PuzzleTipInput = {
+        emoji,
+        tiles: JSON.stringify(tiles.map(t => t.value)),
+        gridSize,
+      }
+      
+      getPuzzleTip(input)
         .then(response => {
           setTip(response.tip);
         })
@@ -40,7 +50,7 @@ const HintModal = ({ isOpen, onClose, imageSrc, emoji }: HintModalProps) => {
           setLoading(false);
         });
     }
-  }, [isOpen, emoji]);
+  }, [isOpen, emoji, tiles, gridSize]);
 
   if (!isOpen) return null;
 
