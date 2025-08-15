@@ -56,9 +56,6 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
             <h2 className={cn("text-4xl font-bold", config.titleClass)}>{difficulty}</h2>
             <p className="text-lg text-slate-400">{config.gridClass}</p>
           </div>
-          <div className={cn("w-20 h-20 rounded-full flex items-center justify-center text-4xl font-bold", config.numberClass)}>
-            {levels[0].gridSize}
-          </div>
         </div>
       </div>
       <CardContent className="p-6 flex items-center justify-center gap-2">
