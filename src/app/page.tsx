@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect } from 'react';
 import type { Level } from '@/lib/game-data';
@@ -7,34 +8,33 @@ import Game from '@/components/game/game';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home(props: {}) {
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
   const [unlockedLevels, setUnlockedLevels] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Unlock the first level of each difficulty by default.
+    // This code now only runs on the client
     const defaultUnlocked = levels
       .filter(level => level.levelNumber === 1)
       .map(level => level.id);
 
     const savedProgress = localStorage.getItem('unlockedLevels');
+    let initialUnlocked = defaultUnlocked;
     if (savedProgress) {
       try {
         const parsedProgress = JSON.parse(savedProgress);
         if (Array.isArray(parsedProgress)) {
-          // Merge saved progress with default unlocked levels
-          setUnlockedLevels([...new Set([...defaultUnlocked, ...parsedProgress])]);
-        } else {
-           setUnlockedLevels(defaultUnlocked);
+          initialUnlocked = [...new Set([...defaultUnlocked, ...parsedProgress])];
         }
       } catch (e) {
         console.error("Failed to parse unlocked levels from localStorage", e);
-        setUnlockedLevels(defaultUnlocked);
       }
-    } else {
-        setUnlockedLevels(defaultUnlocked);
     }
+    setUnlockedLevels(initialUnlocked);
+    setIsLoading(false);
   }, []);
 
   const handleLevelSelect = (level: Level) => {
@@ -93,7 +93,12 @@ export default function Home(props: {}) {
             <p className="text-muted-foreground mt-2 text-lg">Slide the tiles to solve the emoji puzzle!</p>
           </header>
           
-          {currentLevel ? (
+          {isLoading ? (
+             <div className="space-y-6">
+                <Skeleton className="h-40 w-full" />
+                <Skeleton className="h-40 w-full" />
+             </div>
+          ) : currentLevel ? (
             <Game 
               level={currentLevel} 
               onWin={handleGameWin}
