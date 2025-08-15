@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Level } from '@/lib/game-data';
 import useGameLogic from '@/hooks/use-game-logic';
 import GameBoard from './game-board';
@@ -8,7 +8,7 @@ import WinModal from './win-modal';
 import HintModal from './hint-modal';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Volume2, VolumeX } from 'lucide-react';
 
 interface GameProps {
   level: Level;
@@ -46,11 +46,31 @@ const Game = ({
   } = useGameLogic(level.gridSize, onWin);
 
   const [isHintModalOpen, setIsHintModalOpen] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   // This effect will re-initialize the game logic when the level (e.g. emoji) changes.
   useEffect(() => {
     resetGame();
   }, [level, resetGame]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      if (!isSolved) {
+        audio.play().catch(error => console.error("Audio play failed:", error));
+      } else {
+        audio.pause();
+      }
+    }
+  }, [isSolved]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio) {
+        audio.muted = isMuted;
+    }
+  }, [isMuted]);
 
   const handleRestart = () => {
     resetGame();
@@ -67,9 +87,14 @@ const Game = ({
     }
     handleTileClick(tileValue);
   }
+  
+  const toggleMute = () => {
+      setIsMuted(!isMuted);
+  }
 
   return (
     <div className="flex flex-col items-center gap-6">
+       <audio ref={audioRef} src="/music/game-music.mp3" loop preload="auto" />
       <GameControls
         moves={moves}
         time={time}
@@ -94,6 +119,11 @@ const Game = ({
             <ChevronRight className="h-8 w-8" />
         </Button>
       </div>
+
+       <Button onClick={toggleMute} variant="outline" size="icon">
+          {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
+          <span className="sr-only">{isMuted ? 'Unmute' : 'Mute'}</span>
+      </Button>
 
       <WinModal
         isOpen={isSolved}
