@@ -29,13 +29,6 @@ const difficultyConfig = {
     numberClass: "bg-[#42A5F5] text-white",
     levelButtonClass: "bg-blue-400 hover:bg-blue-500 text-blue-900",
   },
-  Medium: {
-    cardClass: "bg-[#FFF3E0] border-[#FFCC80]",
-    titleClass: "text-[#EF6C00]",
-    gridClass: "4x4 Grid",
-    numberClass: "bg-[#FFA726] text-white",
-    levelButtonClass: "bg-orange-400 hover:bg-orange-500 text-orange-900",
-  },
   Hard: {
     cardClass: "bg-[#FFEBEE] border-[#EF9A9A]",
     titleClass: "text-[#C62828]",
@@ -45,7 +38,7 @@ const difficultyConfig = {
   },
 } as const;
 
-const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: { difficulty: 'Very Easy' | 'Easy' | 'Medium' | 'Hard', levels: Level[], unlockedLevels: string[], onLevelSelect: (level: Level) => void }) => {
+const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: { difficulty: 'Very Easy' | 'Easy' | 'Hard', levels: Level[], unlockedLevels: string[], onLevelSelect: (level: Level) => void }) => {
   const config = difficultyConfig[difficulty];
   const [currentPage, setCurrentPage] = React.useState(0);
   const levelsPerPage = 5;
@@ -122,7 +115,7 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
 }
 
 const LevelSelect = ({ levels, unlockedLevels, onLevelSelect }: LevelSelectProps) => {
-  const difficulties: ('Very Easy' | 'Easy' | 'Medium' | 'Hard')[] = ['Very Easy', 'Easy', 'Medium', 'Hard'];
+  const difficulties: ('Very Easy' | 'Easy' | 'Hard')[] = ['Very Easy', 'Easy', 'Hard'];
   
   const levelsByDifficulty = difficulties.map(difficulty => ({
     difficulty,
