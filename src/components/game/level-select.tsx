@@ -89,7 +89,7 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
                     alt={`Level ${level.levelNumber}`}
                     width={40}
                     height={40}
-                    className="w-10 h-10"
+                    className="w-10 h-10 object-contain"
                   />
                 ) : (
                   <Lock className="w-6 h-6 text-gray-500" />

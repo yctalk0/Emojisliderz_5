@@ -54,7 +54,7 @@ const WinModal = ({
         </AlertDialogHeader>
 
         <div className="flex justify-center my-4 rounded-lg overflow-hidden border-2 border-primary/50 shadow-lg">
-            <Image src={imageSrc} alt="Solved puzzle" width={200} height={200} className="w-48 h-48 object-cover" />
+            <Image src={imageSrc} alt="Solved puzzle" width={192} height={192} className="w-48 h-48 object-contain" />
         </div>
 
         <div className="flex justify-center gap-8 my-4">

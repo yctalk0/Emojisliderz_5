@@ -65,7 +65,7 @@ const HintModal = ({ isOpen, onClose, imageSrc, emoji, tiles, gridSize }: HintMo
           <AlertDialogDescription className="text-center text-lg">Here's what the solved puzzle looks like.</AlertDialogDescription>
         </AlertDialogHeader>
         <div className="flex justify-center my-4 rounded-lg overflow-hidden">
-            <img src={imageSrc} alt="Hint" className="w-full max-w-xs h-auto object-cover" />
+            <img src={imageSrc} alt="Hint" className="w-full max-w-xs h-auto object-contain" />
         </div>
         <div className="my-2 p-3 bg-secondary/50 rounded-lg">
             <h4 className="font-bold text-center mb-2">💡 Pro Tip</h4>
