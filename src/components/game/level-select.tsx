@@ -17,13 +17,13 @@ interface LevelSelectProps {
 
 const difficultyConfig = {
   Easy: {
-    cardClass: "bg-blue-900/50 border-blue-700",
+    cardClass: "border-blue-700",
     titleClass: "text-blue-400",
     gridClass: "2x2 Grid",
     levelButtonClass: "bg-blue-500/20 hover:bg-blue-500/30 text-blue-200",
   },
   Hard: {
-    cardClass: "bg-purple-900/50 border-purple-700",
+    cardClass: "border-purple-700",
     titleClass: "text-purple-400",
     gridClass: "3x3 Grid",
     levelButtonClass: "bg-purple-500/20 hover:bg-purple-500/30 text-purple-200",
