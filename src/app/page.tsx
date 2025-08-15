@@ -6,7 +6,7 @@ import { levels, emojiList } from '@/lib/game-data';
 import LevelSelect from '@/components/game/level-select';
 import Game from '@/components/game/game';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Volume2, VolumeX, Puzzle } from 'lucide-react';
+import { ArrowLeft, Volume2, VolumeX, Smile } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -118,8 +118,8 @@ export default function Home({ params, searchParams }: { params: {}; searchParam
                 </Button>
             )}
             <div className="flex justify-center items-center gap-3">
-              <Puzzle className="w-10 h-10 text-primary" />
-              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tighter text-primary font-headline">EmojiSliderz</h1>
+              <Smile className="w-8 h-8 text-primary" />
+              <h1 className="text-4xl font-extrabold tracking-tighter text-primary font-headline">EmojiSliderz</h1>
             </div>
             <p className="text-muted-foreground mt-2 text-lg">Slide the tiles to solve the emoji puzzle!</p>
           </header>
