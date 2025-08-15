@@ -58,13 +58,13 @@ const Game = ({
   useEffect(() => {
     const audio = audioRef.current;
     if (audio) {
-      if (!isSolved) {
+      if (isStarted && !isSolved) {
         audio.play().catch(error => console.error("Audio play failed:", error));
       } else {
         audio.pause();
       }
     }
-  }, [isSolved]);
+  }, [isStarted, isSolved]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -95,7 +95,7 @@ const Game = ({
 
   return (
     <div className="flex flex-col items-center gap-6">
-       <audio ref={audioRef} src="/assets/emoji/music/bgmusic.mp3" loop preload="auto" />
+       <audio ref={audioRef} src="/assets/emoji/music/bgmusic.mp3.mp3" loop preload="auto" />
       <GameControls
         moves={moves}
         time={time}
