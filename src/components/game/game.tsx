@@ -7,17 +7,28 @@ import GameControls from './game-controls';
 import WinModal from './win-modal';
 import HintModal from './hint-modal';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface GameProps {
   level: Level;
   onWin: () => void;
   onExit: () => void;
   onNextLevel: () => void;
-  nextLevelId: string | undefined;
-  isNextLevelUnlocked: boolean;
+  onPreviousLevel: () => void;
+  isNextLevelAvailable: boolean;
+  isPreviousLevelAvailable: boolean;
 }
 
-const Game = ({ level, onWin, onExit, onNextLevel, nextLevelId, isNextLevelUnlocked }: GameProps) => {
+const Game = ({ 
+  level, 
+  onWin, 
+  onExit, 
+  onNextLevel, 
+  onPreviousLevel, 
+  isNextLevelAvailable,
+  isPreviousLevelAvailable
+}: GameProps) => {
   const { toast } = useToast();
   const {
     tiles,
@@ -30,7 +41,6 @@ const Game = ({ level, onWin, onExit, onNextLevel, nextLevelId, isNextLevelUnloc
     handleTileClick,
     undoMove,
     resetGame,
-    setTiles: setGameTiles,
   } = useGameLogic(level.gridSize, onWin);
 
   const [isHintModalOpen, setIsHintModalOpen] = useState(false);
@@ -56,10 +66,6 @@ const Game = ({ level, onWin, onExit, onNextLevel, nextLevelId, isNextLevelUnloc
     handleTileClick(tileValue);
   }
 
-  const handleNextLevelWithReset = () => {
-    onNextLevel();
-  }
-
   return (
     <div className="flex flex-col items-center gap-6">
       <GameControls
@@ -70,21 +76,29 @@ const Game = ({ level, onWin, onExit, onNextLevel, nextLevelId, isNextLevelUnloc
         onRestart={handleRestart}
         canUndo={canUndo}
       />
-      <GameBoard
-        tiles={tiles}
-        gridSize={level.gridSize}
-        onTileClick={handleTileInteraction}
-        imageSrc={level.imageSrc}
-      />
+      <div className="flex items-center gap-2">
+        <Button size="icon" variant="ghost" onClick={onPreviousLevel} disabled={!isPreviousLevelAvailable}>
+            <ChevronLeft className="h-8 w-8" />
+        </Button>
+        <GameBoard
+            tiles={tiles}
+            gridSize={level.gridSize}
+            onTileClick={handleTileInteraction}
+            imageSrc={level.imageSrc}
+        />
+        <Button size="icon" variant="ghost" onClick={onNextLevel} disabled={!isNextLevelAvailable}>
+            <ChevronRight className="h-8 w-8" />
+        </Button>
+      </div>
+
       <WinModal
         isOpen={isSolved}
         moves={moves}
         time={time}
         onPlayAgain={handleRestart}
-        onNextLevel={handleNextLevelWithReset}
+        onNextLevel={onNextLevel}
         onExit={onExit}
-        hasNextLevel={!!nextLevelId}
-        isNextLevelUnlocked={isNextLevelUnlocked}
+        hasNextLevel={isNextLevelAvailable}
       />
       <HintModal 
         isOpen={isHintModalOpen}

@@ -46,12 +46,10 @@ export default function Home(props: {}) {
       const currentIndex = levels.findIndex(l => l.id === currentLevel.id);
       if (currentIndex < levels.length - 1) {
         const nextLevel = levels[currentIndex + 1];
-        // Only unlock if the difficulty is the same.
-        if(nextLevel.difficulty === currentLevel.difficulty) {
-          const newUnlocked = [...new Set([...unlockedLevels, nextLevel.id])];
-          setUnlockedLevels(newUnlocked);
-          localStorage.setItem('unlockedLevels', JSON.stringify(newUnlocked));
-        }
+        // Unlock next level regardless of difficulty, as levels are now sequential
+        const newUnlocked = [...new Set([...unlockedLevels, nextLevel.id])];
+        setUnlockedLevels(newUnlocked);
+        localStorage.setItem('unlockedLevels', JSON.stringify(newUnlocked));
       }
     }
   };
@@ -62,38 +60,24 @@ export default function Home(props: {}) {
 
   const handleNextLevel = () => {
     if (currentLevel) {
-        const currentDifficultyLevels = levels.filter(l => l.difficulty === currentLevel.difficulty);
-        const unsolvedLevels = currentDifficultyLevels.filter(l => !unlockedLevels.includes(l.id) || l.id === currentLevel.id);
-
-        let nextLevel: Level | undefined;
-
-        if (unsolvedLevels.length > 1) {
-             // Find the next level in the difficulty that is not the current one
-             nextLevel = unsolvedLevels.find(l => l.id !== currentLevel.id);
-        }
-
-        // If no more unsolved levels, pick a random one from the same difficulty
-        if (!nextLevel) {
-            const sameDifficultyUnlocked = currentDifficultyLevels.filter(l => unlockedLevels.includes(l.id) && l.id !== currentLevel.id);
-            if(sameDifficultyUnlocked.length > 0) {
-              nextLevel = sameDifficultyUnlocked[Math.floor(Math.random() * sameDifficultyUnlocked.length)];
-            }
-        }
-        
-        // Final fallback to just a random emoji on the same level structure if all else fails
-        if(!nextLevel) {
-            const randomEmoji = emojiList[Math.floor(Math.random() * emojiList.length)];
-            const newLevelData: Level = {
-                ...currentLevel,
-                emoji: randomEmoji,
-                imageSrc: `https://placehold.co/400x400.png?text=${randomEmoji}`,
-            };
-            setCurrentLevel(newLevelData);
-        } else {
-            setCurrentLevel(nextLevel);
+        const currentIndex = levels.findIndex(l => l.id === currentLevel.id);
+        if (currentIndex < levels.length - 1) {
+            setCurrentLevel(levels[currentIndex + 1]);
         }
     }
   }
+  
+  const handlePreviousLevel = () => {
+    if (currentLevel) {
+        const currentIndex = levels.findIndex(l => l.id === currentLevel.id);
+        if (currentIndex > 0) {
+            setCurrentLevel(levels[currentIndex - 1]);
+        }
+    }
+  }
+
+  const isNextLevelAvailable = currentLevel ? levels.findIndex(l => l.id === currentLevel.id) < levels.length - 1 : false;
+  const isPreviousLevelAvailable = currentLevel ? levels.findIndex(l => l.id === currentLevel.id) > 0 : false;
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground font-body">
@@ -115,8 +99,9 @@ export default function Home(props: {}) {
               onWin={handleGameWin}
               onExit={handleExitGame}
               onNextLevel={handleNextLevel}
-              nextLevelId={levels[levels.findIndex(l => l.id === currentLevel.id) + 1]?.id}
-              isNextLevelUnlocked={unlockedLevels.includes(currentLevel.id)}
+              onPreviousLevel={handlePreviousLevel}
+              isNextLevelAvailable={isNextLevelAvailable}
+              isPreviousLevelAvailable={isPreviousLevelAvailable}
             />
           ) : (
             <LevelSelect 

@@ -19,7 +19,6 @@ interface WinModalProps {
   onNextLevel: () => void;
   onExit: () => void;
   hasNextLevel: boolean;
-  isNextLevelUnlocked: boolean;
 }
 
 const WinModal = ({
@@ -30,7 +29,6 @@ const WinModal = ({
   onNextLevel,
   onExit,
   hasNextLevel,
-  isNextLevelUnlocked,
 }: WinModalProps) => {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -62,7 +60,7 @@ const WinModal = ({
           </div>
         </div>
         <AlertDialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0">
-          <Button onClick={onNextLevel} className="w-full h-12">
+          <Button onClick={onNextLevel} disabled={!hasNextLevel} className="w-full h-12">
               <SkipForward className="mr-2 h-5 w-5" />
               Next Level
           </Button>
