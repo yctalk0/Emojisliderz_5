@@ -1,3 +1,4 @@
+
 export type Level = {
   id: string;
   difficulty: 'Very Easy' | 'Easy' | 'Medium' | 'Hard';
@@ -25,6 +26,7 @@ const difficulties = {
 export const levels: Level[] = [];
 
 let emojiIndex = 0;
+let imageCounter = 1;
 
 Object.entries(difficulties).forEach(([difficulty, config]) => {
   for (let i = 1; i <= config.count; i++) {
@@ -38,10 +40,11 @@ Object.entries(difficulties).forEach(([difficulty, config]) => {
       gridSize: config.gridSize,
       levelNumber: i,
       emoji: emoji,
-      imageSrc: `https://placehold.co/400x400.png?text=${emoji}`,
+      imageSrc: `/emoji/${imageCounter}.png`,
       imageHint: 'emoji puzzle', // Generic hint for now
     });
     
     emojiIndex++;
+    imageCounter++;
   }
 });
