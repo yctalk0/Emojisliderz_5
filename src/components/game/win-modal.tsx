@@ -74,6 +74,11 @@ const WinModal = ({
               <SkipForward className="mr-2 h-5 w-5" />
               Next Level
           </Button>
+          <div className="my-1">
+            <Card className="w-full h-20 flex items-center justify-center bg-secondary/50 border-dashed">
+                <p className="text-muted-foreground text-sm">Advertisement</p>
+            </Card>
+          </div>
           <Button onClick={onPlayAgain} variant="secondary" className="w-full h-11">
             <Play className="mr-2 h-5 w-5" />
             Play Again
@@ -82,11 +87,6 @@ const WinModal = ({
             Back to Levels
           </Button>
         </AlertDialogFooter>
-        <div className="mt-2">
-            <Card className="w-full h-20 flex items-center justify-center bg-secondary/50 border-dashed">
-                <p className="text-muted-foreground text-sm">Advertisement</p>
-            </Card>
-        </div>
       </AlertDialogContent>
     </AlertDialog>
   );
