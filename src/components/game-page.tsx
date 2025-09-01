@@ -6,19 +6,19 @@ import { levels } from '@/lib/game-data';
 import LevelSelect from '@/components/game/level-select';
 import Game from '@/components/game/game';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Smile, Volume2, VolumeX, Volume1 } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { ArrowLeft, Volume2, VolumeX, Volume1 } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import useAdMob from '@/hooks/use-admob';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Slider } from '@/components/ui/slider';
+import Image from 'next/image';
 
 export default function GamePage() {
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
   const [unlockedLevels, setUnlockedLevels] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [easyLevelsCompleted, setEasyLevelsCompleted] = useState(0);
-  const [volume, setVolume] = useState(0.5);
+  const [volume, setVolume] = useState(0.2);
   const { prepareInterstitial, showInterstitial, isInitialized } = useAdMob();
   const menuAudioRef = useRef<HTMLAudioElement | null>(null);
   const gameAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -46,11 +46,9 @@ export default function GamePage() {
     if (!menuAudio || !gameAudio) return;
 
     const playAudio = (audio: HTMLAudioElement) => {
-      if (volume > 0) {
-        audio.play().catch(error => console.log("Audio play failed:", error));
-      } else {
-        audio.pause();
-      }
+        if (audio.paused && volume > 0) {
+            audio.play().catch(error => console.log("Audio play failed:", error));
+        }
     };
     
     if (currentLevel === null && !isLoading) {
@@ -77,12 +75,13 @@ export default function GamePage() {
     gameAudio.volume = volume;
     levelCompleteAudio.volume = volume;
     
-    if (volume === 0) {
-      menuAudio.pause();
-      if (currentLevel) gameAudio.pause();
+    const activeAudio = currentLevel ? gameAudio : menuAudio;
+    if(volume === 0) {
+        activeAudio.pause()
     } else {
-      if (currentLevel) gameAudio.play().catch(e => console.log(e));
-      else if(!isLoading) menuAudio.play().catch(e => console.log(e));
+        if(!isLoading && !activeAudio.paused) {
+            activeAudio.play().catch(e => console.log(e));
+        }
     }
 
 
@@ -203,8 +202,8 @@ export default function GamePage() {
   }
 
   return (
-    <div className="flex flex-col text-foreground font-body h-full justify-center">
-      <div className="w-full max-w-md mx-auto flex-grow flex flex-col justify-center p-4">
+    <div className="flex flex-col text-foreground font-body h-full">
+      <div className="w-full max-w-md mx-auto flex flex-col p-4 flex-grow">
           <header className="relative text-center mb-8">
             {currentLevel && (
                 <Button variant="ghost" size="icon" className="absolute top-1/2 left-0 -translate-y-1/2" onClick={handleExitGame}>
@@ -236,7 +235,7 @@ export default function GamePage() {
               </PopoverContent>
             </Popover>
             <div className="flex justify-center items-center gap-3">
-              <Smile className="w-8 h-8 text-primary" />
+              <Image src="/assets/emoji/music/logo/logo.png" alt="EmojiSliderz Logo" width={32} height={32} />
               <h1 className="text-4xl font-extrabold tracking-tighter text-primary font-headline">EmojiSliderz</h1>
             </div>
             <p className="text-muted-foreground mt-2 text-lg">Slide the tiles to solve the emoji puzzle!</p>
@@ -256,18 +255,14 @@ export default function GamePage() {
                 isPreviousLevelAvailable={isPreviousLevelAvailable}
               />
             ) : (
-              <>
-                <LevelSelect 
-                  levels={levels} 
-                  unlockedLevels={unlockedLevels} 
-                  onLevelSelect={handleLevelSelect} 
-                />
-              </>
+              <LevelSelect 
+                levels={levels} 
+                unlockedLevels={unlockedLevels} 
+                onLevelSelect={handleLevelSelect} 
+              />
             )}
           </main>
         </div>
     </div>
   );
 }
-
-    
