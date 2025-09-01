@@ -23,14 +23,16 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased bg-background">
         <div className="flex flex-col min-h-screen">
-          <main className="flex-grow pb-28">
+          <main className="flex-grow flex flex-col">
             {children}
           </main>
-          <footer className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-background/80 backdrop-blur-sm">
-              <Card className="max-w-md mx-auto h-20 flex items-center justify-center bg-secondary/50 border-dashed">
-                  <p className="text-muted-foreground">Advertisement</p>
-              </Card>
-              <div className="max-w-md mx-auto h-[5px] bg-secondary/50 mt-1 rounded-md"></div>
+          <footer className="w-full shrink-0">
+              <div className="p-4">
+                <Card className="max-w-md mx-auto h-20 flex items-center justify-center bg-secondary/50 border-dashed">
+                    <p className="text-muted-foreground">Advertisement</p>
+                </Card>
+                <div className="max-w-md mx-auto h-[5px] bg-secondary/50 mt-1 rounded-md"></div>
+              </div>
           </footer>
         </div>
         <Toaster />

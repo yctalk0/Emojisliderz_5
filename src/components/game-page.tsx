@@ -186,7 +186,7 @@ export default function GamePage() {
   );
 
   return (
-    <div className="flex flex-col text-foreground font-body">
+    <div className="flex flex-col text-foreground font-body h-full">
       <main className="flex-grow flex flex-col items-center justify-center p-4">
         <div className="w-full max-w-md mx-auto">
           <header className="relative text-center mb-8">
