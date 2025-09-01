@@ -6,21 +6,24 @@ import { levels } from '@/lib/game-data';
 import LevelSelect from '@/components/game/level-select';
 import Game from '@/components/game/game';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Smile, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, Smile, Volume2, VolumeX, Volume1 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from './ui/skeleton';
 import useAdMob from '@/hooks/use-admob';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Slider } from '@/components/ui/slider';
 
 export default function GamePage() {
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
   const [unlockedLevels, setUnlockedLevels] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [easyLevelsCompleted, setEasyLevelsCompleted] = useState(0);
-  const [isMuted, setIsMuted] = useState(false);
+  const [volume, setVolume] = useState(0.5);
   const { prepareInterstitial, showInterstitial, isInitialized } = useAdMob();
   const menuAudioRef = useRef<HTMLAudioElement | null>(null);
   const gameAudioRef = useRef<HTMLAudioElement | null>(null);
   const levelCompleteAudioRef = useRef<HTMLAudioElement | null>(null);
+  const isMuted = volume === 0;
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -30,7 +33,6 @@ export default function GamePage() {
         
         const gameAudio = new Audio('/assets/emoji/music/bgmusic.mp3');
         gameAudio.loop = true;
-        gameAudio.volume = 0.2; // Set volume to 20%
         gameAudioRef.current = gameAudio;
         
         const levelCompleteAudio = new Audio('/assets/emoji/music/level_complete.mp3');
@@ -42,24 +44,28 @@ export default function GamePage() {
     const menuAudio = menuAudioRef.current;
     const gameAudio = gameAudioRef.current;
     if (!menuAudio || !gameAudio) return;
+
+    const playAudio = (audio: HTMLAudioElement) => {
+      if (volume > 0) {
+        audio.play().catch(error => console.log("Audio play failed:", error));
+      } else {
+        audio.pause();
+      }
+    };
     
     if (currentLevel === null && !isLoading) {
       gameAudio.pause();
       gameAudio.currentTime = 0;
-      if (!isMuted) {
-        menuAudio.play().catch(error => console.log("Menu audio play failed:", error));
-      }
+      playAudio(menuAudio);
     } else if (currentLevel !== null) {
       menuAudio.pause();
       menuAudio.currentTime = 0;
-      if (!isMuted) {
-        gameAudio.play().catch(error => console.log("Game audio play failed:", error));
-      }
+      playAudio(gameAudio);
     } else {
         menuAudio.pause();
         gameAudio.pause();
     }
-  }, [currentLevel, isLoading, isMuted]);
+  }, [currentLevel, isLoading, volume]);
 
   useEffect(() => {
     const menuAudio = menuAudioRef.current;
@@ -67,11 +73,20 @@ export default function GamePage() {
     const levelCompleteAudio = levelCompleteAudioRef.current;
     if (!menuAudio || !gameAudio || !levelCompleteAudio) return;
 
-    menuAudio.muted = isMuted;
-    gameAudio.muted = isMuted;
-    levelCompleteAudio.muted = isMuted;
+    menuAudio.volume = volume;
+    gameAudio.volume = volume;
+    levelCompleteAudio.volume = volume;
+    
+    if (volume === 0) {
+      menuAudio.pause();
+      if (currentLevel) gameAudio.pause();
+    } else {
+      if (currentLevel) gameAudio.play().catch(e => console.log(e));
+      else if(!isLoading) menuAudio.play().catch(e => console.log(e));
+    }
 
-  }, [isMuted]);
+
+  }, [volume, currentLevel, isLoading]);
 
   useEffect(() => {
     if (isInitialized) {
@@ -165,10 +180,6 @@ export default function GamePage() {
         }
     }
   }
-  
-  const toggleMute = () => {
-    setIsMuted(prev => !prev);
-  }
 
   const isNextLevelAvailable = currentLevel ? levels.findIndex(l => l.id === currentLevel.id) < levels.length - 1 && unlockedLevels.includes(levels[levels.findIndex(l => l.id === currentLevel.id) + 1].id) : false;
   const isPreviousLevelAvailable = currentLevel ? levels.findIndex(l => l.id === currentLevel.id) > 0 : false;
@@ -185,19 +196,45 @@ export default function GamePage() {
     </div>
   );
 
+  const renderVolumeIcon = () => {
+    if (volume === 0) return <VolumeX className="h-6 w-6" />;
+    if (volume < 0.5) return <Volume1 className="h-6 w-6" />;
+    return <Volume2 className="h-6 w-6" />;
+  }
+
   return (
-    <div className="flex flex-col text-foreground font-body h-full">
-      <main className="flex-grow flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-md mx-auto">
+    <div className="flex flex-col text-foreground font-body h-full justify-center">
+      <div className="w-full max-w-md mx-auto flex-grow flex flex-col justify-center p-4">
           <header className="relative text-center mb-8">
             {currentLevel && (
                 <Button variant="ghost" size="icon" className="absolute top-1/2 left-0 -translate-y-1/2" onClick={handleExitGame}>
                     <ArrowLeft className="h-8 w-8" strokeWidth={2.5} />
                 </Button>
             )}
-             <Button variant="ghost" size="icon" className="absolute top-1/2 right-0 -translate-y-1/2" onClick={toggleMute}>
-                {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
-             </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="absolute top-1/2 right-0 -translate-y-1/2">
+                  {renderVolumeIcon()}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56">
+                <div className="grid gap-4">
+                  <div className="space-y-2">
+                    <h4 className="font-medium leading-none">Volume</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Set the volume for the game sounds.
+                    </p>
+                  </div>
+                  <Slider
+                    defaultValue={[volume * 100]}
+                    max={100}
+                    step={1}
+                    onValueChange={(value) => setVolume(value[0] / 100)}
+                    className="w-full"
+                  />
+                </div>
+              </PopoverContent>
+            </Popover>
             <div className="flex justify-center items-center gap-3">
               <Smile className="w-8 h-8 text-primary" />
               <h1 className="text-4xl font-extrabold tracking-tighter text-primary font-headline">EmojiSliderz</h1>
@@ -205,29 +242,32 @@ export default function GamePage() {
             <p className="text-muted-foreground mt-2 text-lg">Slide the tiles to solve the emoji puzzle!</p>
           </header>
           
-          {isLoading ? (
-            renderLoadingSkeleton()
-          ) : currentLevel ? (
-            <Game 
-              level={currentLevel} 
-              onWin={handleGameWin}
-              onExit={handleExitGame}
-              onNextLevel={handleNextLevel}
-              onPreviousLevel={handlePreviousLevel}
-              isNextLevelAvailable={isNextLevelAvailable}
-              isPreviousLevelAvailable={isPreviousLevelAvailable}
-            />
-          ) : (
-            <>
-              <LevelSelect 
-                levels={levels} 
-                unlockedLevels={unlockedLevels} 
-                onLevelSelect={handleLevelSelect} 
+          <main className="flex-grow flex flex-col justify-center">
+            {isLoading ? (
+              renderLoadingSkeleton()
+            ) : currentLevel ? (
+              <Game 
+                level={currentLevel} 
+                onWin={handleGameWin}
+                onExit={handleExitGame}
+                onNextLevel={handleNextLevel}
+                onPreviousLevel={handlePreviousLevel}
+                isNextLevelAvailable={isNextLevelAvailable}
+                isPreviousLevelAvailable={isPreviousLevelAvailable}
               />
-            </>
-          )}
+            ) : (
+              <>
+                <LevelSelect 
+                  levels={levels} 
+                  unlockedLevels={unlockedLevels} 
+                  onLevelSelect={handleLevelSelect} 
+                />
+              </>
+            )}
+          </main>
         </div>
-      </main>
     </div>
   );
 }
+
+    
