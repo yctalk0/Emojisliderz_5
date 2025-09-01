@@ -17,8 +17,8 @@ export const emojiList = [
 ];
 
 const difficulties = {
-  'Easy': { gridSize: 2, count: 158 },
-  'Hard': { gridSize: 3, count: 157 },
+  'Easy': { gridSize: 2, count: 315 },
+  'Hard': { gridSize: 3, count: 315 },
 } as const;
 
 export const levels: Level[] = [];
@@ -31,13 +31,16 @@ Object.entries(difficulties).forEach(([difficulty, config]) => {
     const difficultyTyped = difficulty as 'Easy' | 'Hard';
     const id = `${difficultyTyped.toLowerCase().replace(' ', '-')}-${i}`;
     
+    // We'll loop the images if we run out of unique ones.
+    const imageNumber = ((imageCounter - 1) % 315) + 1;
+    
     levels.push({
       id: id,
       difficulty: difficultyTyped,
       gridSize: config.gridSize,
       levelNumber: i,
       emoji: emoji,
-      imageSrc: `/assets/emoji/${imageCounter}.png`,
+      imageSrc: `/assets/emoji/${imageNumber}.png`,
       imageHint: 'emoji puzzle', // Generic hint for now
     });
     
