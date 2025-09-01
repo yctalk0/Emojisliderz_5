@@ -1,11 +1,12 @@
+
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Level } from '@/lib/game-data';
 import { levels } from '@/lib/game-data';
 import LevelSelect from '@/components/game/level-select';
 import Game from '@/components/game/game';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Smile } from 'lucide-react';
+import { ArrowLeft, Smile, Volume2, VolumeX } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from './ui/skeleton';
 import useAdMob from '@/hooks/use-admob';
@@ -15,7 +16,39 @@ export default function GamePage() {
   const [unlockedLevels, setUnlockedLevels] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [easyLevelsCompleted, setEasyLevelsCompleted] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
   const { prepareInterstitial, showInterstitial, isInitialized } = useAdMob();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    // Initialize audio element on client
+    if (typeof window !== "undefined") {
+        const audio = new Audio('/assets/emoji/music/Opening.mp3');
+        audio.loop = true;
+        audioRef.current = audio;
+    }
+  }, []);
+  
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    
+    if (currentLevel === null && !isLoading) {
+      if (!isMuted) {
+        audio.play().catch(error => console.log("Audio play failed:", error));
+      }
+    } else {
+      audio.pause();
+    }
+  }, [currentLevel, isLoading, isMuted]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    audio.muted = isMuted;
+
+  }, [isMuted]);
 
   useEffect(() => {
     if (isInitialized) {
@@ -104,6 +137,10 @@ export default function GamePage() {
         }
     }
   }
+  
+  const toggleMute = () => {
+    setIsMuted(prev => !prev);
+  }
 
   const isNextLevelAvailable = currentLevel ? levels.findIndex(l => l.id === currentLevel.id) < levels.length - 1 && unlockedLevels.includes(levels[levels.findIndex(l => l.id === currentLevel.id) + 1].id) : false;
   const isPreviousLevelAvailable = currentLevel ? levels.findIndex(l => l.id === currentLevel.id) > 0 : false;
@@ -130,6 +167,9 @@ export default function GamePage() {
                     <ArrowLeft className="h-8 w-8" strokeWidth={2.5} />
                 </Button>
             )}
+             <Button variant="ghost" size="icon" className="absolute top-1/2 right-0 -translate-y-1/2" onClick={toggleMute}>
+                {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
+             </Button>
             <div className="flex justify-center items-center gap-3">
               <Smile className="w-8 h-8 text-primary" />
               <h1 className="text-4xl font-extrabold tracking-tighter text-primary font-headline">EmojiSliderz</h1>
