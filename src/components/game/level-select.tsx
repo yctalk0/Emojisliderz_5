@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Lock, ArrowLeft, ArrowRight, Volume2, VolumeX, Volume1 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Slider } from '@/components/ui/slider';
 
 
@@ -142,32 +141,21 @@ const LevelSelect = ({ levels, unlockedLevels, onLevelSelect, volume, setVolume 
           />
         )
       })}
-      <div className="flex justify-center items-center py-4">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon">
-              {renderVolumeIcon()}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-56">
-            <div className="grid gap-4">
-              <div className="space-y-2">
-                <h4 className="font-medium leading-none">Volume</h4>
-                <p className="text-sm text-muted-foreground">
-                  Set the volume for the game sounds.
-                </p>
-              </div>
-              <Slider
-                defaultValue={[volume * 100]}
-                max={100}
-                step={1}
-                onValueChange={(value) => setVolume(value[0] / 100)}
-                className="w-full"
-              />
-            </div>
-          </PopoverContent>
-        </Popover>
+      <div className="flex justify-center items-center gap-4 px-4 py-2">
+        <div className="text-muted-foreground">
+          {renderVolumeIcon()}
+        </div>
+        <Slider
+          defaultValue={[volume * 100]}
+          max={100}
+          step={1}
+          onValueChange={(value) => setVolume(value[0] / 100)}
+          className="w-full max-w-xs"
+        />
       </div>
+      <Card className="w-full h-24 flex items-center justify-center bg-secondary/50 border-dashed">
+        <p className="text-muted-foreground">Advertisement</p>
+      </Card>
     </div>
   );
 };
