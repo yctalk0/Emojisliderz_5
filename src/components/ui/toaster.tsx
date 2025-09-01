@@ -11,7 +11,11 @@ import {
 } from "@/components/ui/toast"
 
 export function Toaster() {
-  const { toasts } = useToast()
+  const { toasts, mounted } = useToast()
+
+  if (!mounted) {
+    return null
+  }
 
   return (
     <ToastProvider>
