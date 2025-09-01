@@ -30,6 +30,7 @@ export default function GamePage() {
         
         const gameAudio = new Audio('/assets/emoji/music/bgmusic.mp3');
         gameAudio.loop = true;
+        gameAudio.volume = 0.2; // Set volume to 20%
         gameAudioRef.current = gameAudio;
         
         const levelCompleteAudio = new Audio('/assets/emoji/music/level_complete.mp3');
@@ -44,16 +45,19 @@ export default function GamePage() {
     
     if (currentLevel === null && !isLoading) {
       gameAudio.pause();
+      gameAudio.currentTime = 0;
       if (!isMuted) {
         menuAudio.play().catch(error => console.log("Menu audio play failed:", error));
       }
-    } else {
+    } else if (currentLevel !== null) {
       menuAudio.pause();
-      if (currentLevel !== null && !isMuted) {
+      menuAudio.currentTime = 0;
+      if (!isMuted) {
         gameAudio.play().catch(error => console.log("Game audio play failed:", error));
-      } else {
-        gameAudio.pause();
       }
+    } else {
+        menuAudio.pause();
+        gameAudio.pause();
     }
   }, [currentLevel, isLoading, isMuted]);
 
