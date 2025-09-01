@@ -2,7 +2,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import type { Level } from '@/lib/game-data';
-import { levels, emojiList } from '@/lib/game-data';
+import { levels } from '@/lib/game-data';
 import LevelSelect from '@/components/game/level-select';
 import Game from '@/components/game/game';
 import { Button } from '@/components/ui/button';
@@ -10,10 +10,29 @@ import { ArrowLeft, Volume2, VolumeX, Smile } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
+function ClientOnly({ children }: { children: React.ReactNode }) {
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  if (!hasMounted) {
+    return (
+        <div className="space-y-6">
+            <Skeleton className="h-40 w-full" />
+            <Skeleton className="h-40 w-full" />
+        </div>
+    );
+  }
+
+  return <>{children}</>;
+}
+
+
 export default function Home() {
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
   const [unlockedLevels, setUnlockedLevels] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [hasInteracted, setHasInteracted] = useState(false);
@@ -45,7 +64,6 @@ export default function Home() {
         setCurrentLevel(lastPlayedLevel);
       }
     }
-    setIsLoading(false);
   }, []);
   
   useEffect(() => {
@@ -139,38 +157,35 @@ export default function Home() {
             <p className="text-muted-foreground mt-2 text-lg">Slide the tiles to solve the emoji puzzle!</p>
           </header>
           
-          {isLoading ? (
-             <div className="space-y-6">
-                <Skeleton className="h-40 w-full" />
-                <Skeleton className="h-40 w-full" />
-             </div>
-          ) : currentLevel ? (
-            <Game 
-              level={currentLevel} 
-              onWin={handleGameWin}
-              onExit={handleExitGame}
-              onNextLevel={handleNextLevel}
-              onPreviousLevel={handlePreviousLevel}
-              isNextLevelAvailable={isNextLevelAvailable}
-              isPreviousLevelAvailable={isPreviousLevelAvailable}
-              isMuted={isMuted}
-              onToggleMute={toggleMute}
-            />
-          ) : (
-            <>
-              <LevelSelect 
-                levels={levels} 
-                unlockedLevels={unlockedLevels} 
-                onLevelSelect={handleLevelSelect} 
+          <ClientOnly>
+            {currentLevel ? (
+              <Game 
+                level={currentLevel} 
+                onWin={handleGameWin}
+                onExit={handleExitGame}
+                onNextLevel={handleNextLevel}
+                onPreviousLevel={handlePreviousLevel}
+                isNextLevelAvailable={isNextLevelAvailable}
+                isPreviousLevelAvailable={isPreviousLevelAvailable}
+                isMuted={isMuted}
+                onToggleMute={toggleMute}
               />
-               <div className="flex justify-center mt-4">
-                  <Button onClick={toggleMute} variant="secondary" className="px-6 py-4">
-                      {isMuted ? <VolumeX className="h-6 w-6 mr-2" /> : <Volume2 className="h-6 w-6 mr-2" />}
-                      <span>{isMuted ? 'Unmute' : 'Mute'}</span>
-                  </Button>
-               </div>
-            </>
-          )}
+            ) : (
+              <>
+                <LevelSelect 
+                  levels={levels} 
+                  unlockedLevels={unlockedLevels} 
+                  onLevelSelect={handleLevelSelect} 
+                />
+                 <div className="flex justify-center mt-4">
+                    <Button onClick={toggleMute} variant="secondary" className="px-6 py-4">
+                        {isMuted ? <VolumeX className="h-6 w-6 mr-2" /> : <Volume2 className="h-6 w-6 mr-2" />}
+                        <span>{isMuted ? 'Unmute' : 'Mute'}</span>
+                    </Button>
+                 </div>
+              </>
+            )}
+          </ClientOnly>
         </div>
       </main>
       <footer className="w-full p-4">
