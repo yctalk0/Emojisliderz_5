@@ -43,23 +43,18 @@ export default function Home() {
     setUnlockedLevels(initialUnlocked);
   }, [isClient]);
   
-  useEffect(() => {
+  const playAudio = () => {
     const audio = audioRef.current;
-    if (audio) {
-      if (hasInteracted && !isMuted) {
-        audio.loop = true;
-        audio.play().catch(error => console.error("Audio play failed:", error));
-      } else {
-        audio.pause();
-      }
-      audio.muted = isMuted;
+    if (audio && !isMuted) {
+      audio.loop = true;
+      audio.play().catch(error => console.error("Audio play failed:", error));
     }
-  }, [isMuted, hasInteracted]);
-
+  };
 
   const handleLevelSelect = (level: Level) => {
     if (!hasInteracted) {
-        setHasInteracted(true);
+      setHasInteracted(true);
+      playAudio();
     }
     setCurrentLevel(level);
   };
@@ -104,10 +99,22 @@ export default function Home() {
   }
 
   const toggleMute = () => {
-      if (!hasInteracted) {
-        setHasInteracted(true);
+    const audio = audioRef.current;
+    if (!hasInteracted) {
+      setHasInteracted(true);
+    }
+    
+    const newMutedState = !isMuted;
+    setIsMuted(newMutedState);
+
+    if (audio) {
+      audio.muted = newMutedState;
+      if (!newMutedState && audio.paused && hasInteracted) {
+        playAudio();
+      } else if (newMutedState) {
+        audio.pause();
       }
-      setIsMuted(!isMuted);
+    }
   }
 
   const isNextLevelAvailable = currentLevel ? levels.findIndex(l => l.id === currentLevel.id) < levels.length - 1 && unlockedLevels.includes(levels[levels.findIndex(l => l.id === currentLevel.id) + 1].id) : false;
