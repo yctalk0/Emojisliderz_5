@@ -15,30 +15,26 @@ export default function Home() {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    setIsClient(true);
-  }, []);
+    // This effect runs only on the client, after the component has mounted.
+    const defaultUnlocked = levels
+      .filter(level => level.levelNumber === 1)
+      .map(level => level.id);
 
-  useEffect(() => {
-    if (isClient) {
-      const defaultUnlocked = levels
-        .filter(level => level.levelNumber === 1)
-        .map(level => level.id);
-
-      const savedProgress = localStorage.getItem('unlockedLevels');
-      let initialUnlocked = defaultUnlocked;
-      if (savedProgress) {
-        try {
-          const parsedProgress = JSON.parse(savedProgress);
-          if (Array.isArray(parsedProgress)) {
-            initialUnlocked = [...new Set([...defaultUnlocked, ...parsedProgress])];
-          }
-        } catch (e) {
-          console.error("Failed to parse unlocked levels from localStorage", e);
+    const savedProgress = localStorage.getItem('unlockedLevels');
+    let initialUnlocked = defaultUnlocked;
+    if (savedProgress) {
+      try {
+        const parsedProgress = JSON.parse(savedProgress);
+        if (Array.isArray(parsedProgress)) {
+          initialUnlocked = [...new Set([...defaultUnlocked, ...parsedProgress])];
         }
+      } catch (e) {
+        console.error("Failed to parse unlocked levels from localStorage", e);
       }
-      setUnlockedLevels(initialUnlocked);
     }
-  }, [isClient]);
+    setUnlockedLevels(initialUnlocked);
+    setIsClient(true); // Mark that we are now on the client and have loaded state.
+  }, []);
   
   const handleLevelSelect = (level: Level) => {
     setCurrentLevel(level);
@@ -86,6 +82,8 @@ export default function Home() {
   const isPreviousLevelAvailable = currentLevel ? levels.findIndex(l => l.id === currentLevel.id) > 0 : false;
   
   if (!isClient) {
+    // Render nothing on the server and on the initial client render.
+    // This prevents the hydration mismatch.
     return null;
   }
 
