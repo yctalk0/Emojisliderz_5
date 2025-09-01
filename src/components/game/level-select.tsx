@@ -9,6 +9,12 @@ import { Lock, ArrowLeft, ArrowRight, Volume2, VolumeX, Volume1 } from 'lucide-r
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { Slider } from '@/components/ui/slider';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import AdBanner from './ad-banner';
 
 
 interface LevelSelectProps {
@@ -123,9 +129,7 @@ const LevelSelect = ({ levels, unlockedLevels, onLevelSelect }: LevelSelectProps
         return (
           <React.Fragment key={difficulty}>
             {difficulty === 'Easy' && (
-              <Card className="w-full h-24 flex items-center justify-center bg-secondary/50 border-dashed mb-4">
-                <p className="text-muted-foreground">Advertisement</p>
-              </Card>
+              <AdBanner position="top" />
             )}
             <DifficultyCard 
               difficulty={difficulty}
@@ -141,5 +145,3 @@ const LevelSelect = ({ levels, unlockedLevels, onLevelSelect }: LevelSelectProps
 };
 
 export default LevelSelect;
-
-    

@@ -14,6 +14,7 @@ import Confetti from './confetti';
 import { Award, Clock, Move, Play, SkipForward, X } from 'lucide-react';
 import Image from 'next/image';
 import { Card } from '../ui/card';
+import AdBanner from './ad-banner';
 
 interface WinModalProps {
   isOpen: boolean;
@@ -48,16 +49,15 @@ const WinModal = ({
     <AlertDialog open={isOpen} onOpenChange={onExit}>
       <AlertDialogContent className="text-center p-4">
         <Confetti />
-         <AlertDialogCancel asChild>
-          <Button
+         <Button
             variant="ghost"
             size="icon"
+            onClick={onExit}
             className="absolute top-2 right-2"
           >
             <X className="h-6 w-6" />
             <span className="sr-only">Close</span>
           </Button>
-        </AlertDialogCancel>
         <AlertDialogHeader className="p-0">
           <div className="mx-auto bg-accent rounded-full p-3 w-fit -mt-12 border-4 border-background">
             <Award className="w-10 h-10 text-accent-foreground" />
@@ -86,9 +86,7 @@ const WinModal = ({
               Next Level
           </Button>
           <div className="my-1">
-            <Card className="w-full h-20 flex items-center justify-center bg-secondary/50 border-dashed">
-                <p className="text-muted-foreground text-sm">Advertisement</p>
-            </Card>
+            <AdBanner position="bottom" />
           </div>
           <Button onClick={onPlayAgain} variant="secondary" className="w-full h-11">
             <Play className="mr-2 h-5 w-5" />

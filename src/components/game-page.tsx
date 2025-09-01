@@ -12,6 +12,7 @@ import useAdMob from '@/hooks/use-admob';
 import Image from 'next/image';
 import { Card } from './ui/card';
 import { Slider } from './ui/slider';
+import AdBanner from './game/ad-banner';
 
 export default function GamePage() {
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
@@ -252,9 +253,7 @@ export default function GamePage() {
                   className="w-full max-w-xs"
                 />
               </div>
-              <Card className="w-full h-24 flex items-center justify-center bg-secondary/50 border-dashed">
-                  <p className="text-muted-foreground">Advertisement</p>
-              </Card>
+              <AdBanner position="bottom" />
           </footer>
         </div>
     </div>

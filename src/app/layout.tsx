@@ -28,8 +28,6 @@ export default function RootLayout({
           <main className="flex-grow flex flex-col">
             {children}
           </main>
-          <footer className="w-full shrink-0">
-          </footer>
         </div>
         <Toaster />
       </body>
