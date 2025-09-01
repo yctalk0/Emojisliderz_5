@@ -116,6 +116,9 @@ const LevelSelect = ({ levels, unlockedLevels, onLevelSelect }: LevelSelectProps
 
   return (
     <div className="space-y-4">
+       <Card className="w-full h-24 flex items-center justify-center bg-secondary/50 border-dashed">
+          <p className="text-muted-foreground">Advertisement</p>
+      </Card>
       {levelsByDifficulty.map(({ difficulty, levels }) => {
         if (levels.length === 0) return null;
         return (
