@@ -30,7 +30,7 @@ export default function GamePage() {
         
         const gameAudio = new Audio('/assets/emoji/music/bgmusic.mp3');
         gameAudio.loop = true;
-        gameAudio.volume = 0.3; // Set volume to 30%
+        gameAudio.volume = 0.2; // Set volume to 20%
         gameAudioRef.current = gameAudio;
         
         const levelCompleteAudio = new Audio('/assets/emoji/music/level_complete.mp3');
