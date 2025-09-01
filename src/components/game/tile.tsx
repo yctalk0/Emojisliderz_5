@@ -1,6 +1,8 @@
 
 'use client';
 
+import { cn } from '@/lib/utils';
+
 interface TileProps {
   value: number;
   gridSize: number;
@@ -34,10 +36,15 @@ const Tile = ({ value, gridSize, imageSrc, onClick, tileSize, correctPosition, c
     transition: 'transform 0.2s ease-in-out',
   };
 
+  const isCorrect = correctPosition === currentPosition;
+
   return (
     <button
       onClick={() => onClick(value)}
-      className="absolute rounded-md shadow-md hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-ring focus:z-10"
+      className={cn(
+        "absolute rounded-md shadow-md hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-ring focus:z-10",
+        isCorrect && "ring-4 ring-offset-0 ring-green-500/80 shadow-[0_0_20px_theme(colors.green.500)] transition-all duration-300"
+      )}
       style={tileStyle}
       aria-label={`Tile ${value}`}
     >
