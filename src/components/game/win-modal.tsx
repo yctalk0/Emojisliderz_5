@@ -7,10 +7,11 @@ import {
   AlertDialogTitle,
   AlertDialogDescription,
   AlertDialogFooter,
+  AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import Confetti from './confetti';
-import { Award, Clock, Move, Play, SkipForward } from 'lucide-react';
+import { Award, Clock, Move, Play, SkipForward, X } from 'lucide-react';
 import Image from 'next/image';
 import { Card } from '../ui/card';
 
@@ -44,9 +45,19 @@ const WinModal = ({
   if (!isOpen) return null;
 
   return (
-    <AlertDialog open={isOpen}>
+    <AlertDialog open={isOpen} onOpenChange={onExit}>
       <AlertDialogContent className="text-center p-4">
         <Confetti />
+         <AlertDialogCancel asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 right-2"
+          >
+            <X className="h-6 w-6" />
+            <span className="sr-only">Close</span>
+          </Button>
+        </AlertDialogCancel>
         <AlertDialogHeader className="p-0">
           <div className="mx-auto bg-accent rounded-full p-3 w-fit -mt-12 border-4 border-background">
             <Award className="w-10 h-10 text-accent-foreground" />
