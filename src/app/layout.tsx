@@ -29,11 +29,6 @@ export default function RootLayout({
             {children}
           </main>
           <footer className="w-full shrink-0">
-            <div className="p-4">
-              <Card className="max-w-md mx-auto h-20 flex items-center justify-center bg-secondary/50 border-dashed">
-                <p className="text-muted-foreground">Advertisement</p>
-              </Card>
-            </div>
           </footer>
         </div>
         <Toaster />
