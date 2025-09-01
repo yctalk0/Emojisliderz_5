@@ -73,8 +73,7 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
                 onClick={() => onLevelSelect(level)}
                 className={cn(
                   "h-16 w-full text-4xl font-bold flex items-center justify-center transition-all duration-200 ease-in-out hover:scale-110 p-0 relative overflow-hidden",
-                  isUnlocked ? config.levelButtonClass : "bg-slate-700/50 cursor-not-allowed",
-                  !isUnlocked && "opacity-100"
+                  isUnlocked ? config.levelButtonClass : "bg-slate-700/50 cursor-not-allowed"
                 )}
                 aria-label={`Level ${level.levelNumber}`}
               >
