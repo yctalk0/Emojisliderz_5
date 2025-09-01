@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { Level } from '@/lib/game-data';
 import { levels } from '@/lib/game-data';
 import LevelSelect from '@/components/game/level-select';
@@ -8,12 +8,21 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Smile } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from './ui/skeleton';
+import useAdMob from '@/hooks/use-admob';
 
 export default function GamePage() {
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
   const [unlockedLevels, setUnlockedLevels] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [easyLevelsCompleted, setEasyLevelsCompleted] = useState(0);
+  const { prepareInterstitial, showInterstitial, isInitialized } = useAdMob();
 
+  useEffect(() => {
+    if (isInitialized) {
+      prepareInterstitial();
+    }
+  }, [isInitialized, prepareInterstitial]);
+  
   useEffect(() => {
     const defaultUnlocked = levels
       .filter(level => level.levelNumber === 1)
@@ -32,6 +41,12 @@ export default function GamePage() {
       }
     }
     setUnlockedLevels(initialUnlocked);
+    
+    const savedEasyCompleted = localStorage.getItem('easyLevelsCompleted');
+    if(savedEasyCompleted) {
+        setEasyLevelsCompleted(JSON.parse(savedEasyCompleted));
+    }
+    
     setIsLoading(false);
   }, []);
   
@@ -41,6 +56,19 @@ export default function GamePage() {
 
   const handleGameWin = () => {
     if (currentLevel) {
+      // Show Ad logic
+      if (currentLevel.difficulty === 'Hard') {
+        showInterstitial();
+      } else if (currentLevel.difficulty === 'Easy') {
+        const newCount = easyLevelsCompleted + 1;
+        setEasyLevelsCompleted(newCount);
+        localStorage.setItem('easyLevelsCompleted', JSON.stringify(newCount));
+        if (newCount % 3 === 0) {
+          showInterstitial();
+        }
+      }
+
+      // Unlock next level logic
       const currentIndex = levels.findIndex(l => l.id === currentLevel.id);
       if (currentIndex < levels.length - 1) {
         const nextLevel = levels[currentIndex + 1];

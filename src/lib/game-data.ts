@@ -17,15 +17,15 @@ export const emojiList = [
 ];
 
 const difficulties = {
-  'Easy': { gridSize: 2, count: 145 },
-  'Hard': { gridSize: 3, count: 145 },
+  'Easy': { gridSize: 2, count: 162 },
+  'Hard': { gridSize: 3, count: 162 },
 } as const;
 
 export const levels: Level[] = [];
 
+let imageCounter = 1;
 Object.entries(difficulties).forEach(([difficulty, config]) => {
   let emojiIndex = 0;
-  let imageCounter = 1;
   for (let i = 1; i <= config.count; i++) {
     const emoji = emojiList[emojiIndex % emojiList.length];
     const difficultyTyped = difficulty as 'Easy' | 'Hard';
