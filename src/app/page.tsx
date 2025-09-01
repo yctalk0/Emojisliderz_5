@@ -19,25 +19,25 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (!isClient) return;
+    if (isClient) {
+      const defaultUnlocked = levels
+        .filter(level => level.levelNumber === 1)
+        .map(level => level.id);
 
-    const defaultUnlocked = levels
-      .filter(level => level.levelNumber === 1)
-      .map(level => level.id);
-
-    const savedProgress = localStorage.getItem('unlockedLevels');
-    let initialUnlocked = defaultUnlocked;
-    if (savedProgress) {
-      try {
-        const parsedProgress = JSON.parse(savedProgress);
-        if (Array.isArray(parsedProgress)) {
-          initialUnlocked = [...new Set([...defaultUnlocked, ...parsedProgress])];
+      const savedProgress = localStorage.getItem('unlockedLevels');
+      let initialUnlocked = defaultUnlocked;
+      if (savedProgress) {
+        try {
+          const parsedProgress = JSON.parse(savedProgress);
+          if (Array.isArray(parsedProgress)) {
+            initialUnlocked = [...new Set([...defaultUnlocked, ...parsedProgress])];
+          }
+        } catch (e) {
+          console.error("Failed to parse unlocked levels from localStorage", e);
         }
-      } catch (e) {
-        console.error("Failed to parse unlocked levels from localStorage", e);
       }
+      setUnlockedLevels(initialUnlocked);
     }
-    setUnlockedLevels(initialUnlocked);
   }, [isClient]);
   
   const handleLevelSelect = (level: Level) => {
@@ -49,7 +49,6 @@ export default function Home() {
       const currentIndex = levels.findIndex(l => l.id === currentLevel.id);
       if (currentIndex < levels.length - 1) {
         const nextLevel = levels[currentIndex + 1];
-        // Unlock next level regardless of difficulty, as levels are now sequential
         const newUnlocked = [...new Set([...unlockedLevels, nextLevel.id])];
         setUnlockedLevels(newUnlocked);
         localStorage.setItem('unlockedLevels', JSON.stringify(newUnlocked));
