@@ -20,6 +20,7 @@ export default function GamePage() {
   const { prepareInterstitial, showInterstitial, isInitialized } = useAdMob();
   const menuAudioRef = useRef<HTMLAudioElement | null>(null);
   const gameAudioRef = useRef<HTMLAudioElement | null>(null);
+  const levelCompleteAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -30,6 +31,9 @@ export default function GamePage() {
         const gameAudio = new Audio('/assets/emoji/music/bgmusic.mp3');
         gameAudio.loop = true;
         gameAudioRef.current = gameAudio;
+        
+        const levelCompleteAudio = new Audio('/assets/emoji/music/level_complete.mp3');
+        levelCompleteAudioRef.current = levelCompleteAudio;
     }
   }, []);
   
@@ -56,10 +60,12 @@ export default function GamePage() {
   useEffect(() => {
     const menuAudio = menuAudioRef.current;
     const gameAudio = gameAudioRef.current;
-    if (!menuAudio || !gameAudio) return;
+    const levelCompleteAudio = levelCompleteAudioRef.current;
+    if (!menuAudio || !gameAudio || !levelCompleteAudio) return;
 
     menuAudio.muted = isMuted;
     gameAudio.muted = isMuted;
+    levelCompleteAudio.muted = isMuted;
 
   }, [isMuted]);
 
@@ -102,6 +108,11 @@ export default function GamePage() {
 
   const handleGameWin = () => {
     if (currentLevel) {
+      gameAudioRef.current?.pause();
+      if (!isMuted) {
+        levelCompleteAudioRef.current?.play().catch(e => console.error("Could not play win sound", e));
+      }
+
       // Show Ad logic
       if (currentLevel.difficulty === 'Hard') {
         showInterstitial();
