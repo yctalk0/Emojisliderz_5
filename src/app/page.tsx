@@ -1,20 +1,17 @@
 
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import type { Level } from '@/lib/game-data';
 import { levels } from '@/lib/game-data';
 import LevelSelect from '@/components/game/level-select';
 import Game from '@/components/game/game';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Volume2, VolumeX, Smile } from 'lucide-react';
+import { ArrowLeft, Smile } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 
 export default function Home() {
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
   const [unlockedLevels, setUnlockedLevels] = useState<string[]>([]);
-  const [isMuted, setIsMuted] = useState(false);
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [hasInteracted, setHasInteracted] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -43,19 +40,7 @@ export default function Home() {
     setUnlockedLevels(initialUnlocked);
   }, [isClient]);
   
-  const playAudio = () => {
-    const audio = audioRef.current;
-    if (audio && !isMuted && audio.paused) {
-      audio.loop = true;
-      audio.play().catch(error => console.error("Audio play failed:", error));
-    }
-  };
-
   const handleLevelSelect = (level: Level) => {
-    if (!hasInteracted) {
-      setHasInteracted(true);
-    }
-    playAudio();
     setCurrentLevel(level);
   };
 
@@ -98,25 +83,6 @@ export default function Home() {
     }
   }
 
-  const toggleMute = () => {
-    const audio = audioRef.current;
-    if (!hasInteracted) {
-      setHasInteracted(true);
-    }
-    
-    const newMutedState = !isMuted;
-    setIsMuted(newMutedState);
-
-    if (audio) {
-      audio.muted = newMutedState;
-      if (!newMutedState) {
-        playAudio();
-      } else {
-        audio.pause();
-      }
-    }
-  }
-
   const isNextLevelAvailable = currentLevel ? levels.findIndex(l => l.id === currentLevel.id) < levels.length - 1 && unlockedLevels.includes(levels[levels.findIndex(l => l.id === currentLevel.id) + 1].id) : false;
   const isPreviousLevelAvailable = currentLevel ? levels.findIndex(l => l.id === currentLevel.id) > 0 : false;
   
@@ -126,7 +92,6 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground font-body">
-      <audio ref={audioRef} src="/assets/emoji/music/bgmusic.mp3" preload="auto" />
       <main className="flex-grow flex flex-col items-center justify-center p-4 -mt-7">
         <div className="w-full max-w-md mx-auto">
           <header className="relative text-center mb-8">
@@ -151,8 +116,6 @@ export default function Home() {
               onPreviousLevel={handlePreviousLevel}
               isNextLevelAvailable={isNextLevelAvailable}
               isPreviousLevelAvailable={isPreviousLevelAvailable}
-              isMuted={isMuted}
-              onToggleMute={toggleMute}
             />
           ) : (
             <>
@@ -161,12 +124,6 @@ export default function Home() {
                 unlockedLevels={unlockedLevels} 
                 onLevelSelect={handleLevelSelect} 
               />
-               <div className="flex justify-center mt-4">
-                  <Button onClick={toggleMute} variant="secondary" className="px-6 py-4">
-                      {isMuted ? <VolumeX className="h-6 w-6 mr-2" /> : <Volume2 className="h-6 w-6 mr-2" />}
-                      <span>{isMuted ? 'Unmute' : 'Mute'}</span>
-                  </Button>
-               </div>
             </>
           )}
         </div>

@@ -2,7 +2,7 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Clock, HelpCircle, Move, RotateCw, WandSparkles, Undo2, Volume2, VolumeX } from 'lucide-react';
+import { Clock, HelpCircle, Move, RotateCw, WandSparkles, Undo2 } from 'lucide-react';
 
 interface GameControlsProps {
   moves: number;
@@ -13,11 +13,9 @@ interface GameControlsProps {
   onSolve: () => void;
   canUndo: boolean;
   canSolve: boolean;
-  isMuted: boolean;
-  onToggleMute: () => void;
 }
 
-const GameControls = ({ moves, time, onHint, onUndo, onRestart, onSolve, canUndo, canSolve, isMuted, onToggleMute }: GameControlsProps) => {
+const GameControls = ({ moves, time, onHint, onUndo, onRestart, onSolve, canUndo, canSolve }: GameControlsProps) => {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
     const secs = (seconds % 60).toString().padStart(2, '0');
@@ -42,9 +40,6 @@ const GameControls = ({ moves, time, onHint, onUndo, onRestart, onSolve, canUndo
               <span>{formatTime(time)}</span>
             </div>
           </div>
-           <Button onClick={onToggleMute} variant="ghost" size="icon">
-              {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
-           </Button>
         </CardContent>
       </Card>
       <div className="grid grid-cols-4 gap-2">

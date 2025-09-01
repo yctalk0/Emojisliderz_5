@@ -1,6 +1,6 @@
 
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import type { Level } from '@/lib/game-data';
 import useGameLogic from '@/hooks/use-game-logic';
 import GameBoard from './game-board';
@@ -19,8 +19,6 @@ interface GameProps {
   onPreviousLevel: () => void;
   isNextLevelAvailable: boolean;
   isPreviousLevelAvailable: boolean;
-  isMuted: boolean;
-  onToggleMute: () => void;
 }
 
 const Game = ({ 
@@ -31,8 +29,6 @@ const Game = ({
   onPreviousLevel, 
   isNextLevelAvailable,
   isPreviousLevelAvailable,
-  isMuted,
-  onToggleMute
 }: GameProps) => {
   const { toast } = useToast();
   const {
@@ -84,8 +80,6 @@ const Game = ({
         onSolve={autoSolve}
         canUndo={canUndo}
         canSolve={canSolve}
-        isMuted={isMuted}
-        onToggleMute={onToggleMute}
       />
       <div className="flex items-center gap-2">
         <Button size="icon" variant="ghost" onClick={onPreviousLevel} disabled={!isPreviousLevelAvailable}>
