@@ -8,27 +8,6 @@ import Game from '@/components/game/game';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Volume2, VolumeX, Smile } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-
-function ClientOnly({ children }: { children: React.ReactNode }) {
-  const [hasMounted, setHasMounted] = useState(false);
-
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
-
-  if (!hasMounted) {
-    return (
-        <div className="space-y-6">
-            <Skeleton className="h-40 w-full" />
-            <Skeleton className="h-40 w-full" />
-        </div>
-    );
-  }
-
-  return <>{children}</>;
-}
-
 
 export default function Home() {
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
@@ -38,7 +17,6 @@ export default function Home() {
   const [hasInteracted, setHasInteracted] = useState(false);
 
   useEffect(() => {
-    // This code now only runs on the client
     const defaultUnlocked = levels
       .filter(level => level.levelNumber === 1)
       .map(level => level.id);
@@ -56,14 +34,6 @@ export default function Home() {
       }
     }
     setUnlockedLevels(initialUnlocked);
-
-    const lastPlayedLevelId = localStorage.getItem('lastPlayedLevel');
-    if (lastPlayedLevelId) {
-      const lastPlayedLevel = levels.find(l => l.id === lastPlayedLevelId);
-      if (lastPlayedLevel && initialUnlocked.includes(lastPlayedLevel.id)) {
-        setCurrentLevel(lastPlayedLevel);
-      }
-    }
   }, []);
   
   useEffect(() => {
@@ -85,7 +55,6 @@ export default function Home() {
         setHasInteracted(true);
     }
     setCurrentLevel(level);
-    localStorage.setItem('lastPlayedLevel', level.id);
   };
 
   const handleGameWin = () => {
@@ -97,14 +66,12 @@ export default function Home() {
         const newUnlocked = [...new Set([...unlockedLevels, nextLevel.id])];
         setUnlockedLevels(newUnlocked);
         localStorage.setItem('unlockedLevels', JSON.stringify(newUnlocked));
-        localStorage.setItem('lastPlayedLevel', nextLevel.id);
       }
     }
   };
 
   const handleExitGame = () => {
     setCurrentLevel(null);
-    localStorage.removeItem('lastPlayedLevel');
   }
 
   const handleNextLevel = () => {
@@ -112,8 +79,9 @@ export default function Home() {
         const currentIndex = levels.findIndex(l => l.id === currentLevel.id);
         if (currentIndex < levels.length - 1) {
             const nextLevel = levels[currentIndex + 1];
-            setCurrentLevel(nextLevel);
-            localStorage.setItem('lastPlayedLevel', nextLevel.id);
+            if (unlockedLevels.includes(nextLevel.id)) {
+                setCurrentLevel(nextLevel);
+            }
         }
     }
   }
@@ -124,7 +92,6 @@ export default function Home() {
         if (currentIndex > 0) {
             const previousLevel = levels[currentIndex - 1];
             setCurrentLevel(previousLevel);
-            localStorage.setItem('lastPlayedLevel', previousLevel.id);
         }
     }
   }
@@ -136,7 +103,7 @@ export default function Home() {
       setIsMuted(!isMuted);
   }
 
-  const isNextLevelAvailable = currentLevel ? levels.findIndex(l => l.id === currentLevel.id) < levels.length - 1 : false;
+  const isNextLevelAvailable = currentLevel ? levels.findIndex(l => l.id === currentLevel.id) < levels.length - 1 && unlockedLevels.includes(levels[levels.findIndex(l => l.id === currentLevel.id) + 1].id) : false;
   const isPreviousLevelAvailable = currentLevel ? levels.findIndex(l => l.id === currentLevel.id) > 0 : false;
 
   return (
@@ -157,35 +124,33 @@ export default function Home() {
             <p className="text-muted-foreground mt-2 text-lg">Slide the tiles to solve the emoji puzzle!</p>
           </header>
           
-          <ClientOnly>
-            {currentLevel ? (
-              <Game 
-                level={currentLevel} 
-                onWin={handleGameWin}
-                onExit={handleExitGame}
-                onNextLevel={handleNextLevel}
-                onPreviousLevel={handlePreviousLevel}
-                isNextLevelAvailable={isNextLevelAvailable}
-                isPreviousLevelAvailable={isPreviousLevelAvailable}
-                isMuted={isMuted}
-                onToggleMute={toggleMute}
+          {currentLevel ? (
+            <Game 
+              level={currentLevel} 
+              onWin={handleGameWin}
+              onExit={handleExitGame}
+              onNextLevel={handleNextLevel}
+              onPreviousLevel={handlePreviousLevel}
+              isNextLevelAvailable={isNextLevelAvailable}
+              isPreviousLevelAvailable={isPreviousLevelAvailable}
+              isMuted={isMuted}
+              onToggleMute={toggleMute}
+            />
+          ) : (
+            <>
+              <LevelSelect 
+                levels={levels} 
+                unlockedLevels={unlockedLevels} 
+                onLevelSelect={handleLevelSelect} 
               />
-            ) : (
-              <>
-                <LevelSelect 
-                  levels={levels} 
-                  unlockedLevels={unlockedLevels} 
-                  onLevelSelect={handleLevelSelect} 
-                />
-                 <div className="flex justify-center mt-4">
-                    <Button onClick={toggleMute} variant="secondary" className="px-6 py-4">
-                        {isMuted ? <VolumeX className="h-6 w-6 mr-2" /> : <Volume2 className="h-6 w-6 mr-2" />}
-                        <span>{isMuted ? 'Unmute' : 'Mute'}</span>
-                    </Button>
-                 </div>
-              </>
-            )}
-          </ClientOnly>
+               <div className="flex justify-center mt-4">
+                  <Button onClick={toggleMute} variant="secondary" className="px-6 py-4">
+                      {isMuted ? <VolumeX className="h-6 w-6 mr-2" /> : <Volume2 className="h-6 w-6 mr-2" />}
+                      <span>{isMuted ? 'Unmute' : 'Mute'}</span>
+                  </Button>
+               </div>
+            </>
+          )}
         </div>
       </main>
       <footer className="w-full p-4">
