@@ -6,10 +6,12 @@ import { levels } from '@/lib/game-data';
 import LevelSelect from '@/components/game/level-select';
 import Game from '@/components/game/game';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Volume1, Volume2, VolumeX } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import useAdMob from '@/hooks/use-admob';
 import Image from 'next/image';
+import { Card } from './ui/card';
+import { Slider } from './ui/slider';
 
 export default function GamePage() {
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
@@ -192,11 +194,17 @@ export default function GamePage() {
       </div>
     </div>
   );
+  
+  const renderVolumeIcon = () => {
+    if (volume === 0) return <VolumeX className="h-6 w-6" />;
+    if (volume < 0.5) return <Volume1 className="h-6 w-6" />;
+    return <Volume2 className="h-6 w-6" />;
+  }
 
   return (
     <div className="flex flex-col text-foreground font-body h-full flex-grow">
       <div className="w-full max-w-md mx-auto flex flex-col p-4 flex-grow">
-          <header className="relative text-center mb-8">
+          <header className="relative text-center mb-4">
             {currentLevel && (
                 <Button variant="ghost" size="icon" className="absolute top-1/2 left-0 -translate-y-1/2" onClick={handleExitGame}>
                     <ArrowLeft className="h-8 w-8" strokeWidth={2.5} />
@@ -228,11 +236,29 @@ export default function GamePage() {
                 levels={levels} 
                 unlockedLevels={unlockedLevels} 
                 onLevelSelect={handleLevelSelect}
-                volume={volume}
-                setVolume={setVolume}
               />
             )}
           </main>
+          <footer className="mt-auto pt-4 space-y-4">
+             <div className="flex justify-center items-center gap-4 px-4 py-2">
+                <div className="text-muted-foreground">
+                  {renderVolumeIcon()}
+                </div>
+                <Slider
+                  defaultValue={[volume * 100]}
+                  max={100}
+                  step={1}
+                  onValueChange={(value) => setVolume(value[0] / 100)}
+                  className="w-full max-w-xs"
+                />
+              </div>
+              <Card className="w-full h-24 flex items-center justify-center bg-secondary/50 border-dashed">
+                  <p className="text-muted-foreground">Advertisement</p>
+              </Card>
+               <Card className="w-full h-24 flex items-center justify-center bg-secondary/50 border-dashed">
+                  <p className="text-muted-foreground">Advertisement</p>
+              </Card>
+          </footer>
         </div>
     </div>
   );

@@ -15,8 +15,6 @@ interface LevelSelectProps {
   levels: Level[];
   unlockedLevels: string[];
   onLevelSelect: (level: Level) => void;
-  volume: number;
-  setVolume: (volume: number) => void;
 }
 
 const difficultyConfig = {
@@ -110,7 +108,7 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
   )
 }
 
-const LevelSelect = ({ levels, unlockedLevels, onLevelSelect, volume, setVolume }: LevelSelectProps) => {
+const LevelSelect = ({ levels, unlockedLevels, onLevelSelect }: LevelSelectProps) => {
   const difficulties: ('Easy' | 'Hard')[] = ['Easy', 'Hard'];
   
   const levelsByDifficulty = difficulties.map(difficulty => ({
@@ -118,17 +116,8 @@ const LevelSelect = ({ levels, unlockedLevels, onLevelSelect, volume, setVolume 
     levels: levels.filter(level => level.difficulty === difficulty),
   }));
 
-  const renderVolumeIcon = () => {
-    if (volume === 0) return <VolumeX className="h-6 w-6" />;
-    if (volume < 0.5) return <Volume1 className="h-6 w-6" />;
-    return <Volume2 className="h-6 w-6" />;
-  }
-
   return (
     <div className="space-y-4">
-       <Card className="w-full h-24 flex items-center justify-center bg-secondary/50 border-dashed">
-          <p className="text-muted-foreground">Advertisement</p>
-      </Card>
       {levelsByDifficulty.map(({ difficulty, levels }) => {
         if (levels.length === 0) return null;
         return (
@@ -141,21 +130,6 @@ const LevelSelect = ({ levels, unlockedLevels, onLevelSelect, volume, setVolume 
           />
         )
       })}
-      <div className="flex justify-center items-center gap-4 px-4 py-2">
-        <div className="text-muted-foreground">
-          {renderVolumeIcon()}
-        </div>
-        <Slider
-          defaultValue={[volume * 100]}
-          max={100}
-          step={1}
-          onValueChange={(value) => setVolume(value[0] / 100)}
-          className="w-full max-w-xs"
-        />
-      </div>
-      <Card className="w-full h-24 flex items-center justify-center bg-secondary/50 border-dashed">
-        <p className="text-muted-foreground">Advertisement</p>
-      </Card>
     </div>
   );
 };
