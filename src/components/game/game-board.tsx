@@ -1,3 +1,4 @@
+
 'use client';
 import type { TileType } from '@/hooks/use-game-logic';
 import Tile from './tile';
@@ -23,6 +24,21 @@ const GameBoard = ({ tiles, gridSize, onTileClick, imageSrc }: GameBoardProps) =
         height: boardSize,
       }}
     >
+       <div
+        className="absolute inset-0 grid"
+        style={{
+          gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
+          gridTemplateRows: `repeat(${gridSize}, 1fr)`,
+          gap: `${TILE_GAP}px`,
+          padding: `${TILE_GAP}px`,
+        }}
+      >
+        {Array.from({ length: gridSize * gridSize }).map((_, index) => (
+          <div key={index} className="flex items-center justify-center bg-background/20 rounded-md">
+            <span className="text-4xl font-bold text-foreground/20">{index + 1}</span>
+          </div>
+        ))}
+      </div>
       <div
         className="relative w-full h-full"
         style={{
