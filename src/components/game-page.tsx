@@ -18,35 +18,48 @@ export default function GamePage() {
   const [easyLevelsCompleted, setEasyLevelsCompleted] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const { prepareInterstitial, showInterstitial, isInitialized } = useAdMob();
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const menuAudioRef = useRef<HTMLAudioElement | null>(null);
+  const gameAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    // Initialize audio element on client
     if (typeof window !== "undefined") {
-        const audio = new Audio('/assets/emoji/music/Opening.mp3');
-        audio.loop = true;
-        audioRef.current = audio;
+        const menuAudio = new Audio('/assets/emoji/music/Opening.mp3');
+        menuAudio.loop = true;
+        menuAudioRef.current = menuAudio;
+        
+        const gameAudio = new Audio('/assets/emoji/music/bgmusic.mp3');
+        gameAudio.loop = true;
+        gameAudioRef.current = gameAudio;
     }
   }, []);
   
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
+    const menuAudio = menuAudioRef.current;
+    const gameAudio = gameAudioRef.current;
+    if (!menuAudio || !gameAudio) return;
     
     if (currentLevel === null && !isLoading) {
+      gameAudio.pause();
       if (!isMuted) {
-        audio.play().catch(error => console.log("Audio play failed:", error));
+        menuAudio.play().catch(error => console.log("Menu audio play failed:", error));
       }
     } else {
-      audio.pause();
+      menuAudio.pause();
+      if (currentLevel !== null && !isMuted) {
+        gameAudio.play().catch(error => console.log("Game audio play failed:", error));
+      } else {
+        gameAudio.pause();
+      }
     }
   }, [currentLevel, isLoading, isMuted]);
 
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
+    const menuAudio = menuAudioRef.current;
+    const gameAudio = gameAudioRef.current;
+    if (!menuAudio || !gameAudio) return;
 
-    audio.muted = isMuted;
+    menuAudio.muted = isMuted;
+    gameAudio.muted = isMuted;
 
   }, [isMuted]);
 
