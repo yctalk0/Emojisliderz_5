@@ -15,8 +15,15 @@ export default function Home() {
   const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+
     const defaultUnlocked = levels
       .filter(level => level.levelNumber === 1)
       .map(level => level.id);
@@ -34,7 +41,7 @@ export default function Home() {
       }
     }
     setUnlockedLevels(initialUnlocked);
-  }, []);
+  }, [isClient]);
   
   useEffect(() => {
     const audio = audioRef.current;
@@ -105,6 +112,10 @@ export default function Home() {
 
   const isNextLevelAvailable = currentLevel ? levels.findIndex(l => l.id === currentLevel.id) < levels.length - 1 && unlockedLevels.includes(levels[levels.findIndex(l => l.id === currentLevel.id) + 1].id) : false;
   const isPreviousLevelAvailable = currentLevel ? levels.findIndex(l => l.id === currentLevel.id) > 0 : false;
+  
+  if (!isClient) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground font-body">
