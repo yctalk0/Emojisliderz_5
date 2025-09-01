@@ -77,7 +77,7 @@ const WinModal = ({
             <Play className="mr-2 h-5 w-5" />
             Play Again
           </Button>
-          <Button onClick={onExit} variant="link">
+          <Button onClick={onExit} variant="secondary" className="w-full h-12">
             Back to Levels
           </Button>
         </AlertDialogFooter>
