@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { AdMob, AdOptions, InterstitialAdPluginEvents } from '@capacitor-community/admob';
+import { AdMob, AdOptions, InterstitialAdPluginEvents, PluginListenerHandle } from '@capacitor-community/admob';
 import { Capacitor } from '@capacitor/core';
 
 const useAdMob = () => {
@@ -51,17 +51,28 @@ const useAdMob = () => {
   }, [initialize]);
 
   useEffect(() => {
-    const handleAdDismissed = () => {
-        console.log('Interstitial ad dismissed. Preparing next one.');
-        prepareInterstitial();
-    };
+    let listener: PluginListenerHandle | undefined;
 
-    const listener = AdMob.addListener(InterstitialAdPluginEvents.Dismissed, handleAdDismissed);
+    const addListener = async () => {
+        listener = await AdMob.addListener(InterstitialAdPluginEvents.Dismissed, () => {
+            console.log('Interstitial ad dismissed. Preparing next one.');
+            prepareInterstitial();
+        });
+    }
+    
+    if (isInitialized) {
+        addListener();
+    }
 
     return () => {
-        listener.remove();
+      const removeListener = async () => {
+        if(listener) {
+            await listener.remove();
+        }
+      }
+      removeListener();
     };
-  }, [prepareInterstitial]);
+  }, [isInitialized, prepareInterstitial]);
 
   return {
     isInitialized,
