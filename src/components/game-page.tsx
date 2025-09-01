@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useEffect } from 'react';
 import type { Level } from '@/lib/game-data';
@@ -8,12 +7,15 @@ import Game from '@/components/game/game';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Smile } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Skeleton } from './ui/skeleton';
 
 export default function GamePage() {
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
   const [unlockedLevels, setUnlockedLevels] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true); // Add loading state
 
   useEffect(() => {
+    // This code now runs only on the client, after the component has mounted
     const defaultUnlocked = levels
       .filter(level => level.levelNumber === 1)
       .map(level => level.id);
@@ -31,6 +33,7 @@ export default function GamePage() {
       }
     }
     setUnlockedLevels(initialUnlocked);
+    setIsLoading(false); // Set loading to false after state is initialized
   }, []);
   
   const handleLevelSelect = (level: Level) => {
@@ -78,6 +81,18 @@ export default function GamePage() {
   const isNextLevelAvailable = currentLevel ? levels.findIndex(l => l.id === currentLevel.id) < levels.length - 1 && unlockedLevels.includes(levels[levels.findIndex(l => l.id === currentLevel.id) + 1].id) : false;
   const isPreviousLevelAvailable = currentLevel ? levels.findIndex(l => l.id === currentLevel.id) > 0 : false;
   
+  const renderLoadingSkeleton = () => (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Skeleton className="h-8 w-1/4" />
+        <Skeleton className="h-4 w-1/3" />
+      </div>
+      <div className="grid grid-cols-5 gap-2">
+        {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground font-body">
       <main className="flex-grow flex flex-col items-center justify-center p-4 -mt-7">
@@ -95,7 +110,9 @@ export default function GamePage() {
             <p className="text-muted-foreground mt-2 text-lg">Slide the tiles to solve the emoji puzzle!</p>
           </header>
           
-          {currentLevel ? (
+          {isLoading ? (
+            renderLoadingSkeleton()
+          ) : currentLevel ? (
             <Game 
               level={currentLevel} 
               onWin={handleGameWin}
