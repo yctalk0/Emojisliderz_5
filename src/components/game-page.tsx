@@ -20,6 +20,7 @@ export default function GamePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [easyLevelsCompleted, setEasyLevelsCompleted] = useState(0);
   const [volume, setVolume] = useState(0.2);
+  const [lastVolume, setLastVolume] = useState(0.2);
   const { prepareInterstitial, showInterstitial, isInitialized } = useAdMob();
   const menuAudioRef = useRef<HTMLAudioElement | null>(null);
   const gameAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -202,6 +203,23 @@ export default function GamePage() {
     return <Volume2 className="h-6 w-6" />;
   }
 
+  const handleVolumeChange = (value: number[]) => {
+      const newVolume = value[0] / 100;
+      setVolume(newVolume);
+      if (newVolume > 0) {
+          setLastVolume(newVolume);
+      }
+  }
+
+  const toggleMute = () => {
+    if(volume > 0) {
+        setLastVolume(volume);
+        setVolume(0);
+    } else {
+        setVolume(lastVolume > 0 ? lastVolume : 0.2);
+    }
+  }
+
   return (
     <div className="flex flex-col text-foreground font-body h-full flex-grow">
       <div className="w-full max-w-md mx-auto flex flex-col p-4 flex-grow">
@@ -242,18 +260,18 @@ export default function GamePage() {
           </main>
           <footer className="mt-auto pt-4 space-y-4">
              <div className="flex justify-center items-center gap-4 px-4 py-2">
-                <div className="text-muted-foreground">
+                <Button variant="ghost" size="icon" onClick={toggleMute} className="text-muted-foreground">
                   {renderVolumeIcon()}
-                </div>
+                </Button>
                 <Slider
-                  defaultValue={[volume * 100]}
+                  value={[volume * 100]}
                   max={100}
                   step={1}
-                  onValueChange={(value) => setVolume(value[0] / 100)}
+                  onValueChange={handleVolumeChange}
                   className="w-full max-w-xs"
                 />
               </div>
-              <AdBanner position="bottom" />
+              {!currentLevel && <AdBanner position="bottom" />}
           </footer>
         </div>
     </div>
