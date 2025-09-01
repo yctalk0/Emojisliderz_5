@@ -118,16 +118,22 @@ const LevelSelect = ({ levels, unlockedLevels, onLevelSelect }: LevelSelectProps
 
   return (
     <div className="space-y-4">
-      {levelsByDifficulty.map(({ difficulty, levels }) => {
+      {levelsByDifficulty.map(({ difficulty, levels }, index) => {
         if (levels.length === 0) return null;
         return (
-          <DifficultyCard 
-            key={difficulty}
-            difficulty={difficulty}
-            levels={levels}
-            unlockedLevels={unlockedLevels}
-            onLevelSelect={onLevelSelect}
-          />
+          <React.Fragment key={difficulty}>
+            {difficulty === 'Easy' && (
+              <Card className="w-full h-24 flex items-center justify-center bg-secondary/50 border-dashed mb-4">
+                <p className="text-muted-foreground">Advertisement</p>
+              </Card>
+            )}
+            <DifficultyCard 
+              difficulty={difficulty}
+              levels={levels}
+              unlockedLevels={unlockedLevels}
+              onLevelSelect={onLevelSelect}
+            />
+          </React.Fragment>
         )
       })}
     </div>
@@ -135,3 +141,5 @@ const LevelSelect = ({ levels, unlockedLevels, onLevelSelect }: LevelSelectProps
 };
 
 export default LevelSelect;
+
+    

@@ -255,11 +255,10 @@ export default function GamePage() {
               <Card className="w-full h-24 flex items-center justify-center bg-secondary/50 border-dashed">
                   <p className="text-muted-foreground">Advertisement</p>
               </Card>
-               <Card className="w-full h-24 flex items-center justify-center bg-secondary/50 border-dashed">
-                  <p className="text-muted-foreground">Advertisement</p>
-              </Card>
           </footer>
         </div>
     </div>
   );
 }
+
+    
