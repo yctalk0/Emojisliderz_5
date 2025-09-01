@@ -9,13 +9,36 @@ interface GameBoardProps {
   onTileClick: (tileValue: number) => void;
   imageSrc: string;
   hint: Hint | null;
+  difficulty: 'Easy' | 'Hard';
 }
 
-const GameBoard = ({ tiles, gridSize, onTileClick, imageSrc, hint }: GameBoardProps) => {
+const GameBoard = ({ tiles, gridSize, onTileClick, imageSrc, hint, difficulty }: GameBoardProps) => {
   const boardSize = 400; // a fixed size for the board in px
   const TILE_GAP = 4; // gap between tiles in px
 
   const tileSize = (boardSize - (gridSize - 1) * TILE_GAP) / gridSize;
+
+  const emptyIndex = tiles.findIndex(t => t.value === 0);
+
+  const getMoveDirection = (tileIndex: number): 'up' | 'down' | 'left' | 'right' | null => {
+    if (difficulty !== 'Hard') return null;
+
+    const emptyRow = Math.floor(emptyIndex / gridSize);
+    const emptyCol = emptyIndex % gridSize;
+    const tileRow = Math.floor(tileIndex / gridSize);
+    const tileCol = tileIndex % gridSize;
+
+    if (tileRow === emptyRow) {
+      if (tileCol + 1 === emptyCol) return 'right';
+      if (tileCol - 1 === emptyCol) return 'left';
+    }
+    if (tileCol === emptyCol) {
+      if (tileRow + 1 === emptyRow) return 'down';
+      if (tileRow - 1 === emptyRow) return 'up';
+    }
+
+    return null;
+  };
 
   return (
     <div
@@ -36,6 +59,7 @@ const GameBoard = ({ tiles, gridSize, onTileClick, imageSrc, hint }: GameBoardPr
       >
         {Array.from({ length: gridSize * gridSize }).map((_, index) => (
           <div key={index} className="flex items-center justify-center bg-background/20 rounded-md">
+             <span className="text-5xl font-bold text-muted-foreground/20">{index + 1}</span>
           </div>
         ))}
       </div>
@@ -59,7 +83,7 @@ const GameBoard = ({ tiles, gridSize, onTileClick, imageSrc, hint }: GameBoardPr
             correctPosition={tile.value - 1}
             currentPosition={index}
             gap={TILE_GAP}
-            showHint={hint?.tileValue === tile.value ? hint.direction : null}
+            showHint={hint?.tileValue === tile.value ? hint.direction : getMoveDirection(index)}
           />
         ))}
       </div>

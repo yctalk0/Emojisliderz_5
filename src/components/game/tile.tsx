@@ -58,6 +58,7 @@ const Tile = ({ value, gridSize, imageSrc, onClick, tileSize, correctPosition, c
       onClick={() => onClick(value)}
       className={cn(
         "absolute rounded-md shadow-md hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-ring focus:z-10",
+         isCorrect && "border-2 border-green-500/80 shadow-green-500/50 shadow-lg"
       )}
       style={tileStyle}
       aria-label={`Tile ${value}`}

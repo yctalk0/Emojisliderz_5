@@ -97,6 +97,7 @@ const Game = ({
             onTileClick={handleTileInteraction}
             imageSrc={level.imageSrc}
             hint={hint}
+            difficulty={level.difficulty}
         />
         <Button size="icon" variant="ghost" onClick={onNextLevel} disabled={!isNextLevelAvailable}>
             <ChevronRight className="h-8 w-8" />
