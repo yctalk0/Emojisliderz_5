@@ -186,8 +186,8 @@ export default function GamePage() {
   );
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground font-body">
-      <main className="flex-grow flex flex-col items-center justify-center p-4 -mt-7">
+    <div className="flex flex-col text-foreground font-body">
+      <main className="flex-grow flex flex-col items-center justify-center p-4">
         <div className="w-full max-w-md mx-auto">
           <header className="relative text-center mb-8">
             {currentLevel && (
@@ -228,12 +228,6 @@ export default function GamePage() {
           )}
         </div>
       </main>
-      <footer className="w-full p-4">
-        <Card className="max-w-md mx-auto h-20 flex items-center justify-center bg-secondary/50 border-dashed" style={{ position: 'relative', bottom: '7px' }}>
-            <p className="text-muted-foreground">Advertisement</p>
-        </Card>
-        <div className="max-w-md mx-auto h-[5px] bg-secondary/50 mt-1 rounded-md"></div>
-      </footer>
     </div>
   );
 }
