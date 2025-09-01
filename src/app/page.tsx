@@ -45,7 +45,7 @@ export default function Home() {
   
   const playAudio = () => {
     const audio = audioRef.current;
-    if (audio && !isMuted) {
+    if (audio && !isMuted && audio.paused) {
       audio.loop = true;
       audio.play().catch(error => console.error("Audio play failed:", error));
     }
@@ -54,8 +54,8 @@ export default function Home() {
   const handleLevelSelect = (level: Level) => {
     if (!hasInteracted) {
       setHasInteracted(true);
-      playAudio();
     }
+    playAudio();
     setCurrentLevel(level);
   };
 
@@ -109,9 +109,9 @@ export default function Home() {
 
     if (audio) {
       audio.muted = newMutedState;
-      if (!newMutedState && audio.paused && hasInteracted) {
+      if (!newMutedState) {
         playAudio();
-      } else if (newMutedState) {
+      } else {
         audio.pause();
       }
     }
