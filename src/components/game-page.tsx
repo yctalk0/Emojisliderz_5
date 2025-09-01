@@ -6,11 +6,9 @@ import { levels } from '@/lib/game-data';
 import LevelSelect from '@/components/game/level-select';
 import Game from '@/components/game/game';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Volume2, VolumeX, Volume1 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import useAdMob from '@/hooks/use-admob';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Slider } from '@/components/ui/slider';
 import Image from 'next/image';
 
 export default function GamePage() {
@@ -195,12 +193,6 @@ export default function GamePage() {
     </div>
   );
 
-  const renderVolumeIcon = () => {
-    if (volume === 0) return <VolumeX className="h-6 w-6" />;
-    if (volume < 0.5) return <Volume1 className="h-6 w-6" />;
-    return <Volume2 className="h-6 w-6" />;
-  }
-
   return (
     <div className="flex flex-col text-foreground font-body h-full flex-grow">
       <div className="w-full max-w-md mx-auto flex flex-col p-4 flex-grow">
@@ -210,30 +202,7 @@ export default function GamePage() {
                     <ArrowLeft className="h-8 w-8" strokeWidth={2.5} />
                 </Button>
             )}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="absolute top-1/2 right-0 -translate-y-1/2">
-                  {renderVolumeIcon()}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-56">
-                <div className="grid gap-4">
-                  <div className="space-y-2">
-                    <h4 className="font-medium leading-none">Volume</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Set the volume for the game sounds.
-                    </p>
-                  </div>
-                  <Slider
-                    defaultValue={[volume * 100]}
-                    max={100}
-                    step={1}
-                    onValueChange={(value) => setVolume(value[0] / 100)}
-                    className="w-full"
-                  />
-                </div>
-              </PopoverContent>
-            </Popover>
+            
             <div className="flex justify-center items-center gap-3">
               <Image src="/assets/emoji/music/logo/logo.png" alt="EmojiSliderz Logo" width={42} height={42} />
               <h1 className="text-4xl font-extrabold tracking-tighter text-primary font-headline">EmojiSliderz</h1>
@@ -258,7 +227,9 @@ export default function GamePage() {
               <LevelSelect 
                 levels={levels} 
                 unlockedLevels={unlockedLevels} 
-                onLevelSelect={handleLevelSelect} 
+                onLevelSelect={handleLevelSelect}
+                volume={volume}
+                setVolume={setVolume}
               />
             )}
           </main>

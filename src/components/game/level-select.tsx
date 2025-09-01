@@ -5,14 +5,19 @@ import * as React from 'react';
 import type { Level } from '@/lib/game-data';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Lock, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Lock, ArrowLeft, ArrowRight, Volume2, VolumeX, Volume1 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Slider } from '@/components/ui/slider';
+
 
 interface LevelSelectProps {
   levels: Level[];
   unlockedLevels: string[];
   onLevelSelect: (level: Level) => void;
+  volume: number;
+  setVolume: (volume: number) => void;
 }
 
 const difficultyConfig = {
@@ -106,13 +111,19 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
   )
 }
 
-const LevelSelect = ({ levels, unlockedLevels, onLevelSelect }: LevelSelectProps) => {
+const LevelSelect = ({ levels, unlockedLevels, onLevelSelect, volume, setVolume }: LevelSelectProps) => {
   const difficulties: ('Easy' | 'Hard')[] = ['Easy', 'Hard'];
   
   const levelsByDifficulty = difficulties.map(difficulty => ({
     difficulty,
     levels: levels.filter(level => level.difficulty === difficulty),
   }));
+
+  const renderVolumeIcon = () => {
+    if (volume === 0) return <VolumeX className="h-6 w-6" />;
+    if (volume < 0.5) return <Volume1 className="h-6 w-6" />;
+    return <Volume2 className="h-6 w-6" />;
+  }
 
   return (
     <div className="space-y-4">
@@ -131,6 +142,32 @@ const LevelSelect = ({ levels, unlockedLevels, onLevelSelect }: LevelSelectProps
           />
         )
       })}
+      <div className="flex justify-center items-center py-4">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon">
+              {renderVolumeIcon()}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-56">
+            <div className="grid gap-4">
+              <div className="space-y-2">
+                <h4 className="font-medium leading-none">Volume</h4>
+                <p className="text-sm text-muted-foreground">
+                  Set the volume for the game sounds.
+                </p>
+              </div>
+              <Slider
+                defaultValue={[volume * 100]}
+                max={100}
+                step={1}
+                onValueChange={(value) => setVolume(value[0] / 100)}
+                className="w-full"
+              />
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
     </div>
   );
 };
