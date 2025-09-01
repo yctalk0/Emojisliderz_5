@@ -79,7 +79,7 @@ export default function GamePage() {
     if(volume === 0) {
         activeAudio.pause()
     } else {
-        if(!isLoading && !activeAudio.paused) {
+        if(!isLoading && activeAudio.paused) {
             activeAudio.play().catch(e => console.log(e));
         }
     }
@@ -202,7 +202,7 @@ export default function GamePage() {
   }
 
   return (
-    <div className="flex flex-col text-foreground font-body h-full">
+    <div className="flex flex-col text-foreground font-body h-full flex-grow">
       <div className="w-full max-w-md mx-auto flex flex-col p-4 flex-grow">
           <header className="relative text-center mb-8">
             {currentLevel && (
@@ -235,7 +235,7 @@ export default function GamePage() {
               </PopoverContent>
             </Popover>
             <div className="flex justify-center items-center gap-3">
-              <Image src="/assets/emoji/music/logo/logo.png" alt="EmojiSliderz Logo" width={32} height={32} />
+              <Image src="/assets/emoji/music/logo/logo.png" alt="EmojiSliderz Logo" width={42} height={42} />
               <h1 className="text-4xl font-extrabold tracking-tighter text-primary font-headline">EmojiSliderz</h1>
             </div>
             <p className="text-muted-foreground mt-2 text-lg">Slide the tiles to solve the emoji puzzle!</p>
