@@ -2,6 +2,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
+import { ArrowBigUp, ArrowBigDown, ArrowBigLeft, ArrowBigRight } from 'lucide-react';
 
 interface TileProps {
   value: number;
@@ -12,9 +13,23 @@ interface TileProps {
   correctPosition: number;
   currentPosition: number;
   gap: number;
+  showHint: 'up' | 'down' | 'left' | 'right' | null;
 }
 
-const Tile = ({ value, gridSize, imageSrc, onClick, tileSize, correctPosition, currentPosition, gap }: TileProps) => {
+const ArrowIcon = ({ direction }: { direction: 'up' | 'down' | 'left' | 'right' }) => {
+  const iconProps = {
+    className: "w-1/2 h-1/2 text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]",
+    strokeWidth: 1.5,
+  };
+  switch (direction) {
+    case 'up': return <ArrowBigUp {...iconProps} />;
+    case 'down': return <ArrowBigDown {...iconProps} />;
+    case 'left': return <ArrowBigLeft {...iconProps} />;
+    case 'right': return <ArrowBigRight {...iconProps} />;
+  }
+};
+
+const Tile = ({ value, gridSize, imageSrc, onClick, tileSize, correctPosition, currentPosition, gap, showHint }: TileProps) => {
   if (value === 0) {
     return <div className="bg-transparent rounded-md" />;
   }
@@ -43,12 +58,16 @@ const Tile = ({ value, gridSize, imageSrc, onClick, tileSize, correctPosition, c
       onClick={() => onClick(value)}
       className={cn(
         "absolute rounded-md shadow-md hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-ring focus:z-10",
-        isCorrect && "ring-4 ring-offset-0 ring-green-500/80 shadow-[0_0_20px_theme(colors.green.500)] transition-all duration-300"
       )}
       style={tileStyle}
       aria-label={`Tile ${value}`}
     >
-      <div className="absolute top-1 left-1 bg-black/50 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+       {showHint && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20">
+              <ArrowIcon direction={showHint} />
+          </div>
+        )}
+      <div className={cn("absolute top-1 left-1 bg-black/50 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center z-10 transition-all duration-300", isCorrect && "bg-green-500/80")}>
         {value}
       </div>
     </button>

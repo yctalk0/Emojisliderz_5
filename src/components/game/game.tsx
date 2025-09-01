@@ -39,11 +39,13 @@ const Game = ({
     isStarted,
     canUndo,
     canSolve,
+    hint,
     startGame,
     handleTileClick,
     undoMove,
     resetGame,
     autoSolve,
+    getNextMoveHint,
   } = useGameLogic(level.gridSize, onWin);
 
   const [isHintModalOpen, setIsHintModalOpen] = useState(false);
@@ -58,8 +60,12 @@ const Game = ({
     toast({ title: "Game Restarted", description: "The puzzle has been shuffled." });
   }
 
-  const handleHint = () => {
-    setIsHintModalOpen(true);
+  const handleHintRequest = () => {
+    if (level.gridSize > 3) {
+      alert("Hints are only available for 2x2 and 3x3 puzzles for now!");
+      return;
+    }
+    getNextMoveHint();
   }
   
   const handleTileInteraction = (tileValue: number) => {
@@ -74,7 +80,7 @@ const Game = ({
       <GameControls
         moves={moves}
         time={time}
-        onHint={handleHint}
+        onHint={handleHintRequest}
         onUndo={undoMove}
         onRestart={handleRestart}
         onSolve={autoSolve}
@@ -90,6 +96,7 @@ const Game = ({
             gridSize={level.gridSize}
             onTileClick={handleTileInteraction}
             imageSrc={level.imageSrc}
+            hint={hint}
         />
         <Button size="icon" variant="ghost" onClick={onNextLevel} disabled={!isNextLevelAvailable}>
             <ChevronRight className="h-8 w-8" />

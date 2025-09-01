@@ -1,6 +1,6 @@
 
 'use client';
-import type { TileType } from '@/hooks/use-game-logic';
+import type { TileType, Hint } from '@/hooks/use-game-logic';
 import Tile from './tile';
 
 interface GameBoardProps {
@@ -8,9 +8,10 @@ interface GameBoardProps {
   gridSize: number;
   onTileClick: (tileValue: number) => void;
   imageSrc: string;
+  hint: Hint | null;
 }
 
-const GameBoard = ({ tiles, gridSize, onTileClick, imageSrc }: GameBoardProps) => {
+const GameBoard = ({ tiles, gridSize, onTileClick, imageSrc, hint }: GameBoardProps) => {
   const boardSize = 400; // a fixed size for the board in px
   const TILE_GAP = 4; // gap between tiles in px
 
@@ -35,7 +36,6 @@ const GameBoard = ({ tiles, gridSize, onTileClick, imageSrc }: GameBoardProps) =
       >
         {Array.from({ length: gridSize * gridSize }).map((_, index) => (
           <div key={index} className="flex items-center justify-center bg-background/20 rounded-md">
-            <span className="text-4xl font-bold text-foreground/20">{index + 1}</span>
           </div>
         ))}
       </div>
@@ -59,6 +59,7 @@ const GameBoard = ({ tiles, gridSize, onTileClick, imageSrc }: GameBoardProps) =
             correctPosition={tile.value - 1}
             currentPosition={index}
             gap={TILE_GAP}
+            showHint={hint?.tileValue === tile.value ? hint.direction : null}
           />
         ))}
       </div>

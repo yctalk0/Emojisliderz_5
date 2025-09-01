@@ -6,6 +6,11 @@ export interface TileType {
   value: number;
 }
 
+export type Hint = {
+  tileValue: number;
+  direction: 'up' | 'down' | 'left' | 'right';
+}
+
 // A* search algorithm to find the solution path
 const solvePuzzle = (startTiles: TileType[], gridSize: number): TileType[][] | null => {
   const totalTiles = gridSize * gridSize;
@@ -107,6 +112,7 @@ const useGameLogic = (gridSize: number, onWin: () => void) => {
   const [isStarted, setIsStarted] = useState(false);
   const [isSolving, setIsSolving] = useState(false);
   const [history, setHistory] = useState<TileType[][]>([]);
+  const [hint, setHint] = useState<Hint | null>(null);
 
   const isSolvable = (arr: TileType[]): boolean => {
     if (gridSize % 2 === 1) { // Odd grid
@@ -159,6 +165,7 @@ const useGameLogic = (gridSize: number, onWin: () => void) => {
     setIsSolved(false);
     setIsStarted(false);
     setHistory([]);
+    setHint(null);
   }, [gridSize, createSolvedTiles]);
 
   useEffect(() => {
@@ -199,6 +206,7 @@ const useGameLogic = (gridSize: number, onWin: () => void) => {
 
   const handleTileClick = (tileValue: number) => {
     if (isSolved || isSolving) return;
+    setHint(null);
 
     const tileIndex = tiles.findIndex(t => t.value === tileValue);
     const emptyIndex = tiles.findIndex(t => t.value === emptyTileValue);
@@ -221,6 +229,7 @@ const useGameLogic = (gridSize: number, onWin: () => void) => {
   
   const undoMove = () => {
     if (history.length > 0 && !isSolving) {
+      setHint(null);
       const lastState = history[history.length - 1];
       setTiles(lastState);
       setHistory(prev => prev.slice(0, -1));
@@ -234,8 +243,8 @@ const useGameLogic = (gridSize: number, onWin: () => void) => {
   
   const autoSolve = () => {
     if (isSolved || isSolving) return;
+    setHint(null);
     
-    // Can't solve 4x4 and above as it takes too long
     if(gridSize > 3) {
       alert("Auto-solve is only available for 2x2 and 3x3 puzzles for now!");
       return;
@@ -258,10 +267,37 @@ const useGameLogic = (gridSize: number, onWin: () => void) => {
     }
   };
 
+  const getNextMoveHint = () => {
+    if (isSolved || isSolving) return;
+
+    const solutionPath = solvePuzzle(tiles, gridSize);
+    if (solutionPath && solutionPath.length > 1) {
+      const currentTiles = solutionPath[0];
+      const nextTiles = solutionPath[1];
+
+      const currentEmptyIndex = currentTiles.findIndex(t => t.value === emptyTileValue);
+      const nextEmptyIndex = nextTiles.findIndex(t => t.value === emptyTileValue);
+
+      const tileToMoveValue = nextTiles[currentEmptyIndex].value;
+      
+      const diff = nextEmptyIndex - currentEmptyIndex;
+      let direction: Hint['direction'] = 'right';
+      if (diff === 1) direction = 'left';
+      else if (diff === -1) direction = 'right';
+      else if (diff === gridSize) direction = 'up';
+      else if (diff === -gridSize) direction = 'down';
+
+      setHint({
+        tileValue: tileToMoveValue,
+        direction: direction,
+      });
+    }
+  };
+
   const canUndo = useMemo(() => history.length > 0 && !isSolving, [history, isSolving]);
   const canSolve = useMemo(() => !isSolved && !isSolving, [isSolved, isSolving]);
 
-  return { tiles, moves, time, isSolved, isStarted, canUndo, canSolve, startGame, handleTileClick, undoMove, resetGame, autoSolve };
+  return { tiles, moves, time, isSolved, isStarted, canUndo, canSolve, hint, startGame, handleTileClick, undoMove, resetGame, autoSolve, getNextMoveHint };
 };
 
 export default useGameLogic;
