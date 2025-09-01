@@ -18,28 +18,6 @@ const GameBoard = ({ tiles, gridSize, onTileClick, imageSrc, hint, difficulty }:
 
   const tileSize = (boardSize - (gridSize - 1) * TILE_GAP) / gridSize;
 
-  const emptyIndex = tiles.findIndex(t => t.value === 0);
-
-  const getMoveDirection = (tileIndex: number): 'up' | 'down' | 'left' | 'right' | null => {
-    if (difficulty !== 'Hard') return null;
-
-    const emptyRow = Math.floor(emptyIndex / gridSize);
-    const emptyCol = emptyIndex % gridSize;
-    const tileRow = Math.floor(tileIndex / gridSize);
-    const tileCol = tileIndex % gridSize;
-
-    if (tileRow === emptyRow) {
-      if (tileCol + 1 === emptyCol) return 'right';
-      if (tileCol - 1 === emptyCol) return 'left';
-    }
-    if (tileCol === emptyCol) {
-      if (tileRow + 1 === emptyRow) return 'down';
-      if (tileRow - 1 === emptyRow) return 'up';
-    }
-
-    return null;
-  };
-
   return (
     <div
       className="relative rounded-lg shadow-lg bg-secondary p-1"
@@ -83,7 +61,7 @@ const GameBoard = ({ tiles, gridSize, onTileClick, imageSrc, hint, difficulty }:
             correctPosition={tile.value - 1}
             currentPosition={index}
             gap={TILE_GAP}
-            showHint={hint?.tileValue === tile.value ? hint.direction : getMoveDirection(index)}
+            showHint={hint?.tileValue === tile.value ? hint.direction : null}
           />
         ))}
       </div>
