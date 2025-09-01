@@ -83,7 +83,7 @@ const WinModal = ({
           </Button>
         </AlertDialogFooter>
         <div className="mt-2">
-            <Card className="w-full h-16 flex items-center justify-center bg-secondary/50 border-dashed">
+            <Card className="w-full h-20 flex items-center justify-center bg-secondary/50 border-dashed">
                 <p className="text-muted-foreground text-sm">Advertisement</p>
             </Card>
         </div>
