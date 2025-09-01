@@ -12,10 +12,9 @@ import { Skeleton } from './ui/skeleton';
 export default function GamePage() {
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
   const [unlockedLevels, setUnlockedLevels] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true); // Add loading state
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // This code now runs only on the client, after the component has mounted
     const defaultUnlocked = levels
       .filter(level => level.levelNumber === 1)
       .map(level => level.id);
@@ -33,7 +32,7 @@ export default function GamePage() {
       }
     }
     setUnlockedLevels(initialUnlocked);
-    setIsLoading(false); // Set loading to false after state is initialized
+    setIsLoading(false);
   }, []);
   
   const handleLevelSelect = (level: Level) => {
