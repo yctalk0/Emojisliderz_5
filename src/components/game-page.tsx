@@ -8,7 +8,6 @@ import Game from '@/components/game/game';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Volume1, Volume2, VolumeX } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
-import useAdMob from '@/hooks/use-admob';
 import Image from 'next/image';
 import { Card } from './ui/card';
 import { Slider } from './ui/slider';
@@ -21,83 +20,84 @@ export default function GamePage() {
   const [easyLevelsCompleted, setEasyLevelsCompleted] = useState(0);
   const [volume, setVolume] = useState(0.2);
   const [lastVolume, setLastVolume] = useState(0.2);
-  const { prepareInterstitial, showInterstitial, isInitialized } = useAdMob();
   const menuAudioRef = useRef<HTMLAudioElement | null>(null);
   const gameAudioRef = useRef<HTMLAudioElement | null>(null);
   const levelCompleteAudioRef = useRef<HTMLAudioElement | null>(null);
   const isMuted = volume === 0;
-  const [userInteracted, setUserInteracted] = useState(false);
+  
+  const [audioReady, setAudioReady] = useState(false);
 
+  // 1. Initialize Audio and check when it's ready to play
   useEffect(() => {
     if (typeof window !== "undefined") {
-        const menuAudio = new Audio('/assets/emoji/music/Opening.mp3');
-        menuAudio.loop = true;
-        menuAudioRef.current = menuAudio;
-        
-        const gameAudio = new Audio('/assets/emoji/music/bgmusic.mp3');
-        gameAudio.loop = true;
-        gameAudioRef.current = gameAudio;
-        
-        const levelCompleteAudio = new Audio('/assets/emoji/music/level_complete.mp3');
-        levelCompleteAudioRef.current = levelCompleteAudio;
+      const menuAudio = new Audio('/assets/emoji/music/Opening.mp3');
+      menuAudio.loop = true;
+      menuAudioRef.current = menuAudio;
+      
+      const gameAudio = new Audio('/assets/emoji/music/bgmusic.mp3');
+      gameAudio.loop = true;
+      gameAudioRef.current = gameAudio;
+      
+      const levelCompleteAudio = new Audio('/assets/emoji/music/level_complete.mp3');
+      levelCompleteAudioRef.current = levelCompleteAudio;
+
+      const checkAudioReady = () => {
+        if (menuAudio.readyState >= 4 && gameAudio.readyState >= 4) {
+          setAudioReady(true);
+        }
+      };
+
+      menuAudio.addEventListener('canplaythrough', checkAudioReady);
+      gameAudio.addEventListener('canplaythrough', checkAudioReady);
+
+      return () => {
+        menuAudio.removeEventListener('canplaythrough', checkAudioReady);
+        gameAudio.removeEventListener('canplaythrough', checkAudioReady);
+      };
     }
   }, []);
-  
-  useEffect(() => {
-    if (!userInteracted) return;
 
-    const menuAudio = menuAudioRef.current;
-    const gameAudio = gameAudioRef.current;
-    if (!menuAudio || !gameAudio) return;
-
-    const playAudio = (audio: HTMLAudioElement) => {
-        if (audio.paused && volume > 0) {
-            audio.play().catch(error => console.log("Audio play failed:", error));
-        }
-    };
-    
-    if (currentLevel === null && !isLoading) {
-      gameAudio.pause();
-      gameAudio.currentTime = 0;
-      playAudio(menuAudio);
-    } else if (currentLevel !== null) {
-      menuAudio.pause();
-      menuAudio.currentTime = 0;
-      playAudio(gameAudio);
-    } else {
-        menuAudio.pause();
-        gameAudio.pause();
-    }
-  }, [currentLevel, isLoading, volume, userInteracted]);
-
+  // 2. Consolidated effect to manage audio playback
   useEffect(() => {
     const menuAudio = menuAudioRef.current;
     const gameAudio = gameAudioRef.current;
     const levelCompleteAudio = levelCompleteAudioRef.current;
+
     if (!menuAudio || !gameAudio || !levelCompleteAudio) return;
 
+    // Always keep volume updated
     menuAudio.volume = volume;
     gameAudio.volume = volume;
     levelCompleteAudio.volume = volume;
     
+    // Determine which track should be playing
     const activeAudio = currentLevel ? gameAudio : menuAudio;
-    if(volume === 0) {
-        activeAudio.pause()
-    } else {
-        if(userInteracted && !isLoading && activeAudio.paused) {
-            activeAudio.play().catch(e => console.log(e));
-        }
+    const inactiveAudio = currentLevel ? menuAudio : gameAudio;
+
+    // Always pause the inactive track
+    if (!inactiveAudio.paused) {
+      inactiveAudio.pause();
+      inactiveAudio.currentTime = 0;
     }
 
-
-  }, [volume, currentLevel, isLoading, userInteracted]);
-
-  useEffect(() => {
-    if (isInitialized) {
-      prepareInterstitial();
+    // Only play the active track if all conditions are met
+    if (audioReady && !isLoading && volume > 0 && activeAudio.paused) {
+      const playPromise = activeAudio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          // Autoplay was prevented.
+          if (error.name === 'NotAllowedError') {
+            console.log("Autoplay was prevented by the browser.");
+          } else {
+            console.error("Audio playback failed:", error);
+          }
+        });
+      }
+    } else if (volume === 0 && !activeAudio.paused) {
+      activeAudio.pause();
     }
-  }, [isInitialized, prepareInterstitial]);
-  
+  }, [currentLevel, isLoading, volume, audioReady]);
+
   useEffect(() => {
     const defaultUnlocked = levels
       .filter(level => level.levelNumber === 1)
@@ -126,7 +126,6 @@ export default function GamePage() {
   }, []);
   
   const handleLevelSelect = (level: Level) => {
-    if (!userInteracted) setUserInteracted(true);
     setCurrentLevel(level);
   };
 
@@ -137,18 +136,12 @@ export default function GamePage() {
         levelCompleteAudioRef.current?.play().catch(e => console.error("Could not play win sound", e));
       }
 
-      let adShown = false;
       if (currentLevel.difficulty === 'Easy') {
         const newCount = easyLevelsCompleted + 1;
         setEasyLevelsCompleted(newCount);
         localStorage.setItem('easyLevelsCompleted', JSON.stringify(newCount));
-        if (newCount % 5 === 0) {
-          showInterstitial();
-          adShown = true;
-        }
       }
 
-      // Unlock next level logic
       const levelsInDifficulty = levels.filter(l => l.difficulty === currentLevel.difficulty);
       const currentIndexInDifficulty = levelsInDifficulty.findIndex(l => l.id === currentLevel.id);
       
@@ -158,13 +151,12 @@ export default function GamePage() {
         setUnlockedLevels(newUnlocked);
         localStorage.setItem('unlockedLevels', JSON.stringify(newUnlocked));
       }
-      return adShown;
+      return false; // No ad shown
     }
     return false;
   };
 
   const handleExitGame = () => {
-    if (!userInteracted) setUserInteracted(true);
     setCurrentLevel(null);
   }
 
@@ -206,6 +198,12 @@ export default function GamePage() {
 
   const isPreviousLevelAvailable = currentLevel ? levels.filter(l => l.difficulty === currentLevel.difficulty).findIndex(l => l.id === currentLevel.id) > 0 : false;
   
+    const isLastLevelOfDifficulty = currentLevel ? (() => {
+    const levelsInDifficulty = levels.filter(l => l.difficulty === currentLevel.difficulty);
+    const currentIndexInDifficulty = levelsInDifficulty.findIndex(l => l.id === currentLevel.id);
+    return currentIndexInDifficulty === levelsInDifficulty.length - 1;
+  })() : false;
+
   const renderLoadingSkeleton = () => (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -225,7 +223,6 @@ export default function GamePage() {
   }
 
   const handleVolumeChange = (value: number[]) => {
-      if (!userInteracted) setUserInteracted(true);
       const newVolume = value[0] / 100;
       setVolume(newVolume);
       if (newVolume > 0) {
@@ -234,7 +231,6 @@ export default function GamePage() {
   }
 
   const toggleMute = () => {
-    if (!userInteracted) setUserInteracted(true);
     if(volume > 0) {
         setLastVolume(volume);
         setVolume(0);
@@ -255,8 +251,8 @@ export default function GamePage() {
             
             <div className="flex flex-col items-center">
               <div className="flex justify-center items-center gap-2">
-                <Image src="/assets/emoji/music/logo/logo.png" alt="EmojiSliderz Logo" width={52} height={52} />
-                <h1 className="text-5xl font-extrabold tracking-tighter text-primary font-headline">EmojiSliderz</h1>
+                <Image src="/assets/emoji/music/logo/logo.png" alt="Emoji sliderz Logo" width={52} height={52} />
+                <h1 className="text-5xl font-extrabold tracking-tighter text-primary font-headline">Emoji sliderz</h1>
               </div>
               {currentLevel ? (
                 <p className="text-xl font-bold text-primary">Level {currentLevel.levelNumber}</p>
@@ -280,6 +276,7 @@ export default function GamePage() {
                 isNextLevelAvailable={isNextLevelAvailable}
                 isPreviousLevelAvailable={isPreviousLevelAvailable}
                 easyLevelsCompleted={easyLevelsCompleted}
+                isLastLevelOfDifficulty={isLastLevelOfDifficulty}
               />
             ) : (
               <LevelSelect 
@@ -304,7 +301,7 @@ export default function GamePage() {
             </div>
             {currentLevel && (
               <div className="flex justify-center mt-2">
-                <Button onClick={handleExitGame} variant="secondary">Back to Levels</Button>
+                <Button onClick={handleExitGame} className="btn-cyan">Back to Levels</Button>
               </div>
             )}
             <AdBanner position="bottom" className="mt-2" />

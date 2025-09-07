@@ -48,6 +48,12 @@
   }
 }
 
+.btn-cyan {
+  background-color: #00ffff;
+  color: #000000;
+  font-weight: bold;
+}
+
 @layer base {
   * {
     border-color: var(--border);
@@ -121,5 +127,45 @@
   100% {
     color: white;
     text-shadow: 0 0 5px red, 0 0 10px red;
+  }
+}
+
+.blinking-text {
+  animation: multicolor-blink-text 1s infinite;
+}
+
+@keyframes multicolor-blink-text {
+  0% { color: #ff0000; } /* Red */
+  20% { color: #ff7f00; } /* Orange */
+  40% { color: #ffff00; } /* Yellow */
+  60% { color: #00ff00; } /* Green */
+  80% { color: #0000ff; } /* Blue */
+  100% { color: #8b00ff; } /* Violet */
+}
+
+.blinking-badge {
+  animation: vivid-blink-badge 1s infinite;
+}
+
+@keyframes vivid-blink-badge {
+  0% {
+    background-color: #ff0000; /* Red */
+    box-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000;
+  }
+  25% {
+    background-color: #ffff00; /* Yellow */
+    box-shadow: 0 0 5px #ffff00, 0 0 10px #ffff00;
+  }
+  50% {
+    background-color: #00ff00; /* Green */
+    box-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00;
+  }
+  75% {
+    background-color: #0000ff; /* Blue */
+    box-shadow: 0 0 5px #0000ff, 0 0 10px #0000ff;
+  }
+  100% {
+    background-color: #ff0000; /* Red */
+    box-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000;
   }
 }

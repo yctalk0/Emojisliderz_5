@@ -31,19 +31,19 @@ const GameControls = ({ level, moves, time, onHint, onUndo, onRestart, onSolve, 
           <div className="flex items-center gap-2 text-lg font-bold">
             <Move className="w-6 h-6 text-primary" />
             <div className="flex flex-col items-center">
-              <span className="text-sm text-muted-foreground">Moves</span>
-              <span>{moves}</span>
+              <span className="text-sm text-gray-300">Moves</span>
+              <span className="text-white">{moves}</span>
             </div>
           </div>
           <div className="flex flex-col items-center">
-             <span className="text-sm text-muted-foreground">Level</span>
+             <span className="text-sm text-gray-300">Level</span>
             <span className="text-lg font-bold">{level.levelNumber}</span>
           </div>
           <div className="flex items-center gap-2 text-lg font-bold">
             <Clock className="w-6 h-6 text-primary" />
              <div className="flex flex-col items-center">
-               <span className="text-sm text-muted-foreground">Time</span>
-              <span>{formatTime(time)}</span>
+               <span className="text-sm text-gray-300">Time</span>
+              <span className="text-white">{formatTime(time)}</span>
             </div>
           </div>
         </CardContent>

@@ -23,6 +23,8 @@ interface WinModalProps {
   onExit: () => void;
   hasNextLevel: boolean;
   imageSrc: string;
+  isLastLevelOfDifficulty: boolean;
+  difficulty: 'Easy' | 'Hard';
 }
 
 const WinModal = ({
@@ -33,7 +35,9 @@ const WinModal = ({
   onNextLevel,
   onExit,
   hasNextLevel,
-  imageSrc
+  imageSrc,
+  isLastLevelOfDifficulty,
+  difficulty,
 }: WinModalProps) => {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -57,11 +61,17 @@ const WinModal = ({
             <span className="sr-only">Close</span>
           </Button>
         <AlertDialogHeader className="p-0">
-          <div className="mx-auto bg-accent rounded-full p-3 w-fit -mt-12 border-4 border-background">
+          <div className="mx-auto bg-accent rounded-full p-3 w-fit -mt-12 border-4 border-background blinking-badge">
             <Award className="w-10 h-10 text-accent-foreground" />
           </div>
-          <AlertDialogTitle className="text-2xl font-bold mt-2">You Win!</AlertDialogTitle>
-          <AlertDialogDescription className="text-base">Congratulations, you solved the puzzle!</AlertDialogDescription>
+          <AlertDialogTitle className="text-2xl font-bold mt-2 blinking-text">
+            {isLastLevelOfDifficulty ? 'Congratulations!' : 'You Win!'}
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-base">
+            {isLastLevelOfDifficulty
+              ? `You've finished all the ${difficulty} levels!`
+              : 'Congratulations, you solved the puzzle!'}
+          </AlertDialogDescription>
         </AlertDialogHeader>
 
         <div className="flex justify-center my-2 p-2 rounded-lg overflow-hidden border-2 border-primary/50 shadow-lg">

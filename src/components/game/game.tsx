@@ -1,28 +1,24 @@
 
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import type { Level } from '@/lib/game-data';
 import useGameLogic from '@/hooks/use-game-logic';
 import GameBoard from './game-board';
 import GameControls from './game-controls';
 import WinModal from './win-modal';
 import HintModal from './hint-modal';
-import RewardedAdDialog from './rewarded-ad-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
 import AdBanner from './ad-banner';
-import useAdMob from '@/hooks/use-admob';
-import { AdMob, RewardAdPluginEvents } from '@capacitor-community/admob';
 
 interface GameProps {
   level: Level;
-  onWin: () => boolean;
+  onWin: () => void;
   onExit: () => void;
   onNextLevel: () => void;
   onPreviousLevel: () => void;
   isNextLevelAvailable: boolean;
   isPreviousLevelAvailable: boolean;
-  easyLevelsCompleted: number;
+  isLastLevelOfDifficulty: boolean;
 }
 
 const Game = ({ 
@@ -33,26 +29,16 @@ const Game = ({
   onPreviousLevel, 
   isNextLevelAvailable,
   isPreviousLevelAvailable,
-  easyLevelsCompleted,
+  isLastLevelOfDifficulty
 }: GameProps) => {
   const { toast } = useToast();
-  const { showRewarded, prepareRewarded } = useAdMob();
   const [showWinModal, setShowWinModal] = useState(false);
-  const [isAdDialogOpen, setIsAdDialogOpen] = useState(false);
-  const [solveAdWatched, setSolveAdWatched] = useState(false);
-  const [hintUnlockedLevels, setHintUnlockedLevels] = useState<string[]>([]);
-  const [adPurpose, setAdPurpose] = useState<'solve' | 'hint' | null>(null);
-  
-  const adPurposeRef = useRef(adPurpose);
-  adPurposeRef.current = adPurpose;
 
   const handleWin = () => {
-    const adWasShown = onWin();
-    if (!adWasShown) {
-      setTimeout(() => {
-        setShowWinModal(true);
-      }, 700);
-    }
+    onWin();
+    setTimeout(() => {
+      setShowWinModal(true);
+    }, 700);
   };
   
   const {
@@ -76,25 +62,6 @@ const Game = ({
   const [isHintModalOpen, setIsHintModalOpen] = useState(false);
   
   useEffect(() => {
-    prepareRewarded();
-
-    const rewardedListener = AdMob.addListener(RewardAdPluginEvents.Rewarded, () => {
-      if (adPurposeRef.current === 'solve') {
-        setSolveAdWatched(true);
-        autoSolve();
-      } else if (adPurposeRef.current === 'hint') {
-        setHintUnlockedLevels(prev => [...prev, level.id]);
-        getNextMoveHint();
-      }
-      setAdPurpose(null);
-    });
-    
-    return () => {
-      rewardedListener.then(listener => listener.remove());
-    };
-  }, [level.id, autoSolve, prepareRewarded, getNextMoveHint]);
-
-  useEffect(() => {
     if (level.levelNumber === 1 && moves < 3 && !isSolved) {
       getNextMoveHint();
     }
@@ -102,7 +69,6 @@ const Game = ({
   
   useEffect(() => {
     setShowWinModal(false);
-    setSolveAdWatched(false);
   }, [level]);
 
   const handleRestart = () => {
@@ -116,30 +82,11 @@ const Game = ({
       alert("Hints are only available for 2x2 and 3x3 puzzles for now!");
       return;
     }
-
-    if (level.difficulty === 'Hard' && !hintUnlockedLevels.includes(level.id)) {
-      setAdPurpose('hint');
-      setIsAdDialogOpen(true);
-    } else {
-      getNextMoveHint();
-    }
+    getNextMoveHint();
   }
 
   const handleSolveRequest = () => {
-    if (level.difficulty === 'Easy' && (easyLevelsCompleted + 1) % 3 === 0 && !solveAdWatched) {
-      setAdPurpose('solve');
-      setIsAdDialogOpen(true);
-    } else if (level.difficulty === 'Hard' && !solveAdWatched) {
-      setAdPurpose('solve');
-      setIsAdDialogOpen(true);
-    } else {
-      autoSolve();
-    }
-  };
-
-  const handleAdConfirm = () => {
-    setIsAdDialogOpen(false);
-    showRewarded();
+    autoSolve();
   };
   
   const handleTileInteraction = (tileValue: number) => {
@@ -184,6 +131,8 @@ const Game = ({
         onExit={onExit}
         hasNextLevel={isNextLevelAvailable}
         imageSrc={level.imageSrc}
+        isLastLevelOfDifficulty={isLastLevelOfDifficulty}
+        difficulty={level.difficulty}
       />
       <HintModal 
         isOpen={isHintModalOpen}
@@ -192,11 +141,6 @@ const Game = ({
         emoji={level.emoji}
         tiles={tiles}
         gridSize={level.gridSize}
-      />
-      <RewardedAdDialog
-        isOpen={isAdDialogOpen}
-        onClose={() => setIsAdDialogOpen(false)}
-        onConfirm={handleAdConfirm}
       />
     </div>
   );

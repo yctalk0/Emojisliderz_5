@@ -48,55 +48,74 @@ const Confetti = () => {
     setRainPieces(newRainPieces);
   }, []);
 
+  // --- Blast Animation ---
   const blastSprings = useSprings(
     blastPieces.length,
     blastPieces.map(p => ({
-      from: { x: p.startX, y: p.startY, opacity: 1, transform: `rotate(${p.rotation}deg) scale(1)` },
-      to: { x: p.endX, y: p.endY, opacity: 0, transform: `rotate(${p.rotation + 180}deg) scale(${p.scale})` },
-      config: { mass: 1, tension: 280, friction: 90 },
-      delay: Math.random() * 200,
+      from: {
+        transform: `translate(${p.startX}px, ${p.startY}px) rotate(0deg) scale(0)`,
+        opacity: 1,
+      },
+      to: {
+        transform: `translate(${p.endX}px, ${p.endY}px) rotate(${p.rotation}deg) scale(${p.scale})`,
+        opacity: 0,
+      },
+      config: { duration: 3000 },
     }))
   );
-  
-  const rainSprings = useSprings(
+
+  // --- Rain Animation ---
+    const rainSprings = useSprings(
     rainPieces.length,
     rainPieces.map(p => ({
-      from: { y: p.y, x: p.x, opacity: 1, transform: `rotate(${p.rotation}deg) scale(${p.scale})` },
-      to: { y: window.innerHeight + 100, x: p.x + p.sway * 200, opacity: 0, transform: `rotate(${p.rotation + 180}deg) scale(${p.scale})` },
-      config: { duration: random(4000, 7000) },
+      from: {
+        transform: `translate(${p.x}px, ${p.y}px) rotate(0deg) scale(${p.scale})`,
+      },
+      to: async (next: any) => {
+        while (true) {
+          await next({
+            transform: `translate(${p.x + p.sway * 50}px, ${window.innerHeight + 50}px) rotate(${p.rotation}deg) scale(${p.scale})`,
+          });
+          await next({
+            transform: `translate(${p.x}px, -50px) rotate(0deg) scale(${p.scale})`,
+            immediate: true,
+          });
+        }
+      },
+      config: { duration: random(4000, 8000) },
     }))
   );
 
   return (
-    <div ref={containerRef} className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-50">
-      {blastSprings.map((props, i) => (
-        <animated.div
-          key={`blast-${i}`}
-          style={{
-            ...props,
-            position: 'absolute',
-            width: '12px',
-            height: '12px',
-            backgroundColor: blastPieces[i].color,
-            willChange: 'transform, opacity',
-          }}
-        />
-      ))}
-      {rainSprings.map((props, i) => (
-        <animated.div
-          key={`rain-${i}`}
-          style={{
-            ...props,
-            position: 'absolute',
-            width: '10px',
-            height: '10px',
-            backgroundColor: rainPieces[i].color,
-            willChange: 'transform, opacity',
-          }}
-        />
-      ))}
-    </div>
-  );
-};
-
-export default Confetti;
+      <div ref={containerRef} className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-50">
+        {blastSprings.map((props, i) => (
+          <animated.div
+            key={`blast-${i}`}
+            style={{
+              ...props,
+              position: 'absolute',
+              width: '12px',
+              height: '12px',
+              backgroundColor: blastPieces[i].color,
+              willChange: 'transform, opacity',
+            }}
+          />
+        ))}
+        {rainSprings.map((props, i) => (
+          <animated.div
+            key={`rain-${i}`}
+            style={{
+              ...props,
+              position: 'absolute',
+              width: '10px',
+              height: '10px',
+              backgroundColor: rainPieces[i].color,
+              willChange: 'transform, opacity',
+            }}
+          />
+        ))}
+      </div>
+    );
+ };
+ 
+ export default Confetti;
