@@ -26,6 +26,7 @@ export default function GamePage() {
   const gameAudioRef = useRef<HTMLAudioElement | null>(null);
   const levelCompleteAudioRef = useRef<HTMLAudioElement | null>(null);
   const isMuted = volume === 0;
+  const [userInteracted, setUserInteracted] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -43,6 +44,8 @@ export default function GamePage() {
   }, []);
   
   useEffect(() => {
+    if (!userInteracted) return;
+
     const menuAudio = menuAudioRef.current;
     const gameAudio = gameAudioRef.current;
     if (!menuAudio || !gameAudio) return;
@@ -65,7 +68,7 @@ export default function GamePage() {
         menuAudio.pause();
         gameAudio.pause();
     }
-  }, [currentLevel, isLoading, volume]);
+  }, [currentLevel, isLoading, volume, userInteracted]);
 
   useEffect(() => {
     const menuAudio = menuAudioRef.current;
@@ -81,13 +84,13 @@ export default function GamePage() {
     if(volume === 0) {
         activeAudio.pause()
     } else {
-        if(!isLoading && activeAudio.paused) {
+        if(userInteracted && !isLoading && activeAudio.paused) {
             activeAudio.play().catch(e => console.log(e));
         }
     }
 
 
-  }, [volume, currentLevel, isLoading]);
+  }, [volume, currentLevel, isLoading, userInteracted]);
 
   useEffect(() => {
     if (isInitialized) {
@@ -123,6 +126,7 @@ export default function GamePage() {
   }, []);
   
   const handleLevelSelect = (level: Level) => {
+    if (!userInteracted) setUserInteracted(true);
     setCurrentLevel(level);
   };
 
@@ -160,6 +164,7 @@ export default function GamePage() {
   };
 
   const handleExitGame = () => {
+    if (!userInteracted) setUserInteracted(true);
     setCurrentLevel(null);
   }
 
@@ -220,6 +225,7 @@ export default function GamePage() {
   }
 
   const handleVolumeChange = (value: number[]) => {
+      if (!userInteracted) setUserInteracted(true);
       const newVolume = value[0] / 100;
       setVolume(newVolume);
       if (newVolume > 0) {
@@ -228,6 +234,7 @@ export default function GamePage() {
   }
 
   const toggleMute = () => {
+    if (!userInteracted) setUserInteracted(true);
     if(volume > 0) {
         setLastVolume(volume);
         setVolume(0);

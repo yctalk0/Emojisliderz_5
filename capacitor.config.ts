@@ -10,10 +10,10 @@ const config: CapacitorConfig = {
   },
   plugins: {
     AdMob: {
-      appId: "ca-app-pub-3940256099942544~3347511713", // This is a test AdMob app ID
+      appId: "ca-app-pub-3940256099942544~3347511713",
       sync: true
     }
-  }
+  },
 };
 
 export default config;
