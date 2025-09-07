@@ -7,13 +7,11 @@ import {
   AlertDialogTitle,
   AlertDialogDescription,
   AlertDialogFooter,
-  AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import Confetti from './confetti';
 import { Award, Clock, Move, Play, SkipForward, X } from 'lucide-react';
 import Image from 'next/image';
-import { Card } from '../ui/card';
 import AdBanner from './ad-banner';
 
 interface WinModalProps {
@@ -85,9 +83,6 @@ const WinModal = ({
               <SkipForward className="mr-2 h-5 w-5" />
               Next Level
           </Button>
-          <div className="my-1">
-            <AdBanner position="bottom" />
-          </div>
           <Button onClick={onPlayAgain} variant="secondary" className="w-full h-11">
             <Play className="mr-2 h-5 w-5" />
             Play Again
@@ -95,6 +90,9 @@ const WinModal = ({
           <Button onClick={onExit} variant="secondary" className="w-full h-11">
             Back to Levels
           </Button>
+          <div className="my-1">
+            <AdBanner position="bottom" />
+          </div>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

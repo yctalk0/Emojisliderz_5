@@ -1,77 +1,145 @@
 
-'use client';
-
+'use client'
+import React, { useState, useEffect } from 'react';
+import { useSpring, animated } from '@react-spring/web';
 import { cn } from '@/lib/utils';
-import { ArrowBigUp, ArrowBigDown, ArrowBigLeft, ArrowBigRight } from 'lucide-react';
+import type { Hint } from '@/hooks/use-game-logic';
+import type { Level } from '@/lib/game-data';
+import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface TileProps {
+  level: Level;
   value: number;
   gridSize: number;
   imageSrc: string;
-  onClick: (value: number) => void;
+  onClick: (tileValue: number) => void;
   tileSize: number;
   correctPosition: number;
   currentPosition: number;
+  isCorrectPosition: boolean;
   gap: number;
-  showHint: 'up' | 'down' | 'left' | 'right' | null;
+  showHint: Hint['direction'] | null;
+  isSolving: boolean;
 }
 
-const ArrowIcon = ({ direction }: { direction: 'up' | 'down' | 'left' | 'right' }) => {
-  const iconProps = {
-    className: "w-1/2 h-1/2 text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]",
-    strokeWidth: 1.5,
+const ArrowHint = ({ direction, size }: { direction: Hint['direction'], size: number }) => {
+  const moveDistance = 10;
+  const animation = useSpring({
+    loop: { reverse: true },
+    from: { transform: 'translate(0px, 0px)' },
+    to: {
+      transform:
+        direction === 'up'
+          ? `translate(0px, -${moveDistance}px)`
+          : direction === 'down'
+          ? `translate(0px, ${moveDistance}px)`
+          : direction === 'left'
+          ? `translate(-${moveDistance}px, 0px)`
+          : `translate(${moveDistance}px, 0px)`,
+    },
+    config: { duration: 500 },
+  });
+
+  const getArrow = () => {
+    const props = {
+      className: "text-red-500 w-full h-full",
+      strokeWidth: 4,
+      style: { filter: 'drop-shadow(0 0 5px rgba(0,0,0,0.8))' }
+    };
+    switch (direction) {
+      case 'up':
+        return <ChevronUp {...props} />;
+      case 'down':
+        return <ChevronDown {...props} />;
+      case 'left':
+        return <ChevronLeft {...props} />;
+      case 'right':
+        return <ChevronRight {...props} />;
+      default:
+        return null;
+    }
   };
-  switch (direction) {
-    case 'up': return <ArrowBigUp {...iconProps} />;
-    case 'down': return <ArrowBigDown {...iconProps} />;
-    case 'left': return <ArrowBigLeft {...iconProps} />;
-    case 'right': return <ArrowBigRight {...iconProps} />;
-  }
+
+  return (
+    <animated.div
+      style={animation}
+      className="absolute inset-0 flex items-center justify-center"
+    >
+      <div style={{ width: size * 0.5, height: size * 0.5 }}>
+        {getArrow()}
+      </div>
+    </animated.div>
+  );
 };
 
-const Tile = ({ value, gridSize, imageSrc, onClick, tileSize, correctPosition, currentPosition, gap, showHint }: TileProps) => {
-  if (value === 0) {
-    return <div className="bg-transparent rounded-md" />;
-  }
-
+const Tile = ({ 
+  level,
+  value, 
+  gridSize, 
+  imageSrc, 
+  onClick,
+  tileSize, 
+  correctPosition, 
+  currentPosition, 
+  isCorrectPosition,
+  gap,
+  showHint,
+  isSolving,
+}: TileProps) => {
   const row = Math.floor(currentPosition / gridSize);
   const col = currentPosition % gridSize;
+  
+  const { top, left } = useSpring({
+    to: {
+      top: row * (tileSize + gap),
+      left: col * (tileSize + gap),
+    },
+    config: { tension: 300, friction: 30 },
+  });
 
   const bgPosX = (correctPosition % gridSize) * (100 / (gridSize - 1));
   const bgPosY = Math.floor(correctPosition / gridSize) * (100 / (gridSize - 1));
 
-  const tileStyle: React.CSSProperties = {
-    position: 'absolute',
-    width: `${tileSize}px`,
-    height: `${tileSize}px`,
-    transform: `translate(${col * (tileSize + gap)}px, ${row * (tileSize + gap)}px)`,
-    backgroundImage: `url(${imageSrc})`,
-    backgroundSize: `auto ${gridSize * 100}%`,
-    backgroundPosition: `${bgPosX}% ${bgPosY}%`,
-    transition: 'transform 0.2s ease-in-out',
-  };
-
-  const isCorrect = correctPosition === currentPosition;
+  if (value === 0) {
+    return null;
+  }
+  
+  const useRippleHint = level.levelNumber === 1 && !isSolving;
 
   return (
-    <button
+    <animated.div
       onClick={() => onClick(value)}
+      style={{
+        position: 'absolute',
+        width: `${tileSize}px`,
+        height: `${tileSize}px`,
+        backgroundImage: `url(${imageSrc})`,
+        backgroundSize: `${gridSize * 100}% auto`,
+        backgroundPosition: `${bgPosX}% ${bgPosY}%`,
+        backgroundColor: 'white',
+        touchAction: 'none',
+        top,
+        left,
+      }}
       className={cn(
-        "absolute rounded-md shadow-md hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-ring focus:z-10",
-         isCorrect && "border-2 border-green-500/80 shadow-green-500/50 shadow-lg"
+        'rounded-md cursor-pointer select-none',
+        'shadow-lg hover:shadow-xl',
+        'overflow-hidden',
+        'flex items-center justify-center',
+        isCorrectPosition && 'shadow-green-500/50 shadow-[0_0_15px_5px_rgba(74,222,128,0.5)]'
       )}
-      style={tileStyle}
-      aria-label={`Tile ${value}`}
     >
-       {showHint && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20">
-              <ArrowIcon direction={showHint} />
-          </div>
-        )}
-      <div className={cn("absolute top-1 left-1 bg-black/50 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center z-10 transition-all duration-300", isCorrect && "bg-green-500/80")}>
-        {value}
-      </div>
-    </button>
+      {showHint && useRippleHint && (
+        <div className="ripple-container" style={{ width: tileSize, height: tileSize }}>
+          <div className="ripple" />
+          <span className="font-bold text-lg">Tap here</span>
+        </div>
+      )}
+      {showHint && !useRippleHint && <ArrowHint direction={showHint} size={tileSize} />}
+      <span className="absolute bottom-1 right-2 text-2xl font-bold text-black" style={{ textShadow: '1px 1px 2px white' }}>
+          {value}
+      </span>
+    </animated.div>
   );
 };
 

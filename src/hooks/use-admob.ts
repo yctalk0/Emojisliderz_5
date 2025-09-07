@@ -2,14 +2,19 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { AdMob, AdOptions, InterstitialAdPluginEvents, PluginListenerHandle, BannerAdOptions, BannerAdSize, BannerAdPosition } from '@capacitor-community/admob';
-import { Capacitor } from '@capacitor/core';
+import { AdMob, AdOptions, InterstitialAdPluginEvents, BannerAdOptions, BannerAdSize, BannerAdPosition, RewardedAdPluginEvents, RewardAdOptions, RewardAdPluginEvents } from '@capacitor-community/admob';
+import { Capacitor, PluginListenerHandle } from '@capacitor/core';
 
 const useAdMob = () => {
   const [isInitialized, setIsInitialized] = useState(false);
 
-  const interstitialAdOptions: AdOptions = {
+  const interstitialAdOptions = {
     adId: 'ca-app-pub-3940256099942544/1033173712', // Test Interstitial ID
+    isTesting: true,
+  };
+  
+  const rewardedAdOptions: RewardAdOptions = {
+    adId: 'ca-app-pub-3940256099942544/5224354917', // Test Rewarded ID
     isTesting: true,
   };
 
@@ -34,7 +39,7 @@ const useAdMob = () => {
     } catch (error) {
       console.error('Error preparing interstitial ad', error);
     }
-  }, [isInitialized]);
+  }, [isInitialized, interstitialAdOptions]);
 
   const showInterstitial = useCallback(async () => {
     if (!isInitialized) return;
@@ -44,6 +49,29 @@ const useAdMob = () => {
       console.log('Interstitial ad shown.');
     } catch (error) {
       console.error('Error showing interstitial ad', error);
+    }
+  }, [isInitialized]);
+  
+  // --- Rewarded Ads ---
+  const prepareRewarded = useCallback(async () => {
+    if (!isInitialized) return;
+    try {
+      console.log('Preparing rewarded ad...');
+      await AdMob.prepareRewardVideoAd(rewardedAdOptions);
+      console.log('Rewarded ad prepared.');
+    } catch (error) {
+      console.error('Error preparing rewarded ad', error);
+    }
+  }, [isInitialized, rewardedAdOptions]);
+
+  const showRewarded = useCallback(async () => {
+    if (!isInitialized) return;
+    try {
+      console.log('Showing rewarded ad...');
+      await AdMob.showRewardVideoAd();
+      console.log('Rewarded ad shown.');
+    } catch (error) {
+      console.error('Error showing rewarded ad', error);
     }
   }, [isInitialized]);
   
@@ -93,36 +121,43 @@ const useAdMob = () => {
   }, [initialize]);
 
   useEffect(() => {
-    let listener: PluginListenerHandle | undefined;
+    let listeners: PluginListenerHandle[] = [];
 
-    const addListener = async () => {
-        listener = await AdMob.addListener(InterstitialAdPluginEvents.Dismissed, () => {
+    const addListeners = async () => {
+        const interstitialListener = await AdMob.addListener(InterstitialAdPluginEvents.Dismissed, () => {
             console.log('Interstitial ad dismissed. Preparing next one.');
             prepareInterstitial();
         });
+        const rewardedListener = await AdMob.addListener(RewardAdPluginEvents.Dismissed, () => {
+            console.log('Rewarded ad dismissed. Preparing next one.');
+            prepareRewarded();
+        });
+        listeners.push(interstitialListener, rewardedListener);
     }
     
     if (isInitialized) {
-        addListener();
+        addListeners();
     }
 
     return () => {
-      const removeListener = async () => {
-        if(listener) {
+      const removeListeners = async () => {
+        for(const listener of listeners) {
             await listener.remove();
         }
       }
-      removeListener();
+      removeListeners();
     };
-  }, [isInitialized, prepareInterstitial]);
+  }, [isInitialized, prepareInterstitial, prepareRewarded]);
 
   return {
     isInitialized,
-    prepareInterstitial,
-    showInterstitial,
-    showBanner,
-    hideBanner,
-    removeBanner
+    prepareInterstitial: useCallback(prepareInterstitial, [prepareInterstitial]),
+    showInterstitial: useCallback(showInterstitial, [showInterstitial]),
+    prepareRewarded: useCallback(prepareRewarded, [prepareRewarded]),
+    showRewarded: useCallback(showRewarded, [showRewarded]),
+    showBanner: useCallback(showBanner, [showBanner]),
+    hideBanner: useCallback(hideBanner, [hideBanner]),
+    removeBanner: useCallback(removeBanner, [removeBanner])
   };
 };
 

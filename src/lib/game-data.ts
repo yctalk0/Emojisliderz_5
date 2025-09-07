@@ -1,50 +1,33 @@
 
-export type Level = {
+export interface Level {
   id: string;
   difficulty: 'Easy' | 'Hard';
-  gridSize: 2 | 3;
-  emoji: string;
-  imageSrc: string;
-  imageHint: string;
   levelNumber: number;
+  gridSize: number;
+  imageSrc: string;
+  emoji: string;
+}
+
+const levelsPerDifficulty = 405;
+
+const generateLevels = (difficulty: 'Easy' | 'Hard', count: number, gridSize: number, startIndex: number): Level[] => {
+  const levels: Level[] = [];
+  for (let i = 1; i <= count; i++) {
+    const levelNumber = i;
+    const imageIndex = startIndex + i;
+    levels.push({
+      id: `${difficulty.toLowerCase()}-${levelNumber}`,
+      difficulty,
+      levelNumber,
+      gridSize,
+      imageSrc: `/assets/emoji/${imageIndex}.png`,
+      emoji: `Emoji ${imageIndex}`,
+    });
+  }
+  return levels;
 };
 
-export const emojiList = [
-  '😀', '😂', '😍', '😎', '🤓', '🤠', '😡', '🤩', '😢', '😇', '🥳', '🤯',
-  '🤔', '😴', '😭', '😱', '😈', '👻', '👽', '🤖', '👾', '🎃', '😺', '🐶',
-  '🦊', '🐼', '🦄', '🦁', '🐸', '🐙', '🐵', '🚀', '🔥', '💯', '👍', '👎',
-  '😊', '❤️', '⭐', '💡', '☀️', '🎉'
+export const levels: Level[] = [
+  ...generateLevels('Easy', levelsPerDifficulty, 2, 0),
+  ...generateLevels('Hard', levelsPerDifficulty, 3, 0), // Corrected startIndex to 0
 ];
-
-const difficulties = {
-  'Easy': { gridSize: 2, count: 315 },
-  'Hard': { gridSize: 3, count: 315 },
-} as const;
-
-export const levels: Level[] = [];
-
-let imageCounter = 1;
-Object.entries(difficulties).forEach(([difficulty, config]) => {
-  let emojiIndex = 0;
-  for (let i = 1; i <= config.count; i++) {
-    const emoji = emojiList[emojiIndex % emojiList.length];
-    const difficultyTyped = difficulty as 'Easy' | 'Hard';
-    const id = `${difficultyTyped.toLowerCase().replace(' ', '-')}-${i}`;
-    
-    // We'll loop the images if we run out of unique ones.
-    const imageNumber = ((imageCounter - 1) % 315) + 1;
-    
-    levels.push({
-      id: id,
-      difficulty: difficultyTyped,
-      gridSize: config.gridSize,
-      levelNumber: i,
-      emoji: emoji,
-      imageSrc: `/assets/emoji/${imageNumber}.png`,
-      imageHint: 'emoji puzzle', // Generic hint for now
-    });
-    
-    emojiIndex++;
-    imageCounter++;
-  }
-});

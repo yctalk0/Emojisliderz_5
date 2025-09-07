@@ -1,37 +1,69 @@
 
 'use client';
-
-import { useEffect } from 'react';
-import useAdMob from '@/hooks/use-admob';
-import { Card } from '../ui/card';
 import { Capacitor } from '@capacitor/core';
+import useAdMob from '@/hooks/use-admob';
+import { useEffect, useRef, useState } from 'react';
+import { cn } from '@/lib/utils';
 
 interface AdBannerProps {
-  position: 'top' | 'bottom';
+  position: 'top' | 'bottom' | 'middle';
+  className?: string;
 }
 
-const AdBanner = ({ position }: AdBannerProps) => {
+const AdBanner = ({ position, className }: AdBannerProps) => {
   const { showBanner, hideBanner } = useAdMob();
+  const isNative = Capacitor.isNativePlatform();
+  const adRef = useRef<HTMLDivElement>(null);
+  const [isAdVisible, setIsAdVisible] = useState(false);
 
   useEffect(() => {
-    showBanner(position);
-    
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsAdVisible(entry.isIntersecting);
+      },
+      { threshold: 0.5 }
+    );
+
+    if (adRef.current) {
+      observer.observe(adRef.current);
+    }
+
     return () => {
-      hideBanner();
+      if (adRef.current) {
+        observer.unobserve(adRef.current);
+      }
     };
-  }, [showBanner, hideBanner, position]);
-  
-  // On web, we just show a placeholder
-  if (Capacitor.getPlatform() === 'web') {
-      return (
-         <Card className="w-full h-24 flex items-center justify-center bg-secondary/50 border-dashed">
-            <p className="text-muted-foreground">Advertisement</p>
-         </Card>
-      );
+  }, []);
+
+  useEffect(() => {
+    if (isAdVisible && position !== 'middle') {
+      showBanner(position);
+    } else {
+      hideBanner();
+    }
+  }, [isAdVisible, position, showBanner, hideBanner]);
+
+  // Use a consistent height for both native and web placeholders
+  const placeholderHeight = "h-[60px]";
+
+  if (isNative && position !== 'middle') {
+    // On native, Capacitor overlays the ad, so we just return a placeholder of the correct height
+    return <div ref={adRef} className={cn("w-full bg-transparent", placeholderHeight, className)} />;
   }
-
-  // On native, Capacitor will overlay the ad, so we just return a placeholder of the correct height
-  return <div className="w-full h-[50px] bg-transparent" />;
+  
+  // On web, we want a visible placeholder
+  return (
+    <div
+      ref={adRef}
+      className={cn(
+        "w-full max-w-md mx-auto bg-gray-200 dark:bg-gray-800 rounded-md flex items-center justify-center text-sm text-gray-500",
+        placeholderHeight,
+        className
+      )}
+    >
+      Advertisement
+    </div>
+  );
 };
-
+      
 export default AdBanner;

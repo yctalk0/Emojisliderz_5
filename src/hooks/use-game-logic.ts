@@ -206,19 +206,21 @@ const useGameLogic = (gridSize: number, onWin: () => void) => {
 
   const handleTileClick = (tileValue: number) => {
     if (isSolved || isSolving) return;
-    setHint(null);
-
+  
     const tileIndex = tiles.findIndex(t => t.value === tileValue);
     const emptyIndex = tiles.findIndex(t => t.value === emptyTileValue);
-
+  
     const tileRow = Math.floor(tileIndex / gridSize);
     const tileCol = tileIndex % gridSize;
     const emptyRow = Math.floor(emptyIndex / gridSize);
     const emptyCol = emptyIndex % gridSize;
-
+  
     const isAdjacent = Math.abs(tileRow - emptyRow) + Math.abs(tileCol - emptyCol) === 1;
-
+  
     if (isAdjacent) {
+      if (moves > 0) { // Keep the hint on the first level
+        setHint(null);
+      }
       const newTiles = [...tiles];
       setHistory(prev => [...prev, tiles]);
       [newTiles[tileIndex], newTiles[emptyIndex]] = [newTiles[emptyIndex], newTiles[tileIndex]];
@@ -226,7 +228,7 @@ const useGameLogic = (gridSize: number, onWin: () => void) => {
       setMoves(prev => prev + 1);
     }
   };
-  
+
   const undoMove = () => {
     if (history.length > 0 && !isSolving) {
       setHint(null);
@@ -267,7 +269,7 @@ const useGameLogic = (gridSize: number, onWin: () => void) => {
     }
   };
 
-  const getNextMoveHint = () => {
+  const getNextMoveHint = useCallback(() => {
     if (isSolved || isSolving) return;
 
     const solutionPath = solvePuzzle(tiles, gridSize);
@@ -292,12 +294,12 @@ const useGameLogic = (gridSize: number, onWin: () => void) => {
         direction: direction,
       });
     }
-  };
+  }, [tiles, gridSize, isSolved, isSolving]);
 
   const canUndo = useMemo(() => history.length > 0 && !isSolving, [history, isSolving]);
   const canSolve = useMemo(() => !isSolved && !isSolving, [isSolved, isSolving]);
 
-  return { tiles, moves, time, isSolved, isStarted, canUndo, canSolve, hint, startGame, handleTileClick, undoMove, resetGame, autoSolve, getNextMoveHint };
+  return { tiles, moves, time, isSolved, isStarted, isSolving, canUndo, canSolve, hint, startGame, handleTileClick, undoMove, resetGame, autoSolve, getNextMoveHint };
 };
 
 export default useGameLogic;

@@ -133,27 +133,30 @@ export default function GamePage() {
         levelCompleteAudioRef.current?.play().catch(e => console.error("Could not play win sound", e));
       }
 
-      // Show Ad logic
-      if (currentLevel.difficulty === 'Hard') {
-        showInterstitial();
-      } else if (currentLevel.difficulty === 'Easy') {
+      let adShown = false;
+      if (currentLevel.difficulty === 'Easy') {
         const newCount = easyLevelsCompleted + 1;
         setEasyLevelsCompleted(newCount);
         localStorage.setItem('easyLevelsCompleted', JSON.stringify(newCount));
-        if (newCount % 3 === 0) {
+        if (newCount % 5 === 0) {
           showInterstitial();
+          adShown = true;
         }
       }
 
       // Unlock next level logic
-      const currentIndex = levels.findIndex(l => l.id === currentLevel.id);
-      if (currentIndex < levels.length - 1) {
-        const nextLevel = levels[currentIndex + 1];
-        const newUnlocked = [...new Set([...unlockedLevels, nextLevel.id])];
+      const levelsInDifficulty = levels.filter(l => l.difficulty === currentLevel.difficulty);
+      const currentIndexInDifficulty = levelsInDifficulty.findIndex(l => l.id === currentLevel.id);
+      
+      if (currentIndexInDifficulty < levelsInDifficulty.length - 1) {
+        const nextLevelInDifficulty = levelsInDifficulty[currentIndexInDifficulty + 1];
+        const newUnlocked = [...new Set([...unlockedLevels, nextLevelInDifficulty.id])];
         setUnlockedLevels(newUnlocked);
         localStorage.setItem('unlockedLevels', JSON.stringify(newUnlocked));
       }
+      return adShown;
     }
+    return false;
   };
 
   const handleExitGame = () => {
@@ -162,9 +165,11 @@ export default function GamePage() {
 
   const handleNextLevel = () => {
     if (currentLevel) {
-        const currentIndex = levels.findIndex(l => l.id === currentLevel.id);
-        if (currentIndex < levels.length - 1) {
-            const nextLevel = levels[currentIndex + 1];
+        const levelsInDifficulty = levels.filter(l => l.difficulty === currentLevel.difficulty);
+        const currentIndexInDifficulty = levelsInDifficulty.findIndex(l => l.id === currentLevel.id);
+        
+        if (currentIndexInDifficulty < levelsInDifficulty.length - 1) {
+            const nextLevel = levelsInDifficulty[currentIndexInDifficulty + 1];
             if (unlockedLevels.includes(nextLevel.id)) {
                 setCurrentLevel(nextLevel);
             }
@@ -174,16 +179,27 @@ export default function GamePage() {
   
   const handlePreviousLevel = () => {
     if (currentLevel) {
-        const currentIndex = levels.findIndex(l => l.id === currentLevel.id);
-        if (currentIndex > 0) {
-            const previousLevel = levels[currentIndex - 1];
+        const levelsInDifficulty = levels.filter(l => l.difficulty === currentLevel.difficulty);
+        const currentIndexInDifficulty = levelsInDifficulty.findIndex(l => l.id === currentLevel.id);
+
+        if (currentIndexInDifficulty > 0) {
+            const previousLevel = levelsInDifficulty[currentIndexInDifficulty - 1];
             setCurrentLevel(previousLevel);
         }
     }
   }
 
-  const isNextLevelAvailable = currentLevel ? levels.findIndex(l => l.id === currentLevel.id) < levels.length - 1 && unlockedLevels.includes(levels[levels.findIndex(l => l.id === currentLevel.id) + 1].id) : false;
-  const isPreviousLevelAvailable = currentLevel ? levels.findIndex(l => l.id === currentLevel.id) > 0 : false;
+  const isNextLevelAvailable = currentLevel ? (() => {
+    const levelsInDifficulty = levels.filter(l => l.difficulty === currentLevel.difficulty);
+    const currentIndexInDifficulty = levelsInDifficulty.findIndex(l => l.id === currentLevel.id);
+    if (currentIndexInDifficulty < levelsInDifficulty.length - 1) {
+      const nextLevel = levelsInDifficulty[currentIndexInDifficulty + 1];
+      return unlockedLevels.includes(nextLevel.id);
+    }
+    return false;
+  })() : false;
+
+  const isPreviousLevelAvailable = currentLevel ? levels.filter(l => l.difficulty === currentLevel.difficulty).findIndex(l => l.id === currentLevel.id) > 0 : false;
   
   const renderLoadingSkeleton = () => (
     <div className="space-y-4">
@@ -221,20 +237,26 @@ export default function GamePage() {
   }
 
   return (
-    <div className="flex flex-col text-foreground font-body h-full flex-grow">
-      <div className="w-full max-w-md mx-auto flex flex-col p-4 flex-grow">
-          <header className="relative text-center mb-4">
+    <div className="flex flex-col text-foreground font-body flex-grow pb-8">
+      <div className="w-full mx-auto flex flex-col px-4 sm:px-6 lg:px-8 flex-grow">
+          <header className="relative text-center pt-8 mb-4">
             {currentLevel && (
                 <Button variant="ghost" size="icon" className="absolute top-1/2 left-0 -translate-y-1/2" onClick={handleExitGame}>
                     <ArrowLeft className="h-8 w-8" strokeWidth={2.5} />
                 </Button>
             )}
             
-            <div className="flex justify-center items-center gap-3">
-              <Image src="/assets/emoji/music/logo/logo.png" alt="EmojiSliderz Logo" width={42} height={42} />
-              <h1 className="text-4xl font-extrabold tracking-tighter text-primary font-headline">EmojiSliderz</h1>
+            <div className="flex flex-col items-center">
+              <div className="flex justify-center items-center gap-2">
+                <Image src="/assets/emoji/music/logo/logo.png" alt="EmojiSliderz Logo" width={52} height={52} />
+                <h1 className="text-5xl font-extrabold tracking-tighter text-primary font-headline">EmojiSliderz</h1>
+              </div>
+              {currentLevel ? (
+                <p className="text-xl font-bold text-primary">Level {currentLevel.levelNumber}</p>
+              ) : (
+                <p className="text-muted-foreground text-lg">Slide the tiles to solve the emoji puzzle!</p>
+              )}
             </div>
-            <p className="text-muted-foreground mt-2 text-lg">Slide the tiles to solve the emoji puzzle!</p>
           </header>
           
           <main className="flex-grow flex flex-col justify-center">
@@ -242,6 +264,7 @@ export default function GamePage() {
               renderLoadingSkeleton()
             ) : currentLevel ? (
               <Game 
+                key={currentLevel.id}
                 level={currentLevel} 
                 onWin={handleGameWin}
                 onExit={handleExitGame}
@@ -249,6 +272,7 @@ export default function GamePage() {
                 onPreviousLevel={handlePreviousLevel}
                 isNextLevelAvailable={isNextLevelAvailable}
                 isPreviousLevelAvailable={isPreviousLevelAvailable}
+                easyLevelsCompleted={easyLevelsCompleted}
               />
             ) : (
               <LevelSelect 
@@ -258,8 +282,8 @@ export default function GamePage() {
               />
             )}
           </main>
-          <footer className="mt-auto pt-4 space-y-4">
-             <div className="flex justify-center items-center gap-4 px-4 py-2">
+          <footer className="mt-auto pt-2">
+            <div className="flex justify-center items-center gap-4 px-4">
                 <Button variant="ghost" size="icon" onClick={toggleMute} className="text-muted-foreground">
                   {renderVolumeIcon()}
                 </Button>
@@ -270,12 +294,15 @@ export default function GamePage() {
                   onValueChange={handleVolumeChange}
                   className="w-full max-w-xs"
                 />
+            </div>
+            {currentLevel && (
+              <div className="flex justify-center mt-2">
+                <Button onClick={handleExitGame} variant="secondary">Back to Levels</Button>
               </div>
-              {!currentLevel && <AdBanner position="bottom" />}
+            )}
+            <AdBanner position="bottom" className="mt-2" />
           </footer>
         </div>
     </div>
   );
 }
-
-    

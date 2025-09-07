@@ -5,17 +5,10 @@ import * as React from 'react';
 import type { Level } from '@/lib/game-data';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Lock, ArrowLeft, ArrowRight, Volume2, VolumeX, Volume1 } from 'lucide-react';
+import { Lock, Unlock, ArrowLeft, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
-import { Slider } from '@/components/ui/slider';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
 import AdBanner from './ad-banner';
-
 
 interface LevelSelectProps {
   levels: Level[];
@@ -41,7 +34,7 @@ const difficultyConfig = {
 const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: { difficulty: 'Easy' | 'Hard', levels: Level[], unlockedLevels: string[], onLevelSelect: (level: Level) => void }) => {
   const config = difficultyConfig[difficulty];
   const [currentPage, setCurrentPage] = React.useState(0);
-  const levelsPerPage = 10;
+  const levelsPerPage = 9;
   const totalPages = Math.ceil(levels.length / levelsPerPage);
 
   const paginatedLevels = levels.slice(currentPage * levelsPerPage, (currentPage + 1) * levelsPerPage);
@@ -53,15 +46,18 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
   const goToPrevPage = () => {
     setCurrentPage(current => Math.max(current - 1, 0));
   }
+  
+  const lastUnlockedInDifficulty = levels
+    .filter(level => unlockedLevels.includes(level.id))
+    .sort((a, b) => b.levelNumber - a.levelNumber)[0];
+  
+  const nextLevelNumber = lastUnlockedInDifficulty ? lastUnlockedInDifficulty.levelNumber + 1 : 1;
 
   return (
-    <Card className={cn("overflow-hidden border-2 shadow-lg rounded-2xl", config.cardClass)}>
+    <Card className={cn("overflow-hidden border-2 shadow-lg rounded-2xl z-10", config.cardClass)}>
       <div className="p-3 relative">
-        <div className="flex justify-between items-start">
-          <div>
-            <h2 className={cn("text-2xl font-bold", config.titleClass)}>{difficulty}</h2>
-            <p className="text-sm text-slate-400">{config.gridClass}</p>
-          </div>
+        <div className="flex justify-center items-center">
+          <h2 className={cn("text-2xl font-bold", config.titleClass)}>{`${difficulty} - ${config.gridClass}`}</h2>
         </div>
       </div>
       <CardContent className="p-3 flex items-center justify-center gap-2">
@@ -70,18 +66,22 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
             <ArrowLeft className="w-5 h-5" />
           </Button>
         )}
-        <div className="grid grid-cols-5 gap-2 flex-grow">
-          {paginatedLevels.map(level => {
+        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-2 flex-grow">
+          {paginatedLevels.map((level, index) => {
             const isUnlocked = unlockedLevels.includes(level.id);
+            const isNext = level.levelNumber === nextLevelNumber && !isUnlocked;
+            const isFirstLevel = level.difficulty === 'Easy' && level.levelNumber === 1;
+
             return (
               <Button
                 key={level.id}
                 variant={"secondary"}
-                disabled={!isUnlocked}
-                onClick={() => onLevelSelect(level)}
+                disabled={!isUnlocked && !isNext}
+                onClick={() => (isUnlocked || isNext) && onLevelSelect(level)}
                 className={cn(
                   "h-16 w-full text-4xl font-bold flex items-center justify-center transition-all duration-200 ease-in-out hover:scale-110 p-0 relative overflow-hidden",
-                  isUnlocked ? config.levelButtonClass : "bg-slate-700/50 cursor-not-allowed"
+                  isUnlocked ? config.levelButtonClass : "bg-slate-700/50",
+                  isNext && "animate-pulse shadow-lg shadow-yellow-400/50"
                 )}
                 aria-label={`Level ${level.levelNumber}`}
               >
@@ -90,12 +90,18 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
                   alt={`Level ${level.levelNumber}`}
                   width={64}
                   height={64}
+                  priority={isFirstLevel}
                   className={cn(
                     "w-full h-full object-contain p-1",
-                    !isUnlocked && "opacity-50"
+                    !isUnlocked && !isNext && "opacity-50"
                   )}
                 />
-                {!isUnlocked && (
+                {isNext && (
+                  <div className="absolute bottom-1 right-1">
+                    <Unlock className="w-5 h-5 text-white" />
+                  </div>
+                )}
+                {!isUnlocked && !isNext && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-md">
                     <Lock className="w-8 h-8 text-slate-200" />
                   </div>
@@ -124,7 +130,7 @@ const LevelSelect = ({ levels, unlockedLevels, onLevelSelect }: LevelSelectProps
 
   return (
     <div className="space-y-4">
-      {levelsByDifficulty.map(({ difficulty, levels }, index) => {
+      {levelsByDifficulty.map(({ difficulty, levels }) => {
         if (levels.length === 0) return null;
         return (
           <React.Fragment key={difficulty}>

@@ -3,8 +3,10 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Clock, HelpCircle, Move, RotateCw, WandSparkles, Undo2 } from 'lucide-react';
+import type { Level } from '@/lib/game-data';
 
 interface GameControlsProps {
+  level: Level;
   moves: number;
   time: number;
   onHint: () => void;
@@ -15,7 +17,7 @@ interface GameControlsProps {
   canSolve: boolean;
 }
 
-const GameControls = ({ moves, time, onHint, onUndo, onRestart, onSolve, canUndo, canSolve }: GameControlsProps) => {
+const GameControls = ({ level, moves, time, onHint, onUndo, onRestart, onSolve, canUndo, canSolve }: GameControlsProps) => {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
     const secs = (seconds % 60).toString().padStart(2, '0');
@@ -33,6 +35,10 @@ const GameControls = ({ moves, time, onHint, onUndo, onRestart, onSolve, canUndo
               <span>{moves}</span>
             </div>
           </div>
+          <div className="flex flex-col items-center">
+             <span className="text-sm text-muted-foreground">Level</span>
+            <span className="text-lg font-bold">{level.levelNumber}</span>
+          </div>
           <div className="flex items-center gap-2 text-lg font-bold">
             <Clock className="w-6 h-6 text-primary" />
              <div className="flex flex-col items-center">
@@ -42,7 +48,7 @@ const GameControls = ({ moves, time, onHint, onUndo, onRestart, onSolve, canUndo
           </div>
         </CardContent>
       </Card>
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <Button variant="secondary" onClick={onHint} className="h-12 text-base font-bold">
           <HelpCircle className="w-5 h-5 mr-2" /> Hint
         </Button>
