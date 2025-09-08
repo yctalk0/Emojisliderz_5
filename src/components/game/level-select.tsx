@@ -48,10 +48,10 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
   }
   
   const unlockedInDifficulty = levels
-    .filter(l => l.difficulty === difficulty && unlockedLevels.includes(l.id))
+    .filter(l => unlockedLevels.includes(l.id))
     .sort((a, b) => a.levelNumber - b.levelNumber);
 
-  const maxUnlockedLevelInDifficulty = unlockedInDifficulty.length > 0 ? unlockedInDifficulty[unlockedInDifficulty.length - 1] : null;
+  const nextPlayableLevel = unlockedInDifficulty.length > 0 ? unlockedInDifficulty[unlockedInDifficulty.length - 1] : null;
 
   return (
     <Card className={cn("overflow-hidden border-2 shadow-lg rounded-2xl z-10", config.cardClass)}>
@@ -69,16 +69,7 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
         <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-2 flex-grow">
           {paginatedLevels.map((level) => {
             const isUnlocked = unlockedLevels.includes(level.id);
-            
-            // The next playable level is the one with the highest levelNumber among the unlocked ones for this difficulty.
-            // This is null if no levels for this difficulty are unlocked.
-            const isNextPlayable = maxUnlockedLevelInDifficulty ? level.id === maxUnlockedLevelInDifficulty.id : false;
-
-            // A level is completed if it's unlocked but not the "next playable" one.
-            const isCompleted = isUnlocked && !isNextPlayable;
-
-            // The blinking effect should only apply to the very next level to be played.
-            const isBlinking = isNextPlayable;
+            const isNextPlayable = nextPlayableLevel?.id === level.id;
             
             return (
               <Button
@@ -89,7 +80,7 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
                 className={cn(
                   "h-16 w-full text-4xl font-bold flex items-center justify-center transition-all duration-200 ease-in-out hover:scale-110 p-0 relative overflow-hidden",
                   isUnlocked ? config.levelButtonClass : "bg-slate-700/50",
-                  isBlinking && "animate-pulse shadow-lg shadow-yellow-400/50"
+                  isNextPlayable && "animate-pulse shadow-lg shadow-yellow-400/50"
                 )}
                 aria-label={`Level ${level.levelNumber}`}
               >
