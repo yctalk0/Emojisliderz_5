@@ -47,11 +47,10 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
     setCurrentPage(current => Math.max(current - 1, 0));
   }
   
-  const lastUnlockedInDifficulty = levels
-    .filter(level => unlockedLevels.includes(level.id))
-    .sort((a, b) => b.levelNumber - a.levelNumber)[0];
-  
-  const nextLevelNumber = lastUnlockedInDifficulty ? lastUnlockedInDifficulty.levelNumber + 1 : 1;
+  const unlockedInDifficulty = levels.filter(level => unlockedLevels.includes(level.id));
+  const maxUnlockedLevelNumber = unlockedInDifficulty.length > 0
+    ? Math.max(...unlockedInDifficulty.map(l => l.levelNumber))
+    : 0;
 
   return (
     <Card className={cn("overflow-hidden border-2 shadow-lg rounded-2xl z-10", config.cardClass)}>
@@ -67,21 +66,22 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
           </Button>
         )}
         <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-2 flex-grow">
-          {paginatedLevels.map((level, index) => {
+          {paginatedLevels.map((level) => {
             const isUnlocked = unlockedLevels.includes(level.id);
-            const isNext = level.levelNumber === nextLevelNumber && !isUnlocked;
-            const isFirstLevel = level.difficulty === 'Easy' && level.levelNumber === 1;
+            const isFirstOfDifficulty = level.levelNumber === 1;
+            const isNextToUnlock = level.levelNumber === maxUnlockedLevelNumber + 1;
+            const isBlinking = isFirstOfDifficulty || (isNextToUnlock && !isUnlocked);
 
             return (
               <Button
                 key={level.id}
                 variant={"secondary"}
-                disabled={!isUnlocked && !isNext}
-                onClick={() => (isUnlocked || isNext) && onLevelSelect(level)}
+                disabled={!isUnlocked && !isNextToUnlock}
+                onClick={() => (isUnlocked || isNextToUnlock) && onLevelSelect(level)}
                 className={cn(
                   "h-16 w-full text-4xl font-bold flex items-center justify-center transition-all duration-200 ease-in-out hover:scale-110 p-0 relative overflow-hidden",
                   isUnlocked ? config.levelButtonClass : "bg-slate-700/50",
-                  isNext && "animate-pulse shadow-lg shadow-yellow-400/50"
+                  isBlinking && "animate-pulse shadow-lg shadow-yellow-400/50"
                 )}
                 aria-label={`Level ${level.levelNumber}`}
               >
@@ -90,18 +90,18 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
                   alt={`Level ${level.levelNumber}`}
                   width={64}
                   height={64}
-                  priority={isFirstLevel}
+                  priority={isFirstOfDifficulty}
                   className={cn(
                     "w-full h-full object-contain p-1",
-                    !isUnlocked && !isNext && "opacity-50"
+                    !isUnlocked && !isNextToUnlock && "opacity-50"
                   )}
                 />
-                {isNext && (
+                {isNextToUnlock && !isUnlocked && (
                   <div className="absolute bottom-1 right-1">
                     <Unlock className="w-5 h-5 text-white" />
                   </div>
                 )}
-                {!isUnlocked && !isNext && (
+                {!isUnlocked && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-md">
                     <Lock className="w-8 h-8 text-slate-200" />
                   </div>

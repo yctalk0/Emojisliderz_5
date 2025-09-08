@@ -74,11 +74,11 @@ const Game = ({
   const [isHintModalOpen, setIsHintModalOpen] = useState(false);
   
   useEffect(() => {
-    // For the first level, always get the next hint if not solved
-    if (level.levelNumber === 1 && !isSolved) {
+    // For the first level, always get the next hint if not solved and game is not started
+    if (level.levelNumber === 1 && !isSolved && !isStarted) {
       getNextMoveHint();
     }
-  }, [level.levelNumber, isSolved, getNextMoveHint]);
+  }, [level.levelNumber, isSolved, isStarted, getNextMoveHint]);
   
   useEffect(() => {
     setShowWinModal(false);
