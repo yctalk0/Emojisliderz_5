@@ -66,11 +66,16 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
           {paginatedLevels.map((level) => {
             const isUnlocked = unlockedLevels.includes(level.id);
             
-            const unlockedInDifficulty = levelsInSameDifficulty.filter(level => unlockedLevels.includes(level.id));
+            const unlockedInDifficulty = levelsInSameDifficulty
+              .filter(level => unlockedLevels.includes(level.id))
+              .sort((a, b) => a.levelNumber - b.levelNumber);
             
-            const maxUnlockedInDifficulty = unlockedInDifficulty.reduce((max, l) => l.levelNumber > max ? l.levelNumber : max, 0);
+            const maxUnlockedInDifficulty = unlockedInDifficulty.length > 0 ? unlockedInDifficulty[unlockedInDifficulty.length - 1] : null;
+
+            const isNextPlayable = maxUnlockedInDifficulty ? level.id === maxUnlockedInDifficulty.id : false;
             
-            const isBlinking = isUnlocked && level.levelNumber === maxUnlockedInDifficulty && (levelsInSameDifficulty.find(l => l.levelNumber === level.levelNumber + 1) ? !unlockedLevels.includes(levelsInSameDifficulty.find(l => l.levelNumber === level.levelNumber + 1)!.id) : true) ;
+            // The blinking effect should only apply to the very next level to be played.
+            const isBlinking = isNextPlayable && !unlockedLevels.includes(`easy-${level.levelNumber + 1}`) && !unlockedLevels.includes(`hard-${level.levelNumber + 1}`);
 
             return (
               <Button
@@ -101,7 +106,7 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
                     <Lock className="w-8 h-8 text-slate-200" />
                   </div>
                 )}
-                {isUnlocked && (
+                {isNextPlayable && (
                   <div className="absolute top-1 right-1 bg-background/50 rounded-full p-0.5">
                     <Unlock className="w-3 h-3 text-white" />
                   </div>
