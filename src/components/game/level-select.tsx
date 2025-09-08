@@ -68,16 +68,16 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
         <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-2 flex-grow">
           {paginatedLevels.map((level) => {
             const isUnlocked = unlockedLevels.includes(level.id);
-            const isFirstOfDifficulty = level.levelNumber === 1;
             const isNextToUnlock = level.levelNumber === maxUnlockedLevelNumber + 1;
-            const isBlinking = isFirstOfDifficulty || (isNextToUnlock && !isUnlocked);
+            // Corrected blinking logic: only the next level to unlock should blink.
+            const isBlinking = isNextToUnlock && !isUnlocked;
 
             return (
               <Button
                 key={level.id}
                 variant={"secondary"}
-                disabled={!isUnlocked && !isNextToUnlock}
-                onClick={() => (isUnlocked || isNextToUnlock) && onLevelSelect(level)}
+                disabled={!isUnlocked}
+                onClick={() => isUnlocked && onLevelSelect(level)}
                 className={cn(
                   "h-16 w-full text-4xl font-bold flex items-center justify-center transition-all duration-200 ease-in-out hover:scale-110 p-0 relative overflow-hidden",
                   isUnlocked ? config.levelButtonClass : "bg-slate-700/50",
@@ -90,13 +90,13 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
                   alt={`Level ${level.levelNumber}`}
                   width={64}
                   height={64}
-                  priority={isFirstOfDifficulty}
+                  priority={level.levelNumber === 1}
                   className={cn(
                     "w-full h-full object-contain p-1",
-                    !isUnlocked && !isNextToUnlock && "opacity-50"
+                    !isUnlocked && "opacity-50"
                   )}
                 />
-                {isNextToUnlock && !isUnlocked && (
+                {isBlinking && (
                   <div className="absolute bottom-1 right-1">
                     <Unlock className="w-5 h-5 text-white" />
                   </div>

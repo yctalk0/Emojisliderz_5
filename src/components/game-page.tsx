@@ -124,42 +124,27 @@ export default function GamePage() {
   }, [showBanner, hideBanner]);
 
   useEffect(() => {
+    // Only unlock level 1 of each difficulty by default
     const defaultUnlocked = levels
       .filter(level => level.levelNumber === 1)
       .map(level => level.id);
 
     const savedProgress = localStorage.getItem('unlockedLevels');
-    let initialUnlocked = defaultUnlocked;
+    let initialUnlocked: string[];
 
     if (savedProgress) {
-        try {
-            const parsedProgress = JSON.parse(savedProgress) as string[];
-            const validatedUnlocked: string[] = [];
-            const difficulties: ['Easy', 'Hard'] = ['Easy', 'Hard'];
-
-            difficulties.forEach(difficulty => {
-                const levelsInDifficulty = levels
-                    .filter(level => level.difficulty === difficulty)
-                    .sort((a, b) => a.levelNumber - b.levelNumber);
-
-                const unlockedInDifficulty = levelsInDifficulty.filter(l => parsedProgress.includes(l.id));
-
-                if (unlockedInDifficulty.length > 0) {
-                    const maxLevelNumber = Math.max(...unlockedInDifficulty.map(l => l.levelNumber));
-                    const levelsToUnlock = levelsInDifficulty.filter(l => l.levelNumber <= maxLevelNumber);
-                    levelsToUnlock.forEach(l => validatedUnlocked.push(l.id));
-                }
-            });
-
-            initialUnlocked = [...new Set([...defaultUnlocked, ...validatedUnlocked])];
-            localStorage.setItem('unlockedLevels', JSON.stringify(initialUnlocked)); // Correct the stored data
-
-        } catch (e) {
-            console.error("Failed to parse or validate unlocked levels from localStorage", e);
-            initialUnlocked = defaultUnlocked; // Fallback to default on error
-        }
+      try {
+        const parsedProgress = JSON.parse(savedProgress) as string[];
+        // Combine saved progress with default unlocks to ensure level 1 is always available
+        initialUnlocked = [...new Set([...defaultUnlocked, ...parsedProgress])];
+      } catch (e) {
+        console.error("Failed to parse unlocked levels from localStorage", e);
+        initialUnlocked = defaultUnlocked; // Fallback to default on error
+      }
+    } else {
+      initialUnlocked = defaultUnlocked;
     }
-
+    
     setUnlockedLevels(initialUnlocked);
     
     const savedEasyCompleted = localStorage.getItem('easyLevelsCompleted');
@@ -192,8 +177,9 @@ export default function GamePage() {
       const levelsInDifficulty = levels.filter(l => l.difficulty === currentLevel.difficulty).sort((a,b) => a.levelNumber - b.levelNumber);
       const currentIndexInDifficulty = levelsInDifficulty.findIndex(l => l.id === currentLevel.id);
       
-      if (currentIndexInDifficulty < levelsInDifficulty.length - 1) {
-        const nextLevelInDifficulty = levelsInDifficulty[currentIndexInDifficulty + 1];
+      const nextLevelIndex = currentIndexInDifficulty + 1;
+      if (nextLevelIndex < levelsInDifficulty.length) {
+        const nextLevelInDifficulty = levelsInDifficulty[nextLevelIndex];
         setUnlockedLevels(prev => {
           const newUnlocked = [...new Set([...prev, nextLevelInDifficulty.id])];
           localStorage.setItem('unlockedLevels', JSON.stringify(newUnlocked));
@@ -201,7 +187,7 @@ export default function GamePage() {
         });
       }
     }
-  }, [currentLevel, levels,unlockedLevels]);
+  }, [currentLevel, showInterstitial]);
 
 
   const handleExitGame = () => {
@@ -210,11 +196,12 @@ export default function GamePage() {
 
   const handleNextLevel = () => {
     if (currentLevel) {
-        const levelsInDifficulty = levels.filter(l => l.difficulty === currentLevel.difficulty);
+        const levelsInDifficulty = levels.filter(l => l.difficulty === currentLevel.difficulty).sort((a, b) => a.levelNumber - b.levelNumber);
         const currentIndexInDifficulty = levelsInDifficulty.findIndex(l => l.id === currentLevel.id);
         
-        if (currentIndexInDifficulty < levelsInDifficulty.length - 1) {
-            const nextLevel = levelsInDifficulty[currentIndexInDifficulty + 1];
+        const nextLevelIndex = currentIndexInDifficulty + 1;
+        if (nextLevelIndex < levelsInDifficulty.length) {
+            const nextLevel = levelsInDifficulty[nextLevelIndex];
             if (unlockedLevels.includes(nextLevel.id)) {
                 setCurrentLevel(nextLevel);
             }
@@ -224,7 +211,7 @@ export default function GamePage() {
   
   const handlePreviousLevel = () => {
     if (currentLevel) {
-        const levelsInDifficulty = levels.filter(l => l.difficulty === currentLevel.difficulty);
+        const levelsInDifficulty = levels.filter(l => l.difficulty === currentLevel.difficulty).sort((a, b) => a.levelNumber - b.levelNumber);
         const currentIndexInDifficulty = levelsInDifficulty.findIndex(l => l.id === currentLevel.id);
 
         if (currentIndexInDifficulty > 0) {
@@ -235,10 +222,11 @@ export default function GamePage() {
   }
 
   const isNextLevelAvailable = currentLevel ? (() => {
-    const levelsInDifficulty = levels.filter(l => l.difficulty === currentLevel.difficulty);
+    const levelsInDifficulty = levels.filter(l => l.difficulty === currentLevel.difficulty).sort((a, b) => a.levelNumber - b.levelNumber);
     const currentIndexInDifficulty = levelsInDifficulty.findIndex(l => l.id === currentLevel.id);
-    if (currentIndexInDifficulty < levelsInDifficulty.length - 1) {
-      const nextLevel = levelsInDifficulty[currentIndexInDifficulty + 1];
+    const nextLevelIndex = currentIndexInDifficulty + 1;
+    if (nextLevelIndex < levelsInDifficulty.length) {
+      const nextLevel = levelsInDifficulty[nextLevelIndex];
       return unlockedLevels.includes(nextLevel.id);
     }
     return false;
@@ -247,7 +235,7 @@ export default function GamePage() {
   const isPreviousLevelAvailable = currentLevel ? levels.filter(l => l.difficulty === currentLevel.difficulty).findIndex(l => l.id === currentLevel.id) > 0 : false;
   
     const isLastLevelOfDifficulty = currentLevel ? (() => {
-    const levelsInDifficulty = levels.filter(l => l.difficulty === currentLevel.difficulty);
+    const levelsInDifficulty = levels.filter(l => l.difficulty === currentLevel.difficulty).sort((a, b) => a.levelNumber - b.levelNumber);
     const currentIndexInDifficulty = levelsInDifficulty.findIndex(l => l.id === currentLevel.id);
     return currentIndexInDifficulty === levelsInDifficulty.length - 1;
   })() : false;
@@ -308,6 +296,12 @@ export default function GamePage() {
                 <p className="text-muted-foreground text-lg">Slide the tiles to solve the emoji puzzle!</p>
               )}
             </div>
+            
+            <div className="absolute top-1/2 right-0 -translate-y-1/2 flex items-center gap-2">
+               <Button variant="ghost" size="icon" onClick={toggleMute} className="text-muted-foreground">
+                  {renderVolumeIcon()}
+                </Button>
+            </div>
           </header>
           
           <main className="flex-grow flex flex-col justify-center">
@@ -339,19 +333,18 @@ export default function GamePage() {
             )}
           </main>
           <footer className="mt-auto pt-2">
-            <div className="flex justify-center items-center gap-4 px-4">
-                <Button variant="ghost" size="icon" onClick={toggleMute} className="text-muted-foreground">
-                  {renderVolumeIcon()}
-                </Button>
-                <Slider
-                  value={[volume * 100]}
-                  max={100}
-                  step={1}
-                  onValueChange={handleVolumeChange}
-                  className="w-full max-w-xs"
-                />
-            </div>
-            <AdBanner position="bottom" visible={true} /> {/* Ad banner below volume control slider */}
+            {!currentLevel && (
+              <div className="flex justify-center items-center gap-4 px-4">
+                  <Slider
+                    value={[volume * 100]}
+                    max={100}
+                    step={1}
+                    onValueChange={handleVolumeChange}
+                    className="w-full max-w-xs"
+                  />
+              </div>
+            )}
+            <AdBanner position="bottom" visible={!currentLevel} />
             {currentLevel && (
               <div className="flex justify-center mt-2">
                 <Button onClick={handleExitGame} variant="secondary">Back to Levels</Button>
