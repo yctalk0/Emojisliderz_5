@@ -162,7 +162,7 @@ export default function GamePage() {
   const handleGameWin = useCallback(() => {
     if (currentLevel) {
       gameAudioRef.current?.pause();
-
+  
       if (currentLevel.difficulty === 'Easy') {
         setEasyLevelsCompleted(prev => {
           const newCount = prev + 1;
@@ -173,19 +173,31 @@ export default function GamePage() {
           return newCount;
         });
       }
-
-      const levelsInDifficulty = levels.filter(l => l.difficulty === currentLevel.difficulty).sort((a,b) => a.levelNumber - b.levelNumber);
-      const currentIndexInDifficulty = levelsInDifficulty.findIndex(l => l.id === currentLevel.id);
-      
-      const nextLevelIndex = currentIndexInDifficulty + 1;
-      if (nextLevelIndex < levelsInDifficulty.length) {
-        const nextLevelInDifficulty = levelsInDifficulty[nextLevelIndex];
-        setUnlockedLevels(prev => {
-          const newUnlocked = [...new Set([...prev, nextLevelInDifficulty.id])];
-          localStorage.setItem('unlockedLevels', JSON.stringify(newUnlocked));
-          return newUnlocked;
-        });
-      }
+  
+      setUnlockedLevels(prev => {
+        const newUnlocked = new Set(prev);
+  
+        // Unlock next level in the same difficulty
+        const levelsInDifficulty = levels.filter(l => l.difficulty === currentLevel.difficulty).sort((a, b) => a.levelNumber - b.levelNumber);
+        const currentIndexInDifficulty = levelsInDifficulty.findIndex(l => l.id === currentLevel.id);
+        
+        if (currentIndexInDifficulty + 1 < levelsInDifficulty.length) {
+          const nextLevelInDifficulty = levelsInDifficulty[currentIndexInDifficulty + 1];
+          newUnlocked.add(nextLevelInDifficulty.id);
+        }
+  
+        // If the first easy level is completed, unlock the first hard level
+        if (currentLevel.id === 'easy-1') {
+          const firstHardLevel = levels.find(l => l.id === 'hard-1');
+          if (firstHardLevel) {
+            newUnlocked.add(firstHardLevel.id);
+          }
+        }
+  
+        const finalUnlocked = Array.from(newUnlocked);
+        localStorage.setItem('unlockedLevels', JSON.stringify(finalUnlocked));
+        return finalUnlocked;
+      });
     }
   }, [currentLevel, showInterstitial]);
 
