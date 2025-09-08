@@ -47,10 +47,7 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
     setCurrentPage(current => Math.max(current - 1, 0));
   }
   
-  const unlockedInDifficulty = levels.filter(level => unlockedLevels.includes(level.id));
-  const maxUnlockedLevelNumber = unlockedInDifficulty.length > 0
-    ? Math.max(...unlockedInDifficulty.map(l => l.levelNumber))
-    : 0;
+  const levelsInSameDifficulty = levels.filter(l => l.difficulty === difficulty);
 
   return (
     <Card className={cn("overflow-hidden border-2 shadow-lg rounded-2xl z-10", config.cardClass)}>
@@ -68,14 +65,12 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
         <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-2 flex-grow">
           {paginatedLevels.map((level) => {
             const isUnlocked = unlockedLevels.includes(level.id);
-            const isNextToUnlock = isUnlocked && !levels.find(l => l.levelNumber === level.levelNumber - 1 && !unlockedLevels.includes(l.id));
-            const hasCompletedPrevious = level.levelNumber === 1 || unlockedLevels.includes(levels.find(l => l.levelNumber === level.levelNumber - 1)?.id ?? '');
             
-            // A level should blink if it's the next one to be played.
-            // This means it is unlocked, and the level before it is also unlocked (or it's level 1).
-            // But the level itself is the highest unlocked level number.
-            const isHighestUnlocked = level.levelNumber === maxUnlockedLevelNumber;
-            const isBlinking = isUnlocked && isHighestUnlocked && !unlockedLevels.includes(`${level.difficulty.toLowerCase()}-${level.levelNumber + 1}`);
+            const unlockedInDifficulty = levelsInSameDifficulty.filter(level => unlockedLevels.includes(level.id));
+            
+            const maxUnlockedInDifficulty = unlockedInDifficulty.reduce((max, l) => l.levelNumber > max ? l.levelNumber : max, 0);
+            
+            const isBlinking = isUnlocked && level.levelNumber === maxUnlockedInDifficulty && (levelsInSameDifficulty.find(l => l.levelNumber === level.levelNumber + 1) ? !unlockedLevels.includes(levelsInSameDifficulty.find(l => l.levelNumber === level.levelNumber + 1)!.id) : true) ;
 
             return (
               <Button
@@ -104,6 +99,11 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
                 {!isUnlocked && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-md">
                     <Lock className="w-8 h-8 text-slate-200" />
+                  </div>
+                )}
+                {isUnlocked && (
+                  <div className="absolute top-1 right-1 bg-background/50 rounded-full p-0.5">
+                    <Unlock className="w-3 h-3 text-white" />
                   </div>
                 )}
               </Button>
