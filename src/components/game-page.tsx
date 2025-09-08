@@ -124,8 +124,8 @@ export default function GamePage() {
   }, [showBanner, hideBanner]);
 
   useEffect(() => {
-    // By default, only the first 'Easy' level is unlocked.
-    const defaultUnlocked = ['easy-1'];
+    // By default, the first level of each difficulty is unlocked.
+    const defaultUnlocked = ['easy-1', 'hard-1'];
   
     const savedProgress = localStorage.getItem('unlockedLevels');
     let initialUnlocked: string[];
@@ -133,15 +133,15 @@ export default function GamePage() {
     if (savedProgress) {
       try {
         const parsedProgress = JSON.parse(savedProgress) as string[];
-        // On subsequent loads, combine saved progress with the default.
-        // This ensures 'easy-1' is always playable even if localStorage gets corrupted.
+        // On subsequent loads, combine saved progress with the defaults.
+        // This ensures the first levels are always playable even if localStorage gets corrupted.
         initialUnlocked = [...new Set([...defaultUnlocked, ...parsedProgress])];
       } catch (e) {
         console.error("Failed to parse unlocked levels from localStorage", e);
         initialUnlocked = defaultUnlocked;
       }
     } else {
-      // First time launch: only 'easy-1' is unlocked.
+      // First time launch: only 'easy-1' and 'hard-1' are unlocked.
       initialUnlocked = defaultUnlocked;
     }
     
@@ -184,14 +184,6 @@ export default function GamePage() {
         if (currentIndexInDifficulty + 1 < levelsInDifficulty.length) {
           const nextLevelInDifficulty = levelsInDifficulty[currentIndexInDifficulty + 1];
           newUnlocked.add(nextLevelInDifficulty.id);
-        }
-  
-        // If the first easy level is completed, unlock the first hard level
-        if (currentLevel.id === 'easy-1') {
-          const firstHardLevel = levels.find(l => l.id === 'hard-1');
-          if (firstHardLevel) {
-            newUnlocked.add(firstHardLevel.id);
-          }
         }
   
         const finalUnlocked = Array.from(newUnlocked);
