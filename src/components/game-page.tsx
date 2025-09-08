@@ -267,10 +267,10 @@ export default function GamePage() {
     </div>
   );
   
-  const renderVolumeIcon = () => {
-    if (volume === 0) return <VolumeX className="h-6 w-6" />;
-    if (volume < 0.5) return <Volume1 className="h-6 w-6" />;
-    return <Volume2 className="h-6 w-6" />;
+  const renderVolumeIcon = (className: string = "") => {
+    if (volume === 0) return <VolumeX className={`h-6 w-6 ${className}`} />;
+    if (volume < 0.5) return <Volume1 className={`h-6 w-6 ${className}`} />;
+    return <Volume2 className={`h-6 w-6 ${className}`} />;
   }
 
   const handleVolumeChange = (value: number[]) => {
@@ -347,10 +347,11 @@ export default function GamePage() {
               />
             )}
           </main>
-          <footer className="fixed bottom-0 left-0 right-0 w-full px-4 pb-4 bg-background z-10">
-            <div className="max-w-md mx-auto space-y-2">
+          <footer className="w-full px-4 pt-4 pb-8 bg-background mt-auto fixed bottom-0 left-0 right-0">
+            <div className="max-w-md mx-auto space-y-4">
               {!currentLevel && (
-                <div className="flex justify-center items-center gap-4">
+                <div className="flex justify-center items-center gap-2">
+                    {renderVolumeIcon("text-white")}
                     <Slider
                       value={[volume * 100]}
                       max={100}
@@ -360,7 +361,9 @@ export default function GamePage() {
                     />
                 </div>
               )}
-              <AdBanner position="bottom" visible={!currentLevel} />
+              <div className="mt-2">
+                <AdBanner position="bottom" visible={!currentLevel} />
+              </div>
               {currentLevel && (
                 <div className="flex justify-center">
                   <Button onClick={handleExitGame} variant="secondary">Back to Levels</Button>
