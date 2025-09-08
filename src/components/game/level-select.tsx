@@ -47,7 +47,11 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
     setCurrentPage(current => Math.max(current - 1, 0));
   }
   
-  const levelsInSameDifficulty = levels.filter(l => l.difficulty === difficulty);
+  const unlockedInDifficulty = levels
+    .filter(l => l.difficulty === difficulty && unlockedLevels.includes(l.id))
+    .sort((a, b) => a.levelNumber - b.levelNumber);
+
+  const maxUnlockedLevelInDifficulty = unlockedInDifficulty.length > 0 ? unlockedInDifficulty[unlockedInDifficulty.length - 1] : null;
 
   return (
     <Card className={cn("overflow-hidden border-2 shadow-lg rounded-2xl z-10", config.cardClass)}>
@@ -66,17 +70,16 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
           {paginatedLevels.map((level) => {
             const isUnlocked = unlockedLevels.includes(level.id);
             
-            const unlockedInDifficulty = levelsInSameDifficulty
-              .filter(level => unlockedLevels.includes(level.id))
-              .sort((a, b) => a.levelNumber - b.levelNumber);
-            
-            const maxUnlockedInDifficulty = unlockedInDifficulty.length > 0 ? unlockedInDifficulty[unlockedInDifficulty.length - 1] : null;
+            // The next playable level is the one with the highest levelNumber among the unlocked ones for this difficulty.
+            // This is null if no levels for this difficulty are unlocked.
+            const isNextPlayable = maxUnlockedLevelInDifficulty ? level.id === maxUnlockedLevelInDifficulty.id : false;
 
-            const isNextPlayable = maxUnlockedInDifficulty ? level.id === maxUnlockedInDifficulty.id : false;
-            
+            // A level is completed if it's unlocked but not the "next playable" one.
+            const isCompleted = isUnlocked && !isNextPlayable;
+
             // The blinking effect should only apply to the very next level to be played.
-            const isBlinking = isNextPlayable && !unlockedLevels.includes(`easy-${level.levelNumber + 1}`) && !unlockedLevels.includes(`hard-${level.levelNumber + 1}`);
-
+            const isBlinking = isNextPlayable;
+            
             return (
               <Button
                 key={level.id}

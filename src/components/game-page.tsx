@@ -124,22 +124,24 @@ export default function GamePage() {
   }, [showBanner, hideBanner]);
 
   useEffect(() => {
-    // Only unlock level 1 of the 'Easy' difficulty by default
+    // By default, only the first 'Easy' level is unlocked.
     const defaultUnlocked = ['easy-1'];
-
+  
     const savedProgress = localStorage.getItem('unlockedLevels');
     let initialUnlocked: string[];
-
+  
     if (savedProgress) {
       try {
         const parsedProgress = JSON.parse(savedProgress) as string[];
-        // Combine saved progress with default unlocks to ensure level 1 is always available
+        // On subsequent loads, combine saved progress with the default.
+        // This ensures 'easy-1' is always playable even if localStorage gets corrupted.
         initialUnlocked = [...new Set([...defaultUnlocked, ...parsedProgress])];
       } catch (e) {
         console.error("Failed to parse unlocked levels from localStorage", e);
-        initialUnlocked = defaultUnlocked; // Fallback to default on error
+        initialUnlocked = defaultUnlocked;
       }
     } else {
+      // First time launch: only 'easy-1' is unlocked.
       initialUnlocked = defaultUnlocked;
     }
     
