@@ -1,5 +1,6 @@
 
 'use client';
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Level } from '@/lib/game-data';
 import { levels } from '@/lib/game-data';
@@ -12,6 +13,9 @@ import Image from 'next/image';
 import { Card } from './ui/card';
 import { Slider } from './ui/slider';
 import AdBanner from './game/ad-banner';
+import useAdMob from '@/hooks/use-admob';
+import { Capacitor } from '@capacitor/core';
+import { BannerAdPosition } from '@capacitor-community/admob';
 
 export default function GamePage() {
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
@@ -24,6 +28,8 @@ export default function GamePage() {
   const gameAudioRef = useRef<HTMLAudioElement | null>(null);
   const levelCompleteAudioRef = useRef<HTMLAudioElement | null>(null);
   const isMuted = volume === 0;
+  const { showBanner, hideBanner, showInterstitial, showRewarded } = useAdMob();
+
   
   const [audioReady, setAudioReady] = useState(false);
 
@@ -99,22 +105,61 @@ export default function GamePage() {
   }, [currentLevel, isLoading, volume, audioReady]);
 
   useEffect(() => {
+      const showBottomBanner = async () => {
+      if (Capacitor.getPlatform() !== 'web') {
+        await showBanner(BannerAdPosition.BOTTOM_CENTER);
+      }
+    };
+
+    showBottomBanner();
+
+    return () => {
+      const hide = async () => {
+        if (Capacitor.getPlatform() !== 'web') {
+          await hideBanner();
+        }
+      };
+      hide();
+    };
+  }, [showBanner, hideBanner]);
+
+  useEffect(() => {
     const defaultUnlocked = levels
       .filter(level => level.levelNumber === 1)
       .map(level => level.id);
 
     const savedProgress = localStorage.getItem('unlockedLevels');
     let initialUnlocked = defaultUnlocked;
+
     if (savedProgress) {
-      try {
-        const parsedProgress = JSON.parse(savedProgress);
-        if (Array.isArray(parsedProgress)) {
-          initialUnlocked = [...new Set([...defaultUnlocked, ...parsedProgress])];
+        try {
+            const parsedProgress = JSON.parse(savedProgress) as string[];
+            const validatedUnlocked: string[] = [];
+            const difficulties: ['Easy', 'Hard'] = ['Easy', 'Hard'];
+
+            difficulties.forEach(difficulty => {
+                const levelsInDifficulty = levels
+                    .filter(level => level.difficulty === difficulty)
+                    .sort((a, b) => a.levelNumber - b.levelNumber);
+
+                const unlockedInDifficulty = levelsInDifficulty.filter(l => parsedProgress.includes(l.id));
+
+                if (unlockedInDifficulty.length > 0) {
+                    const maxLevelNumber = Math.max(...unlockedInDifficulty.map(l => l.levelNumber));
+                    const levelsToUnlock = levelsInDifficulty.filter(l => l.levelNumber <= maxLevelNumber);
+                    levelsToUnlock.forEach(l => validatedUnlocked.push(l.id));
+                }
+            });
+
+            initialUnlocked = [...new Set([...defaultUnlocked, ...validatedUnlocked])];
+            localStorage.setItem('unlockedLevels', JSON.stringify(initialUnlocked)); // Correct the stored data
+
+        } catch (e) {
+            console.error("Failed to parse or validate unlocked levels from localStorage", e);
+            initialUnlocked = defaultUnlocked; // Fallback to default on error
         }
-      } catch (e) {
-        console.error("Failed to parse unlocked levels from localStorage", e);
-      }
     }
+
     setUnlockedLevels(initialUnlocked);
     
     const savedEasyCompleted = localStorage.getItem('easyLevelsCompleted');
@@ -129,32 +174,35 @@ export default function GamePage() {
     setCurrentLevel(level);
   };
 
-  const handleGameWin = () => {
+  const handleGameWin = useCallback(() => {
     if (currentLevel) {
       gameAudioRef.current?.pause();
-      if (!isMuted) {
-        levelCompleteAudioRef.current?.play().catch(e => console.error("Could not play win sound", e));
-      }
 
       if (currentLevel.difficulty === 'Easy') {
-        const newCount = easyLevelsCompleted + 1;
-        setEasyLevelsCompleted(newCount);
-        localStorage.setItem('easyLevelsCompleted', JSON.stringify(newCount));
+        setEasyLevelsCompleted(prev => {
+          const newCount = prev + 1;
+          localStorage.setItem('easyLevelsCompleted', JSON.stringify(newCount));
+          if (newCount % 4 === 0 && Capacitor.getPlatform() !== 'web') {
+            showInterstitial();
+          }
+          return newCount;
+        });
       }
 
-      const levelsInDifficulty = levels.filter(l => l.difficulty === currentLevel.difficulty);
+      const levelsInDifficulty = levels.filter(l => l.difficulty === currentLevel.difficulty).sort((a,b) => a.levelNumber - b.levelNumber);
       const currentIndexInDifficulty = levelsInDifficulty.findIndex(l => l.id === currentLevel.id);
       
       if (currentIndexInDifficulty < levelsInDifficulty.length - 1) {
         const nextLevelInDifficulty = levelsInDifficulty[currentIndexInDifficulty + 1];
-        const newUnlocked = [...new Set([...unlockedLevels, nextLevelInDifficulty.id])];
-        setUnlockedLevels(newUnlocked);
-        localStorage.setItem('unlockedLevels', JSON.stringify(newUnlocked));
+        setUnlockedLevels(prev => {
+          const newUnlocked = [...new Set([...prev, nextLevelInDifficulty.id])];
+          localStorage.setItem('unlockedLevels', JSON.stringify(newUnlocked));
+          return newUnlocked;
+        });
       }
-      return false; // No ad shown
     }
-    return false;
-  };
+  }, [currentLevel, levels,unlockedLevels]);
+
 
   const handleExitGame = () => {
     setCurrentLevel(null);
@@ -263,6 +311,7 @@ export default function GamePage() {
           </header>
           
           <main className="flex-grow flex flex-col justify-center">
+
             {isLoading ? (
               renderLoadingSkeleton()
             ) : currentLevel ? (
@@ -275,8 +324,11 @@ export default function GamePage() {
                 onPreviousLevel={handlePreviousLevel}
                 isNextLevelAvailable={isNextLevelAvailable}
                 isPreviousLevelAvailable={isPreviousLevelAvailable}
-                easyLevelsCompleted={easyLevelsCompleted}
                 isLastLevelOfDifficulty={isLastLevelOfDifficulty}
+                levelCompleteAudioRef={levelCompleteAudioRef}
+                isMuted={isMuted}
+                easyLevelsCompleted={easyLevelsCompleted}
+                showRewarded={showRewarded}
               />
             ) : (
               <LevelSelect 
@@ -299,13 +351,13 @@ export default function GamePage() {
                   className="w-full max-w-xs"
                 />
             </div>
+            <AdBanner position="bottom" visible={true} /> {/* Ad banner below volume control slider */}
             {currentLevel && (
               <div className="flex justify-center mt-2">
-                <Button onClick={handleExitGame} className="btn-cyan">Back to Levels</Button>
+                <Button onClick={handleExitGame} variant="secondary">Back to Levels</Button>
               </div>
             )}
-            <AdBanner position="bottom" className="mt-2" />
-          </footer>
+           </footer>
         </div>
     </div>
   );

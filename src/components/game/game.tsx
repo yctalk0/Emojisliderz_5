@@ -1,6 +1,6 @@
 
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, RefObject } from 'react';
 import type { Level } from '@/lib/game-data';
 import useGameLogic from '@/hooks/use-game-logic';
 import GameBoard from './game-board';
@@ -12,33 +12,45 @@ import AdBanner from './ad-banner';
 
 interface GameProps {
   level: Level;
-  onWin: () => void;
+  onWin: () => void; // This is now only for parent (GamePage) to update progress
   onExit: () => void;
   onNextLevel: () => void;
   onPreviousLevel: () => void;
   isNextLevelAvailable: boolean;
   isPreviousLevelAvailable: boolean;
   isLastLevelOfDifficulty: boolean;
+  levelCompleteAudioRef: RefObject<HTMLAudioElement>; // Added prop
+  isMuted: boolean; // Added prop
+  easyLevelsCompleted: number; // New prop
+  showRewarded: () => Promise<{ rewarded: boolean }>; // New prop, updated return type
 }
 
-const Game = ({ 
-  level, 
-  onWin, 
-  onExit, 
-  onNextLevel, 
-  onPreviousLevel, 
+const Game = ({
+  level,
+  onWin,
+  onExit,
+  onNextLevel,
+  onPreviousLevel,
   isNextLevelAvailable,
   isPreviousLevelAvailable,
-  isLastLevelOfDifficulty
+  isLastLevelOfDifficulty,
+  levelCompleteAudioRef,
+  isMuted,
+  easyLevelsCompleted, // Destructure new prop
+  showRewarded, // Destructure new prop
 }: GameProps) => {
   const { toast } = useToast();
   const [showWinModal, setShowWinModal] = useState(false);
+  const [showPersistentRippleHint, setShowPersistentRippleHint] = useState(false);
 
-  const handleWin = () => {
-    onWin();
+  // This function is called by the game logic when the puzzle is solved
+  const handleGameWinLogic = () => {
+    onWin(); // Notify parent (GamePage) to update progress
+    setShowPersistentRippleHint(false); // Hide persistent hint on win
+    // We wait a shorter moment for the last tile animation to finish, then show the modal
     setTimeout(() => {
       setShowWinModal(true);
-    }, 700);
+    }, 200); // Reduced delay to 200ms
   };
   
   const {
@@ -57,18 +69,25 @@ const Game = ({
     resetGame,
     autoSolve,
     getNextMoveHint,
-  } = useGameLogic(level.gridSize, handleWin);
+  } = useGameLogic(level.gridSize, handleGameWinLogic);
 
   const [isHintModalOpen, setIsHintModalOpen] = useState(false);
   
   useEffect(() => {
-    if (level.levelNumber === 1 && moves < 3 && !isSolved) {
+    // For the first level, always get the next hint if not solved
+    if (level.levelNumber === 1 && !isSolved) {
       getNextMoveHint();
     }
-  }, [moves, level.levelNumber, isSolved, getNextMoveHint]);
+  }, [level.levelNumber, isSolved, getNextMoveHint]);
   
   useEffect(() => {
     setShowWinModal(false);
+    // Reset persistent hint state when level changes
+    if (level.levelNumber === 1) {
+      setShowPersistentRippleHint(true);
+    } else {
+      setShowPersistentRippleHint(false);
+    }
   }, [level]);
 
   const handleRestart = () => {
@@ -85,8 +104,18 @@ const Game = ({
     getNextMoveHint();
   }
 
-  const handleSolveRequest = () => {
-    autoSolve();
+  const handleSolveRequest = async () => {
+    if (level.difficulty === 'Hard' && level.gridSize === 3) {
+      // Show rewarded ad
+      const adResult = await showRewarded(); // Assuming showRewarded returns a promise that resolves on ad completion
+      if (adResult && adResult.rewarded) { // Assuming adResult has a 'rewarded' property indicating success
+        autoSolve();
+      } else {
+        toast({ title: "Ad not completed", description: "You need to watch the ad to solve the level.", variant: "destructive" });
+      }
+    } else {
+      autoSolve();
+    }
   };
   
   const handleTileInteraction = (tileValue: number) => {
@@ -108,8 +137,10 @@ const Game = ({
         onSolve={handleSolveRequest}
         canUndo={canUndo}
         canSolve={canSolve}
+        easyLevelsCompleted={easyLevelsCompleted}
+        showRewarded={showRewarded}
       />
-      <AdBanner position="middle" />
+      <AdBanner position="bottom" visible={!isSolved} />
       <GameBoard
           level={level}
           tiles={tiles}
@@ -120,6 +151,7 @@ const Game = ({
           difficulty={level.difficulty}
           isSolving={isSolving}
           isGameWon={isSolved}
+          showPersistentRippleHint={showPersistentRippleHint}
       />
 
       <WinModal
@@ -133,6 +165,8 @@ const Game = ({
         imageSrc={level.imageSrc}
         isLastLevelOfDifficulty={isLastLevelOfDifficulty}
         difficulty={level.difficulty}
+        levelCompleteAudioRef={levelCompleteAudioRef} // Pass ref to WinModal
+        isMuted={isMuted} // Pass mute state to WinModal
       />
       <HintModal 
         isOpen={isHintModalOpen}

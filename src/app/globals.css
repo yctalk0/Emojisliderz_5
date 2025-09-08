@@ -48,12 +48,6 @@
   }
 }
 
-.btn-cyan {
-  background-color: #00ffff;
-  color: #000000;
-  font-weight: bold;
-}
-
 @layer base {
   * {
     border-color: var(--border);
@@ -168,4 +162,8 @@
     background-color: #ff0000; /* Red */
     box-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000;
   }
+}
+
+.blinking-value {
+  animation: multicolor-blink-text 1s infinite;
 }

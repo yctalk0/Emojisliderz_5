@@ -13,13 +13,14 @@ interface GameBoardProps {
   gridSize: number;
   onTileClick: (tileValue: number) => void;
   imageSrc: string;
-  hint: Hint | null;
+  hint: Hint | null; // Keep the full hint object here
   difficulty: 'Easy' | 'Hard';
   isSolving: boolean;
   isGameWon: boolean;
+  showPersistentRippleHint: boolean;
 }
 
-const GameBoard = ({ level, tiles, gridSize, onTileClick, imageSrc, hint, difficulty, isSolving, isGameWon }: GameBoardProps) => {
+const GameBoard = ({ level, tiles, gridSize, onTileClick, imageSrc, hint, difficulty, isSolving, isGameWon, showPersistentRippleHint }: GameBoardProps) => {
   const boardRef = useRef<HTMLDivElement>(null);
   const [boardSize, setBoardSize] = useState(300);
 
@@ -103,8 +104,10 @@ const GameBoard = ({ level, tiles, gridSize, onTileClick, imageSrc, hint, diffic
                     currentPosition={index}
                     isCorrectPosition={tile.value - 1 === index}
                     gap={TILE_GAP}
-                    showHint={hint?.tileValue === tile.value ? hint.direction : null}
+                    // Pass the full hint object to Tile
+                    hint={hint}
                     isSolving={isSolving}
+                    showPersistentRippleHint={showPersistentRippleHint}
                   />
                 ))}
               </div>

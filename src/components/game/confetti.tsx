@@ -3,29 +3,15 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useSprings, animated } from '@react-spring/web';
 
-const Confetti = () => {
-  const [blastPieces, setBlastPieces] = useState<any[]>([]);
+interface ConfettiProps {
+  isOpen: boolean;
+}
+
+const Confetti = ({ isOpen }: ConfettiProps) => {
   const [rainPieces, setRainPieces] = useState<any[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const random = (min: number, max: number) => Math.random() * (max - min) + min;
-
-  // --- Blast ---
-  const generateBlastPiece = (rect: DOMRect) => {
-    const angle = random(0, 360);
-    const distance = random(rect.width / 4, rect.width / 2);
-    const startX = rect.width / 2;
-    const startY = rect.height / 2;
-    return {
-      startX,
-      startY,
-      endX: startX + Math.cos(angle) * distance,
-      endY: startY + Math.sin(angle) * distance,
-      color: `hsl(${random(0, 360)}, 100%, 50%)`,
-      rotation: random(0, 360),
-      scale: random(0.5, 1.5),
-    };
-  };
 
   // --- Rain ---
   const generateRainPiece = () => ({
@@ -35,37 +21,20 @@ const Confetti = () => {
     rotation: random(0, 360),
     sway: random(-1, 1),
     scale: random(0.5, 1.2),
+    shape: Math.random() > 0.5 ? 'square' : 'circle', // Add random shape
   });
 
   useEffect(() => {
-    if (containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect();
-      const newBlastPieces = Array.from({ length: 300 }).map(() => generateBlastPiece(rect));
-      setBlastPieces(newBlastPieces);
+    if (isOpen) {
+      const newRainPieces = Array.from({ length: 200 }).map(generateRainPiece);
+      setRainPieces(newRainPieces);
+    } else {
+      setRainPieces([]);
     }
-    
-    const newRainPieces = Array.from({ length: 200 }).map(generateRainPiece);
-    setRainPieces(newRainPieces);
-  }, []);
-
-  // --- Blast Animation ---
-  const blastSprings = useSprings(
-    blastPieces.length,
-    blastPieces.map(p => ({
-      from: {
-        transform: `translate(${p.startX}px, ${p.startY}px) rotate(0deg) scale(0)`,
-        opacity: 1,
-      },
-      to: {
-        transform: `translate(${p.endX}px, ${p.endY}px) rotate(${p.rotation}deg) scale(${p.scale})`,
-        opacity: 0,
-      },
-      config: { duration: 3000 },
-    }))
-  );
+  }, [isOpen]);
 
   // --- Rain Animation ---
-    const rainSprings = useSprings(
+  const rainSprings = useSprings(
     rainPieces.length,
     rainPieces.map(p => ({
       from: {
@@ -82,25 +51,12 @@ const Confetti = () => {
           });
         }
       },
-      config: { duration: random(4000, 8000) },
+      config: { duration: random(3000, 6000) }, // Increased speed by reducing duration
     }))
   );
 
   return (
       <div ref={containerRef} className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-50">
-        {blastSprings.map((props, i) => (
-          <animated.div
-            key={`blast-${i}`}
-            style={{
-              ...props,
-              position: 'absolute',
-              width: '12px',
-              height: '12px',
-              backgroundColor: blastPieces[i].color,
-              willChange: 'transform, opacity',
-            }}
-          />
-        ))}
         {rainSprings.map((props, i) => (
           <animated.div
             key={`rain-${i}`}
@@ -111,6 +67,7 @@ const Confetti = () => {
               height: '10px',
               backgroundColor: rainPieces[i].color,
               willChange: 'transform, opacity',
+              borderRadius: rainPieces[i].shape === 'circle' ? '50%' : '0', // Apply border-radius for circle shape
             }}
           />
         ))}

@@ -130,19 +130,30 @@ const LevelSelect = ({ levels, unlockedLevels, onLevelSelect }: LevelSelectProps
 
   return (
     <div className="space-y-4">
+      <AdBanner position="top" visible={true} /> {/* Ad banner above Easy - 2x2 Grid */}
       {levelsByDifficulty.map(({ difficulty, levels }) => {
         if (levels.length === 0) return null;
         return (
           <React.Fragment key={difficulty}>
             {difficulty === 'Easy' && (
-              <AdBanner position="top" />
+              <>
+                <DifficultyCard 
+                  difficulty={difficulty}
+                  levels={levels}
+                  unlockedLevels={unlockedLevels}
+                  onLevelSelect={onLevelSelect}
+                />
+                <AdBanner position="bottom" visible={true} /> {/* Ad banner between Easy and Hard card */}
+              </>
             )}
-            <DifficultyCard 
-              difficulty={difficulty}
-              levels={levels}
-              unlockedLevels={unlockedLevels}
-              onLevelSelect={onLevelSelect}
-            />
+            {difficulty === 'Hard' && (
+                <DifficultyCard 
+                  difficulty={difficulty}
+                  levels={levels}
+                  unlockedLevels={unlockedLevels}
+                  onLevelSelect={onLevelSelect}
+                />
+            )}
           </React.Fragment>
         )
       })}

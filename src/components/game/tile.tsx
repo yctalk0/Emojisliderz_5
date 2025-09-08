@@ -7,23 +7,18 @@ import type { Hint } from '@/hooks/use-game-logic';
 import type { Level } from '@/lib/game-data';
 import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
-interface TileProps {
-  level: Level;
-  value: number;
-  gridSize: number;
-  imageSrc: string;
-  onClick: (tileValue: number) => void;
-  tileSize: number;
-  correctPosition: number;
-  currentPosition: number;
-  isCorrectPosition: boolean;
-  gap: number;
-  showHint: Hint['direction'] | null;
-  isSolving: boolean;
+interface ArrowHintProps {
+  direction: Hint['direction'];
+  size: number;
+  level: Level; // Add level prop
 }
 
-const ArrowHint = ({ direction, size }: { direction: Hint['direction'], size: number }) => {
+const ArrowHint = ({ direction, size, level }: ArrowHintProps) => {
   const moveDistance = 10;
+  
+  // Determine if the smooth animation should be applied
+  const isSmoothAnimation = level.difficulty === 'Hard' && level.gridSize === 3 && level.levelNumber >= 2;
+
   const animation = useSpring({
     loop: { reverse: true },
     from: { transform: 'translate(0px, 0px)' },
@@ -37,7 +32,7 @@ const ArrowHint = ({ direction, size }: { direction: Hint['direction'], size: nu
           ? `translate(-${moveDistance}px, 0px)`
           : `translate(${moveDistance}px, 0px)`,
     },
-    config: { duration: 500 },
+    config: isSmoothAnimation ? { tension: 200, friction: 10 } : { duration: 500 }, // Conditional config
   });
 
   const getArrow = () => {
@@ -72,6 +67,24 @@ const ArrowHint = ({ direction, size }: { direction: Hint['direction'], size: nu
   );
 };
 
+interface TileProps {
+  level: Level;
+  value: number;
+  gridSize: number;
+  imageSrc: string;
+  onClick: (tileValue: number) => void;
+  tileSize: number;
+  correctPosition: number;
+  currentPosition: number;
+  isCorrectPosition: boolean;
+  gap: number;
+  // The full hint object, which includes both tileValue and direction
+  hint: Hint | null;
+  isSolving: boolean;
+  showPersistentRippleHint: boolean;
+}
+
+
 const Tile = ({ 
   level,
   value, 
@@ -83,8 +96,9 @@ const Tile = ({
   currentPosition, 
   isCorrectPosition,
   gap,
-  showHint,
+  hint, // Destructure the full hint object
   isSolving,
+  showPersistentRippleHint,
 }: TileProps) => {
   const row = Math.floor(currentPosition / gridSize);
   const col = currentPosition % gridSize;
@@ -104,7 +118,10 @@ const Tile = ({
     return null;
   }
   
-  const useRippleHint = level.levelNumber === 1 && !isSolving;
+  // Persistent ripple hint for the first level, only on the hint tile
+  const shouldShowPersistentRipple = showPersistentRippleHint && hint?.tileValue === value && !isSolving;
+  // Arrow hint for other levels or when persistent ripple is not active
+  const shouldShowArrowHint = hint?.direction && hint?.tileValue === value && !shouldShowPersistentRipple;
 
   return (
     <animated.div
@@ -129,13 +146,13 @@ const Tile = ({
         isCorrectPosition && 'shadow-green-500/50 shadow-[0_0_15px_5px_rgba(74,222,128,0.5)]'
       )}
     >
-      {showHint && useRippleHint && (
+      {shouldShowPersistentRipple && (
         <div className="ripple-container" style={{ width: tileSize, height: tileSize }}>
           <div className="ripple" />
           <span className="font-bold text-lg">Tap here</span>
         </div>
       )}
-      {showHint && !useRippleHint && <ArrowHint direction={showHint} size={tileSize} />}
+      {shouldShowArrowHint && <ArrowHint direction={hint!.direction} size={tileSize} level={level} />}
       <span className="absolute bottom-1 right-2 text-2xl font-bold text-black" style={{ textShadow: '1px 1px 2px white' }}>
           {value}
       </span>

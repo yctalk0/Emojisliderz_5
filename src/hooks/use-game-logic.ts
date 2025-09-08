@@ -1,6 +1,7 @@
 
 'use client';
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import useAdMob, { UseAdMob } from '@/hooks/use-admob';
 
 export interface TileType {
   value: number;
@@ -113,6 +114,9 @@ const useGameLogic = (gridSize: number, onWin: () => void) => {
   const [isSolving, setIsSolving] = useState(false);
   const [history, setHistory] = useState<TileType[][]>([]);
   const [hint, setHint] = useState<Hint | null>(null);
+  const [hasShownRewardedAdForCurrentLevel, setHasShownRewardedAdForCurrentLevel] = useState(false);
+
+  const { showRewarded, prepareRewarded } = useAdMob();
 
   const isSolvable = (arr: TileType[]): boolean => {
     if (gridSize % 2 === 1) { // Odd grid
@@ -166,7 +170,9 @@ const useGameLogic = (gridSize: number, onWin: () => void) => {
     setIsStarted(false);
     setHistory([]);
     setHint(null);
-  }, [gridSize, createSolvedTiles]);
+    setHasShownRewardedAdForCurrentLevel(false); // Reset ad state for new level
+    prepareRewarded(); // Preload rewarded ad for the new level
+  }, [gridSize, createSolvedTiles, prepareRewarded]);
 
   useEffect(() => {
     shuffleTiles();
@@ -218,9 +224,7 @@ const useGameLogic = (gridSize: number, onWin: () => void) => {
     const isAdjacent = Math.abs(tileRow - emptyRow) + Math.abs(tileCol - emptyCol) === 1;
   
     if (isAdjacent) {
-      if (moves > 0) { // Keep the hint on the first level
-        setHint(null);
-      }
+      setHint(null); // Clear hint on a valid move
       const newTiles = [...tiles];
       setHistory(prev => [...prev, tiles]);
       [newTiles[tileIndex], newTiles[emptyIndex]] = [newTiles[emptyIndex], newTiles[tileIndex]];
@@ -269,8 +273,19 @@ const useGameLogic = (gridSize: number, onWin: () => void) => {
     }
   };
 
-  const getNextMoveHint = useCallback(() => {
+  const getNextMoveHint = useCallback(async () => {
     if (isSolved || isSolving) return;
+
+    if (!hasShownRewardedAdForCurrentLevel) {
+      // Show rewarded ad
+      await showRewarded();
+      setHasShownRewardedAdForCurrentLevel(true);
+      // After ad, if user closed it, they might need to click hint again.
+      // A more robust solution would involve listening to ad completion events.
+    } else {
+      // If ad has already been shown for this level, provide the hint directly
+      // No need to show another ad
+    }
 
     const solutionPath = solvePuzzle(tiles, gridSize);
     if (solutionPath && solutionPath.length > 1) {
@@ -299,7 +314,7 @@ const useGameLogic = (gridSize: number, onWin: () => void) => {
   const canUndo = useMemo(() => history.length > 0 && !isSolving, [history, isSolving]);
   const canSolve = useMemo(() => !isSolved && !isSolving, [isSolved, isSolving]);
 
-  return { tiles, moves, time, isSolved, isStarted, isSolving, canUndo, canSolve, hint, startGame, handleTileClick, undoMove, resetGame, autoSolve, getNextMoveHint };
+  return { tiles, moves, time, isSolved, isStarted, isSolving, canUndo, canSolve, hint, startGame, handleTileClick, undoMove, resetGame, autoSolve, getNextMoveHint, hasShownRewardedAdForCurrentLevel };
 };
 
 export default useGameLogic;

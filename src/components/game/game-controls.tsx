@@ -15,9 +15,11 @@ interface GameControlsProps {
   onSolve: () => void;
   canUndo: boolean;
   canSolve: boolean;
+  easyLevelsCompleted: number; // New prop
+  showRewarded: () => void; // New prop
 }
 
-const GameControls = ({ level, moves, time, onHint, onUndo, onRestart, onSolve, canUndo, canSolve }: GameControlsProps) => {
+const GameControls = ({ level, moves, time, onHint, onUndo, onRestart, onSolve, canUndo, canSolve, easyLevelsCompleted, showRewarded }: GameControlsProps) => {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
     const secs = (seconds % 60).toString().padStart(2, '0');
@@ -28,28 +30,34 @@ const GameControls = ({ level, moves, time, onHint, onUndo, onRestart, onSolve, 
     <div className="w-full flex flex-col gap-4">
       <Card>
         <CardContent className="flex justify-around items-center p-3">
-          <div className="flex items-center gap-2 text-lg font-bold">
-            <Move className="w-6 h-6 text-primary" />
+          <div className="flex items-center gap-2">
+            <Move className="w-6 h-6 text-white" />
             <div className="flex flex-col items-center">
-              <span className="text-sm text-gray-300">Moves</span>
-              <span className="text-white">{moves}</span>
+              <span className="text-sm font-bold text-white">Moves</span>
+              <span className="text-lg font-bold text-white">{moves}</span>
             </div>
           </div>
           <div className="flex flex-col items-center">
-             <span className="text-sm text-gray-300">Level</span>
-            <span className="text-lg font-bold">{level.levelNumber}</span>
+             <span className="text-sm font-bold text-white">Level</span>
+            <span className="text-lg font-bold text-white">{level.levelNumber}</span>
           </div>
-          <div className="flex items-center gap-2 text-lg font-bold">
-            <Clock className="w-6 h-6 text-primary" />
+          <div className="flex items-center gap-2">
+            <Clock className="w-6 h-6 text-white" />
              <div className="flex flex-col items-center">
-               <span className="text-sm text-gray-300">Time</span>
-              <span className="text-white">{formatTime(time)}</span>
+               <span className="text-sm font-bold text-white">Time</span>
+              <span className="text-lg font-bold text-white">{formatTime(time)}</span>
             </div>
           </div>
         </CardContent>
       </Card>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <Button variant="secondary" onClick={onHint} className="h-12 text-base font-bold">
+        <Button variant="secondary" onClick={() => {
+          if (level.difficulty === 'Easy' && easyLevelsCompleted > 0 && easyLevelsCompleted % 3 === 0) {
+            showRewarded();
+          } else {
+            onHint();
+          }
+        }} className="h-12 text-base font-bold">
           <HelpCircle className="w-5 h-5 mr-2" /> Hint
         </Button>
         <Button variant="secondary" onClick={onUndo} disabled={!canUndo} className="h-12 text-base font-bold">

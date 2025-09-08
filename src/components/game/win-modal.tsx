@@ -13,6 +13,7 @@ import Confetti from './confetti';
 import { Award, Clock, Move, Play, SkipForward, X } from 'lucide-react';
 import Image from 'next/image';
 import AdBanner from './ad-banner';
+import { useEffect, RefObject } from 'react';
 
 interface WinModalProps {
   isOpen: boolean;
@@ -25,6 +26,8 @@ interface WinModalProps {
   imageSrc: string;
   isLastLevelOfDifficulty: boolean;
   difficulty: 'Easy' | 'Hard';
+  levelCompleteAudioRef: RefObject<HTMLAudioElement>;
+  isMuted: boolean;
 }
 
 const WinModal = ({
@@ -38,7 +41,21 @@ const WinModal = ({
   imageSrc,
   isLastLevelOfDifficulty,
   difficulty,
+  levelCompleteAudioRef,
+  isMuted,
 }: WinModalProps) => {
+
+  useEffect(() => {
+    if (isOpen && !isMuted) {
+      levelCompleteAudioRef.current?.play().catch(e => console.error("Could not play win sound", e));
+    } else if (!isOpen) {
+      if (levelCompleteAudioRef.current) {
+        levelCompleteAudioRef.current.pause();
+        levelCompleteAudioRef.current.currentTime = 0;
+      }
+    }
+  }, [isOpen, isMuted, levelCompleteAudioRef]);
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
     const secs = (seconds % 60).toString().padStart(2, '0');
@@ -50,12 +67,11 @@ const WinModal = ({
   return (
     <AlertDialog open={isOpen} onOpenChange={onExit}>
       <AlertDialogContent className="text-center p-4">
-        <Confetti />
+        <Confetti isOpen={isOpen} />
          <Button
-            variant="ghost"
             size="icon"
             onClick={onExit}
-            className="absolute top-2 right-2"
+            className="absolute top-2 right-2 bg-cyan-500 text-black hover:bg-cyan-600 rounded-full"
           >
             <X className="h-6 w-6" />
             <span className="sr-only">Close</span>
@@ -80,12 +96,12 @@ const WinModal = ({
 
         <div className="flex justify-center gap-8 my-2 text-sm">
           <div className="flex items-center gap-2">
-            <Move className="w-4 h-4 text-muted-foreground" />
-            <div><span className="font-bold">{moves}</span> Moves</div>
+            <Move className="w-4 h-4 text-white" />
+            <div><span className="font-bold text-white blinking-value">{moves}</span> <span className="text-white">Moves</span></div>
           </div>
           <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-muted-foreground" />
-            <div><span className="font-bold">{formatTime(time)}</span></div>
+            <Clock className="w-4 h-4 text-white" />
+            <div><span className="font-bold text-white blinking-value">{formatTime(time)}</span></div>
           </div>
         </div>
         <AlertDialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0 p-0">
@@ -93,6 +109,7 @@ const WinModal = ({
               <SkipForward className="mr-2 h-5 w-5" />
               Next Level
           </Button>
+          <AdBanner position="bottom" visible={true} /> {/* Ad banner under Next Level button */}
           <Button onClick={onPlayAgain} variant="secondary" className="w-full h-11">
             <Play className="mr-2 h-5 w-5" />
             Play Again
@@ -100,9 +117,6 @@ const WinModal = ({
           <Button onClick={onExit} variant="secondary" className="w-full h-11">
             Back to Levels
           </Button>
-          <div className="my-1">
-            <AdBanner position="bottom" />
-          </div>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
