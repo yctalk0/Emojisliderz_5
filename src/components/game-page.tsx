@@ -124,10 +124,8 @@ export default function GamePage() {
   }, [showBanner, hideBanner]);
 
   useEffect(() => {
-    // Only unlock level 1 of each difficulty by default
-    const defaultUnlocked = levels
-      .filter(level => level.levelNumber === 1)
-      .map(level => level.id);
+    // Only unlock level 1 of the 'Easy' difficulty by default
+    const defaultUnlocked = ['easy-1'];
 
     const savedProgress = localStorage.getItem('unlockedLevels');
     let initialUnlocked: string[];
