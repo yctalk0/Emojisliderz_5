@@ -163,6 +163,17 @@ export default function GamePage() {
     if (currentLevel) {
       gameAudioRef.current?.pause();
   
+      // When Easy Level 1 is won, unlock Hard Level 1
+      if (currentLevel.id === 'easy-1') {
+        setUnlockedLevels(prev => {
+          const newUnlocked = new Set(prev);
+          newUnlocked.add('hard-1');
+          const finalUnlocked = Array.from(newUnlocked);
+          localStorage.setItem('unlockedLevels', JSON.stringify(finalUnlocked));
+          return finalUnlocked;
+        });
+      }
+      
       if (currentLevel.difficulty === 'Easy') {
         setEasyLevelsCompleted(prev => {
           const newCount = prev + 1;
@@ -336,24 +347,26 @@ export default function GamePage() {
               />
             )}
           </main>
-          <footer className="mt-auto pt-2">
-            {!currentLevel && (
-              <div className="flex justify-center items-center gap-4 px-4">
-                  <Slider
-                    value={[volume * 100]}
-                    max={100}
-                    step={1}
-                    onValueChange={handleVolumeChange}
-                    className="w-full max-w-xs"
-                  />
-              </div>
-            )}
-            <AdBanner position="bottom" visible={!currentLevel} />
-            {currentLevel && (
-              <div className="flex justify-center mt-2">
-                <Button onClick={handleExitGame} variant="secondary">Back to Levels</Button>
-              </div>
-            )}
+          <footer className="fixed bottom-0 left-0 right-0 w-full px-4 pb-4 bg-background z-10">
+            <div className="max-w-md mx-auto space-y-2">
+              {!currentLevel && (
+                <div className="flex justify-center items-center gap-4">
+                    <Slider
+                      value={[volume * 100]}
+                      max={100}
+                      step={1}
+                      onValueChange={handleVolumeChange}
+                      className="w-full max-w-xs"
+                    />
+                </div>
+              )}
+              <AdBanner position="bottom" visible={!currentLevel} />
+              {currentLevel && (
+                <div className="flex justify-center">
+                  <Button onClick={handleExitGame} variant="secondary">Back to Levels</Button>
+                </div>
+              )}
+            </div>
            </footer>
         </div>
     </div>
