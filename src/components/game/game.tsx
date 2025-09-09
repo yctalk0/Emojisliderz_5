@@ -64,7 +64,7 @@ const Game = ({
     canSolve,
     hint,
     startGame,
-    handleTileClick,
+    handleTileSlide,
     undoMove,
     resetGame,
     autoSolve,
@@ -118,11 +118,11 @@ const Game = ({
     }
   };
   
-  const handleTileInteraction = (tileValue: number) => {
+  const handleTileInteraction = (tileValue: number, direction: 'up' | 'down' | 'left' | 'right') => {
     if (!isStarted) {
         startGame();
     }
-    handleTileClick(tileValue);
+    handleTileSlide(tileValue, direction);
   }
   
   return (
@@ -145,7 +145,7 @@ const Game = ({
           level={level}
           tiles={tiles}
           gridSize={level.gridSize}
-          onTileClick={handleTileInteraction}
+          onTileSlide={handleTileInteraction} // Changed from onTileClick
           imageSrc={level.imageSrc}
           hint={hint}
           difficulty={level.difficulty}

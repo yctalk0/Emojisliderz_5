@@ -210,20 +210,30 @@ const useGameLogic = (gridSize: number, onWin: () => void) => {
     }
   };
 
-  const handleTileClick = (tileValue: number) => {
+  const handleTileSlide = (tileValue: number, direction: 'up' | 'down' | 'left' | 'right') => {
     if (isSolved || isSolving) return;
-  
+
     const tileIndex = tiles.findIndex(t => t.value === tileValue);
     const emptyIndex = tiles.findIndex(t => t.value === emptyTileValue);
-  
+
     const tileRow = Math.floor(tileIndex / gridSize);
     const tileCol = tileIndex % gridSize;
     const emptyRow = Math.floor(emptyIndex / gridSize);
     const emptyCol = emptyIndex % gridSize;
-  
-    const isAdjacent = Math.abs(tileRow - emptyRow) + Math.abs(tileCol - emptyCol) === 1;
-  
-    if (isAdjacent) {
+
+    let isValidMove = false;
+
+    if (direction === 'up' && tileRow > 0 && emptyRow === tileRow - 1 && emptyCol === tileCol) {
+      isValidMove = true;
+    } else if (direction === 'down' && tileRow < gridSize - 1 && emptyRow === tileRow + 1 && emptyCol === tileCol) {
+      isValidMove = true;
+    } else if (direction === 'left' && tileCol > 0 && emptyCol === tileCol - 1 && emptyRow === tileRow) {
+      isValidMove = true;
+    } else if (direction === 'right' && tileCol < gridSize - 1 && emptyCol === tileCol + 1 && emptyRow === tileRow) {
+      isValidMove = true;
+    }
+
+    if (isValidMove) {
       setHint(null); // Clear hint on a valid move
       const newTiles = [...tiles];
       setHistory(prev => [...prev, tiles]);
@@ -314,7 +324,7 @@ const useGameLogic = (gridSize: number, onWin: () => void) => {
   const canUndo = useMemo(() => history.length > 0 && !isSolving, [history, isSolving]);
   const canSolve = useMemo(() => !isSolved && !isSolving, [isSolved, isSolving]);
 
-  return { tiles, moves, time, isSolved, isStarted, isSolving, canUndo, canSolve, hint, startGame, handleTileClick, undoMove, resetGame, autoSolve, getNextMoveHint, hasShownRewardedAdForCurrentLevel };
+  return { tiles, moves, time, isSolved, isStarted, isSolving, canUndo, canSolve, hint, startGame, handleTileSlide, undoMove, resetGame, autoSolve, getNextMoveHint, hasShownRewardedAdForCurrentLevel };
 };
 
 export default useGameLogic;

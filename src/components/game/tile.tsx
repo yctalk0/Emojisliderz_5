@@ -2,6 +2,7 @@
 'use client'
 import React, { useState, useEffect } from 'react';
 import { useSpring, animated } from '@react-spring/web';
+import { useDrag } from '@use-gesture/react';
 import { cn } from '@/lib/utils';
 import type { Hint } from '@/hooks/use-game-logic';
 import type { Level } from '@/lib/game-data';
@@ -72,7 +73,7 @@ interface TileProps {
   value: number;
   gridSize: number;
   imageSrc: string;
-  onClick: (tileValue: number) => void;
+  onTileSlide: (tileValue: number, direction: 'up' | 'down' | 'left' | 'right') => void; // Changed from onClick
   tileSize: number;
   correctPosition: number;
   currentPosition: number;
@@ -90,7 +91,7 @@ const Tile = ({
   value, 
   gridSize, 
   imageSrc, 
-  onClick,
+  onTileSlide, // Changed from onClick
   tileSize, 
   correctPosition, 
   currentPosition, 
@@ -103,13 +104,42 @@ const Tile = ({
   const row = Math.floor(currentPosition / gridSize);
   const col = currentPosition % gridSize;
   
-  const { top, left } = useSpring({
-    to: {
+  const [springProps, api] = useSpring(() => ({
+    top: row * (tileSize + gap),
+    left: col * (tileSize + gap),
+    config: { tension: 300, friction: 30 },
+  }));
+
+  useEffect(() => {
+    api.start({
       top: row * (tileSize + gap),
       left: col * (tileSize + gap),
+    });
+  }, [row, col, tileSize, gap, api]);
+
+  const bind = useDrag(
+    ({ down, movement: [mx, my], swipe: [swipeX, swipeY], tap }) => {
+      if (tap || isSolving) return; // Prevent interaction during auto-solve or on tap
+  
+      // Only process swipes, not drags
+      if (swipeX !== 0 || swipeY !== 0) {
+        if (swipeY === -1) onTileSlide(value, 'up');
+        else if (swipeY === 1) onTileSlide(value, 'down');
+        else if (swipeX === -1) onTileSlide(value, 'left');
+        else if (swipeX === 1) onTileSlide(value, 'right');
+      }
     },
-    config: { tension: 300, friction: 30 },
-  });
+    {
+      filterTaps: true,
+      enabled: !isSolving,
+      // More restrictive swipe detection
+      swipe: {
+        velocity: [0.1, 0.1], // Lower velocity threshold for swipe
+        distance: [20, 20],   // Minimum distance for a swipe
+        duration: 250,       // Max duration for a swipe
+      },
+    }
+  );
 
   const bgPosX = (correctPosition % gridSize) * (100 / (gridSize - 1));
   const bgPosY = Math.floor(correctPosition / gridSize) * (100 / (gridSize - 1));
@@ -125,7 +155,7 @@ const Tile = ({
 
   return (
     <animated.div
-      onClick={() => onClick(value)}
+      {...bind()}
       style={{
         position: 'absolute',
         width: `${tileSize}px`,
@@ -135,8 +165,7 @@ const Tile = ({
         backgroundPosition: `${bgPosX}% ${bgPosY}%`,
         backgroundColor: 'white',
         touchAction: 'none',
-        top,
-        left,
+        ...springProps,
       }}
       className={cn(
         'rounded-md cursor-pointer select-none',
@@ -149,7 +178,6 @@ const Tile = ({
       {shouldShowPersistentRipple && (
         <div className="ripple-container" style={{ width: tileSize, height: tileSize }}>
           <div className="ripple" />
-          <span className="font-bold text-lg">Tap here</span>
         </div>
       )}
       {shouldShowArrowHint && <ArrowHint direction={hint!.direction} size={tileSize} level={level} />}

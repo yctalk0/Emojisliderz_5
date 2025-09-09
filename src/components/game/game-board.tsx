@@ -11,7 +11,7 @@ interface GameBoardProps {
   level: Level;
   tiles: TileType[];
   gridSize: number;
-  onTileClick: (tileValue: number) => void;
+  onTileSlide: (tileValue: number, direction: 'up' | 'down' | 'left' | 'right') => void; // Changed from onTileClick
   imageSrc: string;
   hint: Hint | null; // Keep the full hint object here
   difficulty: 'Easy' | 'Hard';
@@ -20,7 +20,7 @@ interface GameBoardProps {
   showPersistentRippleHint: boolean;
 }
 
-const GameBoard = ({ level, tiles, gridSize, onTileClick, imageSrc, hint, difficulty, isSolving, isGameWon, showPersistentRippleHint }: GameBoardProps) => {
+const GameBoard = ({ level, tiles, gridSize, onTileSlide, imageSrc, hint, difficulty, isSolving, isGameWon, showPersistentRippleHint }: GameBoardProps) => {
   const boardRef = useRef<HTMLDivElement>(null);
   const [boardSize, setBoardSize] = useState(300);
 
@@ -98,7 +98,7 @@ const GameBoard = ({ level, tiles, gridSize, onTileClick, imageSrc, hint, diffic
                     value={tile.value}
                     gridSize={gridSize}
                     imageSrc={imageSrc}
-                    onClick={onTileClick}
+                    onTileSlide={onTileSlide} // Changed from onClick
                     tileSize={tileSize}
                     correctPosition={tile.value - 1}
                     currentPosition={index}
