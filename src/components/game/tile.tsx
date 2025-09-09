@@ -1,6 +1,6 @@
 
 'use client'
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSpring, animated } from '@react-spring/web';
 import { useDrag } from '@use-gesture/react';
 import { cn } from '@/lib/utils';
@@ -73,16 +73,16 @@ interface TileProps {
   value: number;
   gridSize: number;
   imageSrc: string;
-  onTileSlide: (tileValue: number, direction: 'up' | 'down' | 'left' | 'right') => void; // Changed from onClick
+  onTileSlide: (tileValue: number) => void;
   tileSize: number;
   correctPosition: number;
   currentPosition: number;
   isCorrectPosition: boolean;
   gap: number;
-  // The full hint object, which includes both tileValue and direction
   hint: Hint | null;
   isSolving: boolean;
   showPersistentRippleHint: boolean;
+  emptyIndex: number;
 }
 
 
@@ -91,56 +91,109 @@ const Tile = ({
   value, 
   gridSize, 
   imageSrc, 
-  onTileSlide, // Changed from onClick
+  onTileSlide,
   tileSize, 
   correctPosition, 
   currentPosition, 
   isCorrectPosition,
   gap,
-  hint, // Destructure the full hint object
+  hint,
   isSolving,
   showPersistentRippleHint,
+  emptyIndex,
 }: TileProps) => {
   const row = Math.floor(currentPosition / gridSize);
   const col = currentPosition % gridSize;
-  
-  const [springProps, api] = useSpring(() => ({
-    top: row * (tileSize + gap),
-    left: col * (tileSize + gap),
+  const emptyRow = Math.floor(emptyIndex / gridSize);
+  const emptyCol = emptyIndex % gridSize;
+
+  const canMove = useMemo(() => {
+    if (isSolving || value === 0) return null;
+    if (row === emptyRow && Math.abs(col - emptyCol) === 1) return 'horizontal';
+    if (col === emptyCol && Math.abs(row - emptyRow) === 1) return 'vertical';
+    return null;
+  }, [row, col, emptyRow, emptyCol, isSolving, value]);
+
+  const [{ x, y }, api] = useSpring(() => ({
+    x: col * (tileSize + gap),
+    y: row * (tileSize + gap),
     config: { tension: 300, friction: 30 },
   }));
 
   useEffect(() => {
-    api.start({
-      top: row * (tileSize + gap),
-      left: col * (tileSize + gap),
-    });
-  }, [row, col, tileSize, gap, api]);
+    if (!isSolving) {
+      api.start({
+        x: col * (tileSize + gap),
+        y: row * (tileSize + gap),
+        immediate: false,
+      });
+    }
+  }, [row, col, tileSize, gap, api, isSolving]);
+
 
   const bind = useDrag(
-    ({ down, movement: [mx, my], swipe: [swipeX, swipeY], tap }) => {
-      if (tap || isSolving) return; // Prevent interaction during auto-solve or on tap
-  
-      // Only process swipes, not drags
-      if (swipeX !== 0 || swipeY !== 0) {
-        if (swipeY === -1) onTileSlide(value, 'up');
-        else if (swipeY === 1) onTileSlide(value, 'down');
-        else if (swipeX === -1) onTileSlide(value, 'left');
-        else if (swipeX === 1) onTileSlide(value, 'right');
+    ({ down, movement: [mx, my], distance, direction: [dx], event }) => {
+      event.preventDefault();
+      if (!canMove || isSolving) return;
+
+      const originalX = col * (tileSize + gap);
+      const originalY = row * (tileSize + gap);
+      
+      let newX = originalX;
+      let newY = originalY;
+
+      if (down) {
+        if (canMove === 'horizontal') {
+          newX += mx;
+        } else if (canMove === 'vertical') {
+          newY += my;
+        }
+      } else { // on release
+        const moveThreshold = tileSize / 2;
+        let shouldMove = false;
+
+        if (canMove === 'horizontal' && Math.abs(mx) > moveThreshold) {
+          // Check if moving towards the empty space
+          if ((mx > 0 && col < emptyCol) || (mx < 0 && col > emptyCol)) {
+            shouldMove = true;
+          }
+        } else if (canMove === 'vertical' && Math.abs(my) > moveThreshold) {
+           // Check if moving towards the empty space
+          if ((my > 0 && row < emptyRow) || (my < 0 && row > emptyRow)) {
+            shouldMove = true;
+          }
+        }
+        
+        if (shouldMove) {
+          // Snap to empty spot - the logic will handle the swap
+          onTileSlide(value);
+        } else {
+          // Return to original spot
+          newX = originalX;
+          newY = originalY;
+        }
       }
+
+      api.start({
+        x: newX,
+        y: newY,
+        immediate: down, // Be snappy on drag, animate on release
+      });
     },
     {
       filterTaps: true,
-      enabled: !isSolving,
-      // More restrictive swipe detection
-      swipe: {
-        velocity: [0.1, 0.1], // Lower velocity threshold for swipe
-        distance: [20, 20],   // Minimum distance for a swipe
-        duration: 250,       // Max duration for a swipe
+      enabled: !isSolving && !!canMove,
+      axis: canMove === 'horizontal' ? 'x' : canMove === 'vertical' ? 'y' : undefined,
+      bounds: {
+        left: canMove === 'horizontal' && col > emptyCol ? emptyCol * (tileSize + gap) : col * (tileSize + gap),
+        right: canMove === 'horizontal' && col < emptyCol ? emptyCol * (tileSize + gap) : col * (tileSize + gap),
+        top: canMove === 'vertical' && row > emptyRow ? emptyRow * (tileSize + gap) : row * (tileSize + gap),
+        bottom: canMove === 'vertical' && row < emptyRow ? emptyRow * (tileSize + gap) : row * (tileSize + gap),
       },
+      rubberband: true,
     }
   );
-
+  
   const bgPosX = (correctPosition % gridSize) * (100 / (gridSize - 1));
   const bgPosY = Math.floor(correctPosition / gridSize) * (100 / (gridSize - 1));
 
@@ -148,9 +201,7 @@ const Tile = ({
     return null;
   }
   
-  // Persistent ripple hint for the first level, only on the hint tile
   const shouldShowPersistentRipple = showPersistentRippleHint && hint?.tileValue === value && !isSolving;
-  // Arrow hint for other levels or when persistent ripple is not active
   const shouldShowArrowHint = hint?.direction && hint?.tileValue === value && !shouldShowPersistentRipple;
 
   return (
@@ -165,11 +216,15 @@ const Tile = ({
         backgroundPosition: `${bgPosX}% ${bgPosY}%`,
         backgroundColor: 'white',
         touchAction: 'none',
-        ...springProps,
+        left: 0,
+        top: 0,
+        transform: x.to((xVal) => y.to((yVal) => `translate3d(${xVal}px, ${yVal}px, 0)`)),
+        zIndex: canMove ? 10 : 1, // Bring draggable tile to front
       }}
       className={cn(
-        'rounded-md cursor-pointer select-none',
-        'shadow-lg hover:shadow-xl',
+        'rounded-md select-none',
+        canMove ? 'cursor-grab' : 'cursor-default',
+        'shadow-lg',
         'overflow-hidden',
         'flex items-center justify-center',
         isCorrectPosition && 'shadow-green-500/50 shadow-[0_0_15px_5px_rgba(74,222,128,0.5)]'

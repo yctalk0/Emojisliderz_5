@@ -115,6 +115,7 @@ const useGameLogic = (gridSize: number, onWin: () => void) => {
   const [history, setHistory] = useState<TileType[][]>([]);
   const [hint, setHint] = useState<Hint | null>(null);
   const [hasShownRewardedAdForCurrentLevel, setHasShownRewardedAdForCurrentLevel] = useState(false);
+  const emptyIndex = useMemo(() => tiles.findIndex(t => t.value === emptyTileValue), [tiles]);
 
   const { showRewarded, prepareRewarded } = useAdMob();
 
@@ -140,21 +141,21 @@ const useGameLogic = (gridSize: number, onWin: () => void) => {
     // For even grids, ensure solvability by making random moves
     if (gridSize % 2 === 0) {
       let tempTiles = createSolvedTiles();
-      let emptyIndex = tempTiles.findIndex(t => t.value === emptyTileValue);
+      let currentEmptyIndex = tempTiles.findIndex(t => t.value === emptyTileValue);
       // Increased shuffles for more randomness
       for (let i = 0; i < gridSize * gridSize * 10; i++) {
-        const emptyRow = Math.floor(emptyIndex / gridSize);
-        const emptyCol = emptyIndex % gridSize;
+        const emptyRow = Math.floor(currentEmptyIndex / gridSize);
+        const emptyCol = currentEmptyIndex % gridSize;
 
         const possibleMoves = [];
-        if (emptyRow > 0) possibleMoves.push(emptyIndex - gridSize);
-        if (emptyRow < gridSize - 1) possibleMoves.push(emptyIndex + gridSize);
-        if (emptyCol > 0) possibleMoves.push(emptyIndex - 1);
-        if (emptyCol < gridSize - 1) possibleMoves.push(emptyIndex + 1);
+        if (emptyRow > 0) possibleMoves.push(currentEmptyIndex - gridSize);
+        if (emptyRow < gridSize - 1) possibleMoves.push(currentEmptyIndex + gridSize);
+        if (emptyCol > 0) possibleMoves.push(currentEmptyIndex - 1);
+        if (emptyCol < gridSize - 1) possibleMoves.push(currentEmptyIndex + 1);
 
         const moveIndex = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
-        [tempTiles[emptyIndex], tempTiles[moveIndex]] = [tempTiles[moveIndex], tempTiles[emptyIndex]];
-        emptyIndex = moveIndex;
+        [tempTiles[currentEmptyIndex], tempTiles[moveIndex]] = [tempTiles[moveIndex], tempTiles[currentEmptyIndex]];
+        currentEmptyIndex = moveIndex;
       }
       shuffledTiles = tempTiles;
     } else {
@@ -210,7 +211,7 @@ const useGameLogic = (gridSize: number, onWin: () => void) => {
     }
   };
 
-  const handleTileSlide = (tileValue: number, direction: 'up' | 'down' | 'left' | 'right') => {
+  const handleTileSlide = (tileValue: number) => {
     if (isSolved || isSolving) return;
 
     const tileIndex = tiles.findIndex(t => t.value === tileValue);
@@ -220,20 +221,11 @@ const useGameLogic = (gridSize: number, onWin: () => void) => {
     const tileCol = tileIndex % gridSize;
     const emptyRow = Math.floor(emptyIndex / gridSize);
     const emptyCol = emptyIndex % gridSize;
+    
+    const isAdjacent = Math.abs(tileRow - emptyRow) + Math.abs(tileCol - emptyCol) === 1;
 
-    let isValidMove = false;
-
-    if (direction === 'up' && tileRow > 0 && emptyRow === tileRow - 1 && emptyCol === tileCol) {
-      isValidMove = true;
-    } else if (direction === 'down' && tileRow < gridSize - 1 && emptyRow === tileRow + 1 && emptyCol === tileCol) {
-      isValidMove = true;
-    } else if (direction === 'left' && tileCol > 0 && emptyCol === tileCol - 1 && emptyRow === tileRow) {
-      isValidMove = true;
-    } else if (direction === 'right' && tileCol < gridSize - 1 && emptyCol === tileCol + 1 && emptyRow === tileRow) {
-      isValidMove = true;
-    }
-
-    if (isValidMove) {
+    if (isAdjacent) {
+      if (!isStarted) startGame();
       setHint(null); // Clear hint on a valid move
       const newTiles = [...tiles];
       setHistory(prev => [...prev, tiles]);
@@ -242,7 +234,7 @@ const useGameLogic = (gridSize: number, onWin: () => void) => {
       setMoves(prev => prev + 1);
     }
   };
-
+  
   const undoMove = () => {
     if (history.length > 0 && !isSolving) {
       setHint(null);
@@ -319,12 +311,12 @@ const useGameLogic = (gridSize: number, onWin: () => void) => {
         direction: direction,
       });
     }
-  }, [tiles, gridSize, isSolved, isSolving]);
+  }, [tiles, gridSize, isSolved, isSolving, hasShownRewardedAdForCurrentLevel, showRewarded]);
 
   const canUndo = useMemo(() => history.length > 0 && !isSolving, [history, isSolving]);
   const canSolve = useMemo(() => !isSolved && !isSolving, [isSolved, isSolving]);
 
-  return { tiles, moves, time, isSolved, isStarted, isSolving, canUndo, canSolve, hint, startGame, handleTileSlide, undoMove, resetGame, autoSolve, getNextMoveHint, hasShownRewardedAdForCurrentLevel };
+  return { tiles, moves, time, isSolved, isStarted, isSolving, canUndo, canSolve, hint, emptyIndex, startGame, handleTileSlide, undoMove, resetGame, autoSolve, getNextMoveHint, hasShownRewardedAdForCurrentLevel };
 };
 
 export default useGameLogic;

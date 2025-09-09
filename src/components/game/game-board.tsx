@@ -11,16 +11,17 @@ interface GameBoardProps {
   level: Level;
   tiles: TileType[];
   gridSize: number;
-  onTileSlide: (tileValue: number, direction: 'up' | 'down' | 'left' | 'right') => void; // Changed from onTileClick
+  onTileSlide: (tileValue: number) => void;
   imageSrc: string;
-  hint: Hint | null; // Keep the full hint object here
+  hint: Hint | null;
   difficulty: 'Easy' | 'Hard';
   isSolving: boolean;
   isGameWon: boolean;
   showPersistentRippleHint: boolean;
+  emptyIndex: number;
 }
 
-const GameBoard = ({ level, tiles, gridSize, onTileSlide, imageSrc, hint, difficulty, isSolving, isGameWon, showPersistentRippleHint }: GameBoardProps) => {
+const GameBoard = ({ level, tiles, gridSize, onTileSlide, imageSrc, hint, difficulty, isSolving, isGameWon, showPersistentRippleHint, emptyIndex }: GameBoardProps) => {
   const boardRef = useRef<HTMLDivElement>(null);
   const [boardSize, setBoardSize] = useState(300);
 
@@ -49,8 +50,6 @@ const GameBoard = ({ level, tiles, gridSize, onTileSlide, imageSrc, hint, diffic
 
   const contentSize = boardSize - PADDING * 2;
   const tileSize = (contentSize - (gridSize - 1) * TILE_GAP) / gridSize;
-
-  const emptyTileIndex = tiles.findIndex(tile => tile.value === 0);
 
   return (
     <div className="w-full max-w-md mx-auto">
@@ -81,7 +80,7 @@ const GameBoard = ({ level, tiles, gridSize, onTileSlide, imageSrc, hint, diffic
                   key={index}
                   className={cn(
                     "flex items-center justify-center rounded-md",
-                    index === emptyTileIndex ? "bg-transparent" : "bg-background/20"
+                    index === emptyIndex ? "bg-transparent" : "bg-background/20"
                   )}
                 >
                   <span className="text-5xl font-bold text-muted-foreground/20">{index + 1}</span>
@@ -98,16 +97,16 @@ const GameBoard = ({ level, tiles, gridSize, onTileSlide, imageSrc, hint, diffic
                     value={tile.value}
                     gridSize={gridSize}
                     imageSrc={imageSrc}
-                    onTileSlide={onTileSlide} // Changed from onClick
+                    onTileSlide={onTileSlide}
                     tileSize={tileSize}
                     correctPosition={tile.value - 1}
                     currentPosition={index}
                     isCorrectPosition={tile.value - 1 === index}
                     gap={TILE_GAP}
-                    // Pass the full hint object to Tile
                     hint={hint}
                     isSolving={isSolving}
                     showPersistentRippleHint={showPersistentRippleHint}
+                    emptyIndex={emptyIndex}
                   />
                 ))}
               </div>

@@ -63,6 +63,7 @@ const Game = ({
     canUndo,
     canSolve,
     hint,
+    emptyIndex,
     startGame,
     handleTileSlide,
     undoMove,
@@ -118,13 +119,6 @@ const Game = ({
     }
   };
   
-  const handleTileInteraction = (tileValue: number, direction: 'up' | 'down' | 'left' | 'right') => {
-    if (!isStarted) {
-        startGame();
-    }
-    handleTileSlide(tileValue, direction);
-  }
-  
   return (
     <div className="flex flex-col items-center gap-4">
       <GameControls
@@ -145,13 +139,14 @@ const Game = ({
           level={level}
           tiles={tiles}
           gridSize={level.gridSize}
-          onTileSlide={handleTileInteraction} // Changed from onTileClick
+          onTileSlide={handleTileSlide}
           imageSrc={level.imageSrc}
           hint={hint}
           difficulty={level.difficulty}
           isSolving={isSolving}
           isGameWon={isSolved}
           showPersistentRippleHint={showPersistentRippleHint}
+          emptyIndex={emptyIndex}
       />
 
       <WinModal
