@@ -139,29 +139,38 @@ const useGameLogic = (gridSize: number, onWin: () => void, isMuted: boolean, pau
   const shuffleTiles = useCallback(() => {
     setIsSolving(false);
     let shuffledTiles: TileType[];
-    if (gridSize % 2 === 0) {
-      let tempTiles = createSolvedTiles();
-      let emptyIndex = tempTiles.findIndex(t => t.value === emptyTileValue);
-      for (let i = 0; i < gridSize * gridSize * 10; i++) {
-        const emptyRow = Math.floor(emptyIndex / gridSize);
-        const emptyCol = emptyIndex % gridSize;
+    let isAlreadySolved = false;
 
-        const possibleMoves = [];
-        if (emptyRow > 0) possibleMoves.push(emptyIndex - gridSize);
-        if (emptyRow < gridSize - 1) possibleMoves.push(emptyIndex + gridSize);
-        if (emptyCol > 0) possibleMoves.push(emptyIndex - 1);
-        if (emptyCol < gridSize - 1) possibleMoves.push(emptyIndex + 1);
+    do {
+      if (gridSize % 2 === 0) {
+        let tempTiles = createSolvedTiles();
+        let emptyIndex = tempTiles.findIndex(t => t.value === emptyTileValue);
+        // Increase iterations for a more thorough shuffle, especially for 2x2
+        const shuffleIterations = gridSize * gridSize * 20;
 
-        const moveIndex = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
-        [tempTiles[emptyIndex], tempTiles[moveIndex]] = [tempTiles[moveIndex], tempTiles[emptyIndex]];
-        emptyIndex = moveIndex;
-      }
-      shuffledTiles = tempTiles;
-    } else {
-       do {
+        for (let i = 0; i < shuffleIterations; i++) {
+          const emptyRow = Math.floor(emptyIndex / gridSize);
+          const emptyCol = emptyIndex % gridSize;
+
+          const possibleMoves = [];
+          if (emptyRow > 0) possibleMoves.push(emptyIndex - gridSize);
+          if (emptyRow < gridSize - 1) possibleMoves.push(emptyIndex + gridSize);
+          if (emptyCol > 0) possibleMoves.push(emptyIndex - 1);
+          if (emptyCol < gridSize - 1) possibleMoves.push(emptyIndex + 1);
+
+          const moveIndex = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+          [tempTiles[emptyIndex], tempTiles[moveIndex]] = [tempTiles[moveIndex], tempTiles[emptyIndex]];
+          emptyIndex = moveIndex;
+        }
+        shuffledTiles = tempTiles;
+      } else {
         shuffledTiles = [...createSolvedTiles()].sort(() => Math.random() - 0.5);
-      } while (!isSolvable(shuffledTiles) || JSON.stringify(shuffledTiles) === JSON.stringify(createSolvedTiles()));
-    }
+      }
+      
+      const solvedState = createSolvedTiles();
+      isAlreadySolved = JSON.stringify(shuffledTiles.map(t => t.value)) === JSON.stringify(solvedState.map(t => t.value));
+
+    } while (!isSolvable(shuffledTiles) || isAlreadySolved);
 
     setTiles(shuffledTiles);
     setMoves(0);
@@ -173,6 +182,7 @@ const useGameLogic = (gridSize: number, onWin: () => void, isMuted: boolean, pau
     setHasShownRewardedAdForCurrentLevel(false);
     prepareRewarded();
   }, [gridSize, createSolvedTiles, prepareRewarded]);
+
 
   useEffect(() => {
     shuffleTiles();
