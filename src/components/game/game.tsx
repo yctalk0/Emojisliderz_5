@@ -19,7 +19,7 @@ interface GameProps {
   isPreviousLevelAvailable: boolean;
   isLastLevelOfDifficulty: boolean;
   playLevelCompleteSound: () => void; // New prop
-  playTileSlideSound: () => void; // New prop
+  onTileSlide: () => void; // New prop
   isMuted: boolean; // Added prop
   easyLevelsCompleted: number; // New prop
   showRewarded: () => Promise<{ rewarded: boolean }>; // New prop, updated return type
@@ -36,7 +36,7 @@ const Game = ({
   isPreviousLevelAvailable,
   isLastLevelOfDifficulty,
   playLevelCompleteSound, // Destructure new prop
-  playTileSlideSound, // Destructure new prop
+  onTileSlide, // Destructure new prop
   isMuted,
   easyLevelsCompleted, // Destructure new prop
   showRewarded, // Destructure new prop
@@ -128,7 +128,7 @@ const Game = ({
         startGame();
     }
     handleTileClick(tileValue);
-    playTileSlideSound(); // Play tile slide sound on each tile interaction
+    onTileSlide(); // Play tile slide sound on each tile interaction
   }
   
   return (
