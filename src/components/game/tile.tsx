@@ -147,13 +147,13 @@ const Tile = ({
         const threshold = tileSize / 2;
         if (canMoveHorizontal && Math.abs(mx) > threshold) {
           if ((mx > 0 && emptyCol > col) || (mx < 0 && emptyCol < col)) {
-            onSlide(value);
+            onClick(value);
             return;
           }
         }
         if (canMoveVertical && Math.abs(my) > threshold) {
           if ((my > 0 && emptyRow > row) || (my < 0 && emptyRow < row)) {
-            onSlide(value);
+            onClick(value);
             return;
           }
         }
@@ -179,6 +179,7 @@ const Tile = ({
   return (
     <animated.div
       {...bind(value)}
+      onClick={() => onClick(value)}
       style={{
         position: 'absolute',
         width: `${tileSize}px`,
@@ -196,7 +197,9 @@ const Tile = ({
         'shadow-lg hover:shadow-xl',
         'overflow-hidden',
         'flex items-center justify-center',
-        isCorrectPosition && 'shadow-green-500/50 shadow-[0_0_15px_5px_rgba(74,222,128,0.5)]',
+        isCorrectPosition 
+          ? 'shadow-green-500/90 shadow-[0_0_12px_4px_rgba(74,222,128,0.9)]' 
+          : 'shadow-red-500/90 shadow-[0_0_12px_4px_rgba(239,68,68,0.9)]',
         isSolving && 'transition-none'
       )}
     >
