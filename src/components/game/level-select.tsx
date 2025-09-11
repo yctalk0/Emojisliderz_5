@@ -51,7 +51,6 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
     .filter(level => unlockedLevels.includes(level.id))
     .sort((a, b) => b.levelNumber - a.levelNumber)[0];
   
-  // The next level to be unlocked is either the one after the last unlocked, or level 1 if none are unlocked.
   const nextLevelNumber = lastUnlockedInDifficulty ? lastUnlockedInDifficulty.levelNumber + 1 : 1;
   const nextLevel = levels.find(l => l.levelNumber === nextLevelNumber);
 
@@ -71,9 +70,7 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
         <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-2 flex-grow">
           {paginatedLevels.map((level, index) => {
             const isUnlocked = unlockedLevels.includes(level.id);
-            // The "next" level to be unlocked (which blinks) is the one we calculated.
-            const isNext = nextLevel?.id === level.id;
-            // A level is completed if it's unlocked and the *next* level is also unlocked. This is a simplification.
+            const isNext = nextLevel?.id === level.id && unlockedLevels.includes(level.id);
             const isCompleted = isUnlocked && unlockedLevels.includes(levels.find(l => l.levelNumber === level.levelNumber + 1)?.id ?? 'none');
 
             return (
@@ -95,7 +92,7 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
                   width={64}
                   height={64}
                   priority={level.levelNumber === 1}
-                  className={cn("w-full h-full object-contain p-1", !isUnlocked && "opacity-30")}
+                  className={cn("w-full h-full object-contain p-1", !isUnlocked && "opacity-60")}
                 />
                 
                 {isNext && !isCompleted && (
@@ -104,7 +101,7 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
                   </div>
                 )}
                 {!isUnlocked && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-md">
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-md">
                     <Lock className="w-8 h-8 text-slate-200" />
                   </div>
                 )}
@@ -127,7 +124,7 @@ const LevelSelect = ({ levels, unlockedLevels, onLevelSelect }: LevelSelectProps
   
   const levelsByDifficulty = difficulties.map(difficulty => ({
     difficulty,
-    levels: levels.filter(level => level.difficulty === difficulty),
+    levels: levels.filter(level => level.difficulty === difficulty).sort((a,b) => a.levelNumber - b.levelNumber),
   }));
 
   return (
@@ -135,6 +132,9 @@ const LevelSelect = ({ levels, unlockedLevels, onLevelSelect }: LevelSelectProps
       <AdBanner position="top" visible={true} /> {/* Ad banner above Easy - 2x2 Grid */}
       {levelsByDifficulty.map(({ difficulty, levels }) => {
         if (levels.length === 0) return null;
+        const anyUnlockedInDifficulty = levels.some(l => unlockedLevels.includes(l.id));
+        if (difficulty === 'Hard' && !anyUnlockedInDifficulty) return null;
+
         return (
           <React.Fragment key={difficulty}>
             <DifficultyCard 
