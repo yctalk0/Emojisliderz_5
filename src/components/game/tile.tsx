@@ -142,8 +142,16 @@ const Tile = ({
       let newY = targetY;
 
       if (down) {
-        if (canMoveHorizontal) newX += mx;
-        if (canMoveVertical) newY += my;
+        if (canMoveHorizontal) {
+          const maxMove = emptyCol > col ? tileSize + gap : -tileSize - gap;
+          const clampedMx = emptyCol > col ? Math.max(0, Math.min(mx, maxMove)) : Math.min(0, Math.max(mx, maxMove));
+          newX += clampedMx;
+        }
+        if (canMoveVertical) {
+          const maxMove = emptyRow > row ? tileSize + gap : -tileSize - gap;
+          const clampedMy = emptyRow > row ? Math.max(0, Math.min(my, maxMove)) : Math.min(0, Math.max(my, maxMove));
+          newY += clampedMy;
+        }
       } else {
         const threshold = tileSize / 2;
         if (canMoveHorizontal && Math.abs(mx) > threshold) {
@@ -164,6 +172,36 @@ const Tile = ({
       
       api.start({ x: newX, y: newY, immediate: down });
     }, {
+      from: () => [x.get(), y.get()],
+      bounds: () => {
+        const bounds = {
+          left: -Infinity,
+          right: Infinity,
+          top: -Infinity,
+          bottom: Infinity,
+        };
+
+        if (canMoveHorizontal) {
+          if (emptyCol > col) {
+            bounds.left = col * (tileSize + gap);
+            bounds.right = emptyCol * (tileSize + gap);
+          } else {
+            bounds.left = emptyCol * (tileSize + gap);
+            bounds.right = col * (tileSize + gap);
+          }
+        }
+        if (canMoveVertical) {
+          if (emptyRow > row) {
+            bounds.top = row * (tileSize + gap);
+            bounds.bottom = emptyRow * (tileSize + gap);
+          } else {
+            bounds.top = emptyRow * (tileSize + gap);
+            bounds.bottom = row * (tileSize + gap);
+          }
+        }
+        return bounds;
+      },
+      rubberband: true,
       filterTaps: true,
       axis: (canMoveHorizontal && canMoveVertical) ? undefined : canMoveHorizontal ? 'x' : 'y'
     }

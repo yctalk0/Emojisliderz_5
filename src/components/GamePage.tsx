@@ -251,7 +251,7 @@ export default function GamePage() {
           <Image src="/assets/emoji/music/logo/logo.png" alt="Emoji sliderz Logo" width={64} height={64} />
           <h1 className="text-6xl font-extrabold tracking-tighter text-primary font-headline">Emoji sliderz</h1>
         </div>
-        <p className="mt-4 text-2xl text-muted-foreground animate-pulse">Tap to start</p>
+        <p className="mt-4 text-2xl text-muted-foreground font-bold blinking-text">Tap to start</p>
       </div>
     );
   }
@@ -313,7 +313,7 @@ export default function GamePage() {
             )}
           </main>
         </div>
-        <footer className="sticky bottom-0 bg-background/80 backdrop-blur-sm mt-auto py-2 px-4 pb-4 sm:pb-6 lg:pb-8">
+        <footer className="bg-background/80 backdrop-blur-sm mt-auto py-2 px-4 pb-4 sm:pb-6 lg:pb-8">
             <div className="flex justify-center items-center gap-4 mb-2">
                 <Button variant="ghost" size="icon" onClick={toggleMute} className="text-muted-foreground">
                   {renderVolumeIcon()}
@@ -338,4 +338,3 @@ export default function GamePage() {
     </div>
   );
 }
-    
