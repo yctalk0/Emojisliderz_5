@@ -26,7 +26,6 @@ interface WinModalProps {
   imageSrc: string;
   isLastLevelOfDifficulty: boolean;
   difficulty: 'Easy' | 'Hard';
-  levelCompleteAudioRef: RefObject<HTMLAudioElement>;
   isMuted: boolean;
 }
 
@@ -41,20 +40,9 @@ const WinModal = ({
   imageSrc,
   isLastLevelOfDifficulty,
   difficulty,
-  levelCompleteAudioRef,
   isMuted,
 }: WinModalProps) => {
 
-  useEffect(() => {
-    if (isOpen && !isMuted) {
-      levelCompleteAudioRef.current?.play().catch(e => console.error("Could not play win sound", e));
-    } else if (!isOpen) {
-      if (levelCompleteAudioRef.current) {
-        levelCompleteAudioRef.current.pause();
-        levelCompleteAudioRef.current.currentTime = 0;
-      }
-    }
-  }, [isOpen, isMuted, levelCompleteAudioRef]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60).toString().padStart(2, '0');

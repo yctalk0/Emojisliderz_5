@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useEffect, RefObject } from 'react';
 import type { Level } from '@/lib/game-data';
@@ -19,10 +18,12 @@ interface GameProps {
   isNextLevelAvailable: boolean;
   isPreviousLevelAvailable: boolean;
   isLastLevelOfDifficulty: boolean;
-  levelCompleteAudioRef: RefObject<HTMLAudioElement>; // Added prop
+  playLevelCompleteSound: () => void; // New prop
+  playTileSlideSound: () => void; // New prop
   isMuted: boolean; // Added prop
   easyLevelsCompleted: number; // New prop
   showRewarded: () => Promise<{ rewarded: boolean }>; // New prop, updated return type
+  unlockedLevels: string[]; // New prop
 }
 
 const Game = ({
@@ -34,10 +35,12 @@ const Game = ({
   isNextLevelAvailable,
   isPreviousLevelAvailable,
   isLastLevelOfDifficulty,
-  levelCompleteAudioRef,
+  playLevelCompleteSound, // Destructure new prop
+  playTileSlideSound, // Destructure new prop
   isMuted,
   easyLevelsCompleted, // Destructure new prop
   showRewarded, // Destructure new prop
+  unlockedLevels, // Destructure new prop
 }: GameProps) => {
   const { toast } = useToast();
   const [showWinModal, setShowWinModal] = useState(false);
@@ -46,6 +49,7 @@ const Game = ({
   // This function is called by the game logic when the puzzle is solved
   const handleGameWinLogic = () => {
     onWin(); // Notify parent (GamePage) to update progress
+    playLevelCompleteSound(); // Play level complete sound
     setShowPersistentRippleHint(false); // Hide persistent hint on win
     // We wait a shorter moment for the last tile animation to finish, then show the modal
     setTimeout(() => {
@@ -63,9 +67,8 @@ const Game = ({
     canUndo,
     canSolve,
     hint,
-    emptyIndex,
     startGame,
-    handleTileSlide,
+    handleTileClick,
     undoMove,
     resetGame,
     autoSolve,
@@ -74,16 +77,17 @@ const Game = ({
 
   const [isHintModalOpen, setIsHintModalOpen] = useState(false);
   
+  // For the first level of any difficulty, provide a hint by default when the level starts if not solved.
   useEffect(() => {
-    // For the first level, always get the next hint if not solved and game is not started
-    if (level.levelNumber === 1 && !isSolved && !isStarted) {
+    if (level.levelNumber === 1 && !isSolved) {
       getNextMoveHint();
     }
-  }, [level.levelNumber, isSolved, isStarted, getNextMoveHint]);
+  }, [level.levelNumber, isSolved, getNextMoveHint, level.id]);
   
   useEffect(() => {
     setShowWinModal(false);
     // Reset persistent hint state when level changes
+    // Only show persistent ripple hint for the first level of any difficulty
     if (level.levelNumber === 1) {
       setShowPersistentRippleHint(true);
     } else {
@@ -119,6 +123,14 @@ const Game = ({
     }
   };
   
+  const handleTileInteraction = (tileValue: number) => {
+    if (!isStarted) {
+        startGame();
+    }
+    handleTileClick(tileValue);
+    playTileSlideSound(); // Play tile slide sound on each tile interaction
+  }
+  
   return (
     <div className="flex flex-col items-center gap-4">
       <GameControls
@@ -139,14 +151,13 @@ const Game = ({
           level={level}
           tiles={tiles}
           gridSize={level.gridSize}
-          onTileSlide={handleTileSlide}
+          onTileClick={handleTileInteraction}
           imageSrc={level.imageSrc}
           hint={hint}
           difficulty={level.difficulty}
           isSolving={isSolving}
           isGameWon={isSolved}
           showPersistentRippleHint={showPersistentRippleHint}
-          emptyIndex={emptyIndex}
       />
 
       <WinModal
@@ -160,7 +171,6 @@ const Game = ({
         imageSrc={level.imageSrc}
         isLastLevelOfDifficulty={isLastLevelOfDifficulty}
         difficulty={level.difficulty}
-        levelCompleteAudioRef={levelCompleteAudioRef} // Pass ref to WinModal
         isMuted={isMuted} // Pass mute state to WinModal
       />
       <HintModal 
