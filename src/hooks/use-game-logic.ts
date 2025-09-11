@@ -97,7 +97,7 @@ const solvePuzzle = (startTiles: TileType[], gridSize: number): TileType[][] | n
 };
 
 
-const useGameLogic = (gridSize: number, onWin: () => void) => {
+const useGameLogic = (gridSize: number, onWin: () => void, isMuted: boolean, pauseBgMusic: () => void, resumeBgMusic: () => void) => {
   const totalTiles = gridSize * gridSize;
   const emptyTileValue = 0;
 
@@ -118,7 +118,7 @@ const useGameLogic = (gridSize: number, onWin: () => void) => {
   const [hasShownRewardedAdForCurrentLevel, setHasShownRewardedAdForCurrentLevel] = useState(false);
 
   const { showRewarded, prepareRewarded } = useAdMob();
-  const { play: playSlideSound } = useSound('/assets/sounds/slide_1.mp3', 0.5); // Adjust volume as needed
+  const { play: playSlideSound } = useSound('/assets/sounds/slide_1.mp3', 0.5, 'effect', isMuted); // Adjust volume as needed, pass isMuted
 
   const isSolvable = (arr: TileType[]): boolean => {
     if (gridSize % 2 === 1) { // Odd grid
@@ -263,12 +263,18 @@ const useGameLogic = (gridSize: number, onWin: () => void) => {
     if (solutionPath) {
       setIsSolving(true);
       if(!isStarted) startGame();
+      pauseBgMusic(); // Pause background music when auto-solve starts
 
       solutionPath.forEach((state, index) => {
         setTimeout(() => {
           setHistory(prev => [...prev, tiles]);
           setTiles(state);
           setMoves(moves + index);
+          playSlideSound(); // Play sound for each tile movement during auto-solve
+          if (index === solutionPath.length - 1) {
+            // If it's the last step of the auto-solve, resume background music
+            resumeBgMusic();
+          }
         }, index * 300);
       });
     } else {

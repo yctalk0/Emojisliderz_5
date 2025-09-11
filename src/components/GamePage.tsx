@@ -24,6 +24,7 @@ export default function GamePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAppStarted, setIsAppStarted] = useState(false); // New state for initial interaction
   const [easyLevelsCompleted, setEasyLevelsCompleted] = useState(0);
+  const [hintsUsedCount, setHintsUsedCount] = useState(0); // New state for hints used
   const [volume, setVolume] = useState(0.2);
   const [lastVolume, setLastVolume] = useState(0.2);
   const isMuted = volume === 0;
@@ -85,14 +86,27 @@ export default function GamePage() {
     }
     
     setUnlockedLevels(initialUnlocked);
-    localStorage.setItem('unlockedLevels', JSON.stringify(initialUnlocked));
+    localStorage.setItem('unlockedLevels', JSON.stringify(initialUnlocked)); // Use initialUnlocked here
     
     const savedEasyCompleted = localStorage.getItem('easyLevelsCompleted');
     if(savedEasyCompleted) {
         setEasyLevelsCompleted(JSON.parse(savedEasyCompleted));
     }
+
+    const savedHintsUsed = localStorage.getItem('hintsUsedCount');
+    if(savedHintsUsed) {
+        setHintsUsedCount(JSON.parse(savedHintsUsed));
+    }
     
     setIsLoading(false);
+  }, []);
+
+  const handleHintUsed = useCallback((levelId: string) => {
+    setHintsUsedCount(prev => {
+      const newCount = prev + 1;
+      localStorage.setItem('hintsUsedCount', JSON.stringify(newCount));
+      return newCount;
+    });
   }, []);
   
   const handleLevelSelect = (level: Level) => {
@@ -103,12 +117,12 @@ export default function GamePage() {
     if (currentLevel) {
       pauseBgMusic(); // Pause background music when game is won
 
-      if (currentLevel.difficulty === 'Easy') {
+      if (currentLevel.difficulty === 'Easy' && currentLevel.gridSize === 2) {
         setEasyLevelsCompleted(prev => {
           const newCount = prev + 1;
           localStorage.setItem('easyLevelsCompleted', JSON.stringify(newCount));
-          if (newCount % 4 === 0 && Capacitor.getPlatform() !== 'web') {
-            showInterstitial();
+          if (newCount % 3 === 0 && Capacitor.getPlatform() !== 'web') {
+            showRewarded(); // Show rewarded ad after every 3 easy 2x2 levels
           }
           return newCount;
         });
@@ -284,8 +298,12 @@ export default function GamePage() {
                 onTileSlide={playTileSlideSound}
                 isMuted={isMuted}
                 easyLevelsCompleted={easyLevelsCompleted}
+                hintsUsedCount={hintsUsedCount} // Pass hintsUsedCount
+                onHintUsedInLevel={handleHintUsed} // Pass handleHintUsed
                 showRewarded={showRewarded}
                 unlockedLevels={unlockedLevels}
+                pauseBgMusic={pauseBgMusic} // Pass pause function
+                resumeBgMusic={resumeBgMusic} // Pass resume function
               />
             ) : (
               <LevelSelect 

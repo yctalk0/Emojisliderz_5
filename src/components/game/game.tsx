@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, RefObject } from 'react';
+import { useState, useEffect, useRef, RefObject } from 'react';
 import type { Level } from '@/lib/game-data';
 import useGameLogic from '@/hooks/use-game-logic';
 import GameBoard from './game-board';
@@ -24,6 +24,10 @@ interface GameProps {
   easyLevelsCompleted: number; // New prop
   showRewarded: () => Promise<{ rewarded: boolean }>; // New prop, updated return type
   unlockedLevels: string[]; // New prop
+  pauseBgMusic: () => void; // New prop
+  resumeBgMusic: () => void; // New prop
+  onHintUsedInLevel: (levelId: string) => void; // New prop to notify parent about hint usage
+  hintsUsedCount: number; // New prop to track hints used
 }
 
 const Game = ({
@@ -41,13 +45,22 @@ const Game = ({
   easyLevelsCompleted, // Destructure new prop
   showRewarded, // Destructure new prop
   unlockedLevels, // Destructure new prop
+  pauseBgMusic, // Destructure new prop
+  resumeBgMusic, // Destructure new prop
+  onHintUsedInLevel, // Destructure new prop
 }: GameProps) => {
+  const [hintUsedInCurrentLevel, setHintUsedInCurrentLevel] = useState(false); // New state to track hint usage per level
+  // Use a ref to track if auto-solve is active
+  const isAutoSolvingRef = useRef(false);
   const { toast } = useToast();
   const [showWinModal, setShowWinModal] = useState(false);
   const [showPersistentRippleHint, setShowPersistentRippleHint] = useState(false);
 
   // This function is called by the game logic when the puzzle is solved
   const handleGameWinLogic = () => {
+    if (hintUsedInCurrentLevel) {
+      onHintUsedInLevel(level.id); // Notify parent that a hint was used in this level
+    }
     onWin(); // Notify parent (GamePage) to update progress
     playLevelCompleteSound(); // Play level complete sound
     setShowPersistentRippleHint(false); // Hide persistent hint on win
@@ -73,7 +86,7 @@ const Game = ({
     resetGame,
     autoSolve,
     getNextMoveHint,
-  } = useGameLogic(level.gridSize, handleGameWinLogic);
+  } = useGameLogic(level.gridSize, handleGameWinLogic, isMuted, pauseBgMusic, resumeBgMusic);
 
   const [isHintModalOpen, setIsHintModalOpen] = useState(false);
   
@@ -86,6 +99,7 @@ const Game = ({
   
   useEffect(() => {
     setShowWinModal(false);
+    setHintUsedInCurrentLevel(false); // Reset hint usage for the new level
     // Reset persistent hint state when level changes
     // Only show persistent ripple hint for the first level of any difficulty
     if (level.levelNumber === 1) {
@@ -98,6 +112,7 @@ const Game = ({
   const handleRestart = () => {
     resetGame();
     setShowWinModal(false);
+    setHintUsedInCurrentLevel(false); // Reset hint usage on restart
     toast({ title: "Game Restarted", description: "The puzzle has been shuffled." });
   }
 
@@ -106,6 +121,7 @@ const Game = ({
       alert("Hints are only available for 2x2 and 3x3 puzzles for now!");
       return;
     }
+    setHintUsedInCurrentLevel(true); // Mark that a hint was used in this level
     getNextMoveHint();
   }
 
@@ -172,6 +188,8 @@ const Game = ({
         isLastLevelOfDifficulty={isLastLevelOfDifficulty}
         difficulty={level.difficulty}
         isMuted={isMuted} // Pass mute state to WinModal
+        pauseBgMusic={pauseBgMusic} // Pass pause function
+        resumeBgMusic={resumeBgMusic} // Pass resume function
       />
       <HintModal 
         isOpen={isHintModalOpen}

@@ -27,6 +27,8 @@ interface WinModalProps {
   isLastLevelOfDifficulty: boolean;
   difficulty: 'Easy' | 'Hard';
   isMuted: boolean;
+  pauseBgMusic: () => void; // New prop
+  resumeBgMusic: () => void; // New prop
 }
 
 const WinModal = ({
@@ -41,6 +43,8 @@ const WinModal = ({
   isLastLevelOfDifficulty,
   difficulty,
   isMuted,
+  pauseBgMusic,
+  resumeBgMusic,
 }: WinModalProps) => {
 
 
@@ -49,6 +53,14 @@ const WinModal = ({
     const secs = (seconds % 60).toString().padStart(2, '0');
     return `${mins}:${secs}`;
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      pauseBgMusic();
+    } else {
+      resumeBgMusic();
+    }
+  }, [isOpen, pauseBgMusic, resumeBgMusic]);
 
   if (!isOpen) return null;
 
@@ -105,6 +117,7 @@ const WinModal = ({
           <Button onClick={onExit} variant="secondary" className="w-full h-11">
             Back to Levels
           </Button>
+          <AdBanner position="bottom" visible={true} />
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

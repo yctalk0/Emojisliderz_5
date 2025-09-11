@@ -51,13 +51,7 @@ const GameControls = ({ level, moves, time, onHint, onUndo, onRestart, onSolve, 
         </CardContent>
       </Card>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <Button variant="secondary" onClick={() => {
-          if (level.difficulty === 'Easy' && easyLevelsCompleted > 0 && easyLevelsCompleted % 3 === 0) {
-            showRewarded();
-          } else {
-            onHint();
-          }
-        }} className="h-12 text-base font-bold">
+        <Button variant="secondary" onClick={onHint} className="h-12 text-base font-bold">
           <HelpCircle className="w-5 h-5 mr-2" /> Hint
         </Button>
         <Button variant="secondary" onClick={onUndo} disabled={!canUndo} className="h-12 text-base font-bold">
@@ -66,7 +60,12 @@ const GameControls = ({ level, moves, time, onHint, onUndo, onRestart, onSolve, 
         <Button variant="secondary" onClick={onRestart} className="h-12 text-base font-bold">
           <RotateCw className="w-5 h-5 mr-2" /> Restart
         </Button>
-         <Button variant="secondary" onClick={onSolve} disabled={!canSolve} className="h-12 text-base font-bold">
+         <Button variant="secondary" onClick={() => {
+          onSolve(); // Always call onSolve
+          if (level.difficulty === 'Easy' && level.gridSize === 2 && easyLevelsCompleted > 0 && easyLevelsCompleted % 3 === 0) {
+            showRewarded(); // Show rewarded ad after every 3 easy 2x2 solves
+          }
+        }} disabled={!canSolve} className="h-12 text-base font-bold">
           <WandSparkles className="w-5 h-5 mr-2" /> Solve
         </Button>
       </div>
