@@ -6,17 +6,17 @@ import { cn } from '@/lib/utils';
 import type { Hint } from '@/hooks/use-game-logic';
 import type { Level } from '@/lib/game-data';
 import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useDrag } from '@use-gesture/react';
 
 interface ArrowHintProps {
   direction: Hint['direction'];
   size: number;
-  level: Level; // Add level prop
+  level: Level;
 }
 
 const ArrowHint = ({ direction, size, level }: ArrowHintProps) => {
   const moveDistance = 10;
   
-  // Determine if the smooth animation should be applied
   const isSmoothAnimation = level.difficulty === 'Hard' && level.gridSize === 3 && level.levelNumber >= 2;
 
   const animation = useSpring({
@@ -32,7 +32,7 @@ const ArrowHint = ({ direction, size, level }: ArrowHintProps) => {
           ? `translate(-${moveDistance}px, 0px)`
           : `translate(${moveDistance}px, 0px)`,
     },
-    config: isSmoothAnimation ? { tension: 200, friction: 10 } : { duration: 500 }, // Conditional config
+    config: isSmoothAnimation ? { tension: 200, friction: 10 } : { duration: 500 },
   });
 
   const getArrow = () => {
@@ -73,15 +73,16 @@ interface TileProps {
   gridSize: number;
   imageSrc: string;
   onClick: (tileValue: number) => void;
+  onSlide: (tileValue: number) => void;
   tileSize: number;
   correctPosition: number;
   currentPosition: number;
   isCorrectPosition: boolean;
   gap: number;
-  // The full hint object, which includes both tileValue and direction
   hint: Hint | null;
   isSolving: boolean;
   showPersistentRippleHint: boolean;
+  emptyTileIndex: number;
 }
 
 
@@ -91,25 +92,79 @@ const Tile = ({
   gridSize, 
   imageSrc, 
   onClick,
+  onSlide,
   tileSize, 
   correctPosition, 
   currentPosition, 
   isCorrectPosition,
   gap,
-  hint, // Destructure the full hint object
+  hint,
   isSolving,
   showPersistentRippleHint,
+  emptyTileIndex
 }: TileProps) => {
   const row = Math.floor(currentPosition / gridSize);
   const col = currentPosition % gridSize;
-  
-  const { top, left } = useSpring({
-    to: {
-      top: row * (tileSize + gap),
-      left: col * (tileSize + gap),
-    },
+  const emptyRow = Math.floor(emptyTileIndex / gridSize);
+  const emptyCol = emptyTileIndex % gridSize;
+
+  const canMoveHorizontal = row === emptyRow;
+  const canMoveVertical = col === emptyCol;
+
+  const [{ x, y }, api] = useSpring(() => ({
+    x: col * (tileSize + gap),
+    y: row * (tileSize + gap),
     config: { tension: 300, friction: 30 },
-  });
+  }));
+
+  useEffect(() => {
+    api.start({
+      x: col * (tileSize + gap),
+      y: row * (tileSize + gap),
+      immediate: isSolving
+    });
+  }, [currentPosition, tileSize, gap, api, col, row, isSolving]);
+
+
+  const bind = useDrag(
+    ({ down, movement: [mx, my], tap, args }) => {
+      const [tileValue] = args;
+      if (tap) {
+        onClick(tileValue);
+        return;
+      }
+      
+      const targetX = col * (tileSize + gap);
+      const targetY = row * (tileSize + gap);
+
+      let newX = targetX;
+      let newY = targetY;
+
+      if (down) {
+        if (canMoveHorizontal) newX += mx;
+        if (canMoveVertical) newY += my;
+      } else {
+        const threshold = tileSize / 2;
+        if (canMoveHorizontal && Math.abs(mx) > threshold) {
+          if ((mx > 0 && emptyCol > col) || (mx < 0 && emptyCol < col)) {
+            onSlide(value);
+            return;
+          }
+        }
+        if (canMoveVertical && Math.abs(my) > threshold) {
+          if ((my > 0 && emptyRow > row) || (my < 0 && emptyRow < row)) {
+            onSlide(value);
+            return;
+          }
+        }
+      }
+      
+      api.start({ x: newX, y: newY, immediate: down });
+    }, {
+      filterTaps: true,
+      axis: (canMoveHorizontal && canMoveVertical) ? undefined : canMoveHorizontal ? 'x' : 'y'
+    }
+  );
 
   const bgPosX = (correctPosition % gridSize) * (100 / (gridSize - 1));
   const bgPosY = Math.floor(correctPosition / gridSize) * (100 / (gridSize - 1));
@@ -118,14 +173,12 @@ const Tile = ({
     return null;
   }
   
-  // Persistent ripple hint for the first level, only on the hint tile
   const shouldShowPersistentRipple = showPersistentRippleHint && hint?.tileValue === value && !isSolving;
-  // Arrow hint for other levels or when persistent ripple is not active
   const shouldShowArrowHint = hint?.direction && hint?.tileValue === value && !shouldShowPersistentRipple;
 
   return (
     <animated.div
-      onClick={() => onClick(value)}
+      {...bind(value)}
       style={{
         position: 'absolute',
         width: `${tileSize}px`,
@@ -135,15 +188,16 @@ const Tile = ({
         backgroundPosition: `${bgPosX}% ${bgPosY}%`,
         backgroundColor: 'white',
         touchAction: 'none',
-        top,
-        left,
+        x,
+        y,
       }}
       className={cn(
         'rounded-md cursor-pointer select-none',
         'shadow-lg hover:shadow-xl',
         'overflow-hidden',
         'flex items-center justify-center',
-        isCorrectPosition && 'shadow-green-500/50 shadow-[0_0_15px_5px_rgba(74,222,128,0.5)]'
+        isCorrectPosition && 'shadow-green-500/50 shadow-[0_0_15px_5px_rgba(74,222,128,0.5)]',
+        isSolving && 'transition-none'
       )}
     >
       {shouldShowPersistentRipple && (

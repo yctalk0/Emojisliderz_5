@@ -13,14 +13,16 @@ interface GameBoardProps {
   gridSize: number;
   onTileClick: (tileValue: number) => void;
   imageSrc: string;
-  hint: Hint | null; // Keep the full hint object here
+  hint: Hint | null;
   difficulty: 'Easy' | 'Hard';
   isSolving: boolean;
   isGameWon: boolean;
   showPersistentRippleHint: boolean;
+  onTileSlide: (tileValue: number) => void;
+  emptyTileIndex: number;
 }
 
-const GameBoard = ({ level, tiles, gridSize, onTileClick, imageSrc, hint, difficulty, isSolving, isGameWon, showPersistentRippleHint }: GameBoardProps) => {
+const GameBoard = ({ level, tiles, gridSize, onTileClick, imageSrc, hint, difficulty, isSolving, isGameWon, showPersistentRippleHint, onTileSlide, emptyTileIndex }: GameBoardProps) => {
   const boardRef = useRef<HTMLDivElement>(null);
   const [boardSize, setBoardSize] = useState(300);
 
@@ -49,8 +51,6 @@ const GameBoard = ({ level, tiles, gridSize, onTileClick, imageSrc, hint, diffic
 
   const contentSize = boardSize - PADDING * 2;
   const tileSize = (contentSize - (gridSize - 1) * TILE_GAP) / gridSize;
-
-  const emptyTileIndex = tiles.findIndex(tile => tile.value === 0);
 
   return (
     <div className="w-full max-w-md mx-auto">
@@ -99,15 +99,16 @@ const GameBoard = ({ level, tiles, gridSize, onTileClick, imageSrc, hint, diffic
                     gridSize={gridSize}
                     imageSrc={imageSrc}
                     onClick={onTileClick}
+                    onSlide={onTileSlide}
                     tileSize={tileSize}
                     correctPosition={tile.value - 1}
                     currentPosition={index}
                     isCorrectPosition={tile.value - 1 === index}
                     gap={TILE_GAP}
-                    // Pass the full hint object to Tile
                     hint={hint}
                     isSolving={isSolving}
                     showPersistentRippleHint={showPersistentRippleHint}
+                    emptyTileIndex={emptyTileIndex}
                   />
                 ))}
               </div>

@@ -118,7 +118,7 @@ const useGameLogic = (gridSize: number, onWin: () => void, isMuted: boolean, pau
   const [hasShownRewardedAdForCurrentLevel, setHasShownRewardedAdForCurrentLevel] = useState(false);
 
   const { showRewarded, prepareRewarded } = useAdMob();
-  const { play: playSlideSound } = useSound('/assets/sounds/slide_1.mp3', 0.5, 'effect', isMuted); // Adjust volume as needed, pass isMuted
+  const { play: playSlideSound } = useSound('/assets/sounds/slide_1.mp3', 0.5, 'effect', isMuted);
 
   const isSolvable = (arr: TileType[]): boolean => {
     if (gridSize % 2 === 1) { // Odd grid
@@ -131,7 +131,7 @@ const useGameLogic = (gridSize: number, onWin: () => void, isMuted: boolean, pau
         }
       }
       return inversions % 2 === 0;
-    } else { // Even grid, more complex rule, so we shuffle by moves instead
+    } else {
       return true; 
     }
   };
@@ -139,11 +139,9 @@ const useGameLogic = (gridSize: number, onWin: () => void, isMuted: boolean, pau
   const shuffleTiles = useCallback(() => {
     setIsSolving(false);
     let shuffledTiles: TileType[];
-    // For even grids, ensure solvability by making random moves
     if (gridSize % 2 === 0) {
       let tempTiles = createSolvedTiles();
       let emptyIndex = tempTiles.findIndex(t => t.value === emptyTileValue);
-      // Increased shuffles for more randomness
       for (let i = 0; i < gridSize * gridSize * 10; i++) {
         const emptyRow = Math.floor(emptyIndex / gridSize);
         const emptyCol = emptyIndex % gridSize;
@@ -172,8 +170,8 @@ const useGameLogic = (gridSize: number, onWin: () => void, isMuted: boolean, pau
     setIsStarted(false);
     setHistory([]);
     setHint(null);
-    setHasShownRewardedAdForCurrentLevel(false); // Reset ad state for new level
-    prepareRewarded(); // Preload rewarded ad for the new level
+    setHasShownRewardedAdForCurrentLevel(false);
+    prepareRewarded();
   }, [gridSize, createSolvedTiles, prepareRewarded]);
 
   useEffect(() => {
@@ -214,6 +212,7 @@ const useGameLogic = (gridSize: number, onWin: () => void, isMuted: boolean, pau
 
   const handleTileClick = (tileValue: number) => {
     if (isSolved || isSolving) return;
+    if (!isStarted) startGame();
   
     const tileIndex = tiles.findIndex(t => t.value === tileValue);
     const emptyIndex = tiles.findIndex(t => t.value === emptyTileValue);
@@ -226,13 +225,13 @@ const useGameLogic = (gridSize: number, onWin: () => void, isMuted: boolean, pau
     const isAdjacent = Math.abs(tileRow - emptyRow) + Math.abs(tileCol - emptyCol) === 1;
   
     if (isAdjacent) {
-      setHint(null); // Clear hint on a valid move
+      setHint(null);
       const newTiles = [...tiles];
       setHistory(prev => [...prev, tiles]);
       [newTiles[tileIndex], newTiles[emptyIndex]] = [newTiles[emptyIndex], newTiles[tileIndex]];
       setTiles(newTiles);
       setMoves(prev => prev + 1);
-      playSlideSound(); // Play sound on tile move
+      playSlideSound();
     }
   };
 
@@ -263,16 +262,15 @@ const useGameLogic = (gridSize: number, onWin: () => void, isMuted: boolean, pau
     if (solutionPath) {
       setIsSolving(true);
       if(!isStarted) startGame();
-      pauseBgMusic(); // Pause background music when auto-solve starts
+      pauseBgMusic();
 
       solutionPath.forEach((state, index) => {
         setTimeout(() => {
           setHistory(prev => [...prev, tiles]);
           setTiles(state);
           setMoves(moves + index);
-          playSlideSound(); // Play sound for each tile movement during auto-solve
+          playSlideSound();
           if (index === solutionPath.length - 1) {
-            // If it's the last step of the auto-solve, resume background music
             resumeBgMusic();
           }
         }, index * 300);
@@ -286,14 +284,8 @@ const useGameLogic = (gridSize: number, onWin: () => void, isMuted: boolean, pau
     if (isSolved || isSolving) return;
 
     if (!hasShownRewardedAdForCurrentLevel) {
-      // Show rewarded ad
       await showRewarded();
       setHasShownRewardedAdForCurrentLevel(true);
-      // After ad, if user closed it, they might need to click hint again.
-      // A more robust solution would involve listening to ad completion events.
-    } else {
-      // If ad has already been shown for this level, provide the hint directly
-      // No need to show another ad
     }
 
     const solutionPath = solvePuzzle(tiles, gridSize);
@@ -318,12 +310,13 @@ const useGameLogic = (gridSize: number, onWin: () => void, isMuted: boolean, pau
         direction: direction,
       });
     }
-  }, [tiles, gridSize, isSolved, isSolving]);
+  }, [tiles, gridSize, isSolved, isSolving, hasShownRewardedAdForCurrentLevel, showRewarded]);
 
   const canUndo = useMemo(() => history.length > 0 && !isSolving, [history, isSolving]);
   const canSolve = useMemo(() => !isSolved && !isSolving, [isSolved, isSolving]);
+  const emptyTileIndex = useMemo(() => tiles.findIndex(t => t.value === emptyTileValue), [tiles]);
 
-  return { tiles, moves, time, isSolved, isStarted, isSolving, canUndo, canSolve, hint, startGame, handleTileClick, undoMove, resetGame, autoSolve, getNextMoveHint, hasShownRewardedAdForCurrentLevel };
+  return { tiles, moves, time, isSolved, isStarted, isSolving, canUndo, canSolve, hint, emptyTileIndex, startGame, handleTileClick, undoMove, resetGame, autoSolve, getNextMoveHint, hasShownRewardedAdForCurrentLevel };
 };
 
 export default useGameLogic;

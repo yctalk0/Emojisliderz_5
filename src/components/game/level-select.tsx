@@ -47,14 +47,12 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
     setCurrentPage(current => Math.max(current - 1, 0));
   }
   
-  // Find the first level in this difficulty that is NOT in unlockedLevels (i.e., not completed)
-  // This will be our "next" level to play.
-  const nextLevelToPlay = levels.find(level => !unlockedLevels.includes(level.id));
-  
-  const anyUnlockedInDifficulty = levels.some(l => unlockedLevels.includes(l.id));
-
   // A special check for hard mode: don't render it at all if the first hard level isn't unlocked.
   if (difficulty === 'Hard' && !unlockedLevels.includes('hard-1')) return null;
+  
+  const lastUnlockedLevelInDifficulty = levels
+    .filter(l => unlockedLevels.includes(l.id))
+    .sort((a, b) => b.levelNumber - a.levelNumber)[0];
 
   return (
     <Card className={cn("overflow-hidden border-2 shadow-lg rounded-2xl z-10", config.cardClass)}>
@@ -71,11 +69,10 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
         )}
         <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-2 flex-grow">
           {paginatedLevels.map((level) => {
-            const isCompleted = unlockedLevels.includes(level.id);
-            // The "next" level is the one we identified above. It should be blinking.
-            const isNext = nextLevelToPlay?.id === level.id;
-            // A level is playable if it's been completed (can be replayed) OR if it's the next one to play.
-            const isUnlocked = isCompleted || isNext;
+            const isUnlocked = unlockedLevels.includes(level.id);
+            const isNextToPlay = lastUnlockedLevelInDifficulty && lastUnlockedLevelInDifficulty.levelNumber + 1 === level.levelNumber;
+            const isBlinking = isUnlocked && !levels.some(l => l.levelNumber === level.levelNumber + 1 && unlockedLevels.includes(l.id));
+
 
             return (
               <Button
@@ -86,8 +83,7 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
                 className={cn(
                   "h-16 w-full text-4xl font-bold flex items-center justify-center transition-all duration-200 ease-in-out hover:scale-110 p-0 relative overflow-hidden",
                   isUnlocked ? config.levelButtonClass : "bg-slate-700/50",
-                  // Apply blinking animation only if it's the next level to play
-                  isNext && "animate-pulse shadow-lg shadow-yellow-400/50"
+                  isBlinking && "animate-pulse shadow-lg shadow-yellow-400/50"
                 )}
                 aria-label={`Level ${level.levelNumber}`}
               >
@@ -99,12 +95,11 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
                   priority={level.levelNumber === 1}
                   className={cn(
                     "w-full h-full object-contain p-1",
-                     // Adjust opacity for locked levels to make the emoji visible
                     !isUnlocked && "opacity-60"
                   )}
                 />
                 
-                {isNext && (
+                {isBlinking && (
                   <div className="absolute bottom-1 right-1">
                     <Unlock className="w-5 h-5 text-white" />
                   </div>
@@ -160,5 +155,4 @@ const LevelSelect = ({ levels, unlockedLevels, onLevelSelect }: LevelSelectProps
 };
 
 export default LevelSelect;
-
     

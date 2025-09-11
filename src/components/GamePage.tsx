@@ -114,15 +114,16 @@ export default function GamePage() {
   };
 
   const handleGameWin = useCallback(() => {
+    playLevelCompleteSound();
     if (currentLevel) {
-      pauseBgMusic(); // Pause background music when game is won
+      pauseBgMusic();
   
       if (currentLevel.difficulty === 'Easy' && currentLevel.gridSize === 2) {
         setEasyLevelsCompleted(prev => {
           const newCount = prev + 1;
           localStorage.setItem('easyLevelsCompleted', JSON.stringify(newCount));
           if (newCount % 3 === 0 && Capacitor.getPlatform() !== 'web') {
-            showRewarded(); // Show rewarded ad after every 3 easy 2x2 levels
+            showRewarded();
           }
           return newCount;
         });
@@ -130,11 +131,8 @@ export default function GamePage() {
   
       setUnlockedLevels(prevUnlocked => {
         const newUnlocked = new Set(prevUnlocked);
-  
-        // Add the just-completed level to the set.
         newUnlocked.add(currentLevel.id);
   
-        // Find the next level in the same difficulty and unlock it.
         const levelsInDifficulty = levels.filter(l => l.difficulty === currentLevel.difficulty).sort((a, b) => a.levelNumber - b.levelNumber);
         const currentIndexInDifficulty = levelsInDifficulty.findIndex(l => l.id === currentLevel.id);
   
@@ -143,7 +141,6 @@ export default function GamePage() {
           newUnlocked.add(nextLevelInDifficulty.id);
         }
   
-        // If Easy Level 1 is completed, unlock Hard Level 1.
         if (currentLevel.id === 'easy-1') {
           newUnlocked.add('hard-1');
         }
@@ -153,7 +150,7 @@ export default function GamePage() {
         return updatedUnlocked;
       });
     }
-  }, [currentLevel, pauseBgMusic, showRewarded]);
+  }, [currentLevel, pauseBgMusic, showRewarded, playLevelCompleteSound]);
 
 
   const handleExitGame = () => {
@@ -167,7 +164,9 @@ export default function GamePage() {
         
         if (currentIndexInDifficulty < levelsInDifficulty.length - 1) {
             const nextLevel = levelsInDifficulty[currentIndexInDifficulty + 1];
-            setCurrentLevel(nextLevel); // Directly set next level
+            if (unlockedLevels.includes(nextLevel.id)) {
+              setCurrentLevel(nextLevel);
+            }
         }
     }
   }
@@ -187,8 +186,11 @@ export default function GamePage() {
   const isNextLevelAvailable = currentLevel ? (() => {
     const levelsInDifficulty = levels.filter(l => l.difficulty === currentLevel.difficulty);
     const currentIndexInDifficulty = levelsInDifficulty.findIndex(l => l.id === currentLevel.id);
-    // Next level is available if there is a next level in the sequence
-    return currentIndexInDifficulty < levelsInDifficulty.length - 1;
+    if (currentIndexInDifficulty < levelsInDifficulty.length - 1) {
+        const nextLevel = levelsInDifficulty[currentIndexInDifficulty + 1];
+        return unlockedLevels.includes(nextLevel.id);
+    }
+    return false;
   })() : false;
 
   const isPreviousLevelAvailable = currentLevel ? levels.filter(l => l.difficulty === currentLevel.difficulty).findIndex(l => l.id === currentLevel.id) > 0 : false;
@@ -236,8 +238,6 @@ export default function GamePage() {
 
   const handleStartApp = () => {
     setIsAppStarted(true);
-    // When the app starts, play the menu music.
-    // This is necessary because of browser autoplay policies.
     playMenuMusic();
   };
 
@@ -294,7 +294,6 @@ export default function GamePage() {
                 isNextLevelAvailable={isNextLevelAvailable}
                 isPreviousLevelAvailable={isPreviousLevelAvailable}
                 isLastLevelOfDifficulty={isLastLevelOfDifficulty}
-                playLevelCompleteSound={playLevelCompleteSound}
                 onTileSlide={playTileSlideSound}
                 isMuted={isMuted}
                 easyLevelsCompleted={easyLevelsCompleted}
@@ -315,7 +314,7 @@ export default function GamePage() {
           </main>
         </div>
         <footer className="sticky bottom-0 bg-background/80 backdrop-blur-sm mt-auto py-2 px-4 pb-4 sm:pb-6 lg:pb-8">
-            <div className="flex justify-center items-center gap-4">
+            <div className="flex justify-center items-center gap-4 mb-2">
                 <Button variant="ghost" size="icon" onClick={toggleMute} className="text-muted-foreground">
                   {renderVolumeIcon()}
                 </Button>
@@ -327,7 +326,7 @@ export default function GamePage() {
                   className="w-full max-w-xs"
                 />
             </div>
-            <div className="mt-4">
+            <div className="mb-2">
               <AdBanner position="bottom" visible={true} />
             </div>
             {currentLevel && (
@@ -339,5 +338,4 @@ export default function GamePage() {
     </div>
   );
 }
-
     
