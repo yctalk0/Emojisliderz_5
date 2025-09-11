@@ -47,12 +47,17 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
     setCurrentPage(current => Math.max(current - 1, 0));
   }
   
-  const lastUnlockedInDifficulty = levels
-    .filter(level => unlockedLevels.includes(level.id))
-    .sort((a, b) => b.levelNumber - a.levelNumber)[0];
+  // Find all levels in this difficulty that have been completed.
+  const completedLevelsInDifficulty = levels.filter(level => unlockedLevels.includes(level.id));
   
-  const nextLevelNumber = lastUnlockedInDifficulty ? lastUnlockedInDifficulty.levelNumber + 1 : 1;
-  const nextLevel = levels.find(l => l.levelNumber === nextLevelNumber);
+  // Find the highest completed level number in this difficulty.
+  const lastCompletedLevelNumber = completedLevelsInDifficulty.reduce((max, l) => Math.max(max, l.levelNumber), 0);
+
+  // The next level to play is the one after the highest completed one.
+  const nextLevelToPlay = levels.find(l => l.levelNumber === lastCompletedLevelNumber + 1);
+  
+  const anyUnlockedInDifficulty = levels.some(l => unlockedLevels.includes(l.id));
+  if (difficulty === 'Hard' && !anyUnlockedInDifficulty) return null;
 
   return (
     <Card className={cn("overflow-hidden border-2 shadow-lg rounded-2xl z-10", config.cardClass)}>
@@ -68,10 +73,11 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
           </Button>
         )}
         <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-2 flex-grow">
-          {paginatedLevels.map((level, index) => {
+          {paginatedLevels.map((level) => {
             const isUnlocked = unlockedLevels.includes(level.id);
-            const isNext = nextLevel?.id === level.id && unlockedLevels.includes(level.id);
-            const isCompleted = isUnlocked && unlockedLevels.includes(levels.find(l => l.levelNumber === level.levelNumber + 1)?.id ?? 'none');
+            // A level is "next" if it's the next one to be played in this difficulty
+            const isNext = nextLevelToPlay?.id === level.id;
+            const isCompleted = isUnlocked && !isNext;
 
             return (
               <Button
@@ -82,7 +88,7 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
                 className={cn(
                   "h-16 w-full text-4xl font-bold flex items-center justify-center transition-all duration-200 ease-in-out hover:scale-110 p-0 relative overflow-hidden",
                   isUnlocked ? config.levelButtonClass : "bg-slate-700/50",
-                  isNext && !isCompleted && "animate-pulse shadow-lg shadow-yellow-400/50"
+                  isNext && "animate-pulse shadow-lg shadow-yellow-400/50"
                 )}
                 aria-label={`Level ${level.levelNumber}`}
               >
@@ -95,7 +101,7 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
                   className={cn("w-full h-full object-contain p-1", !isUnlocked && "opacity-60")}
                 />
                 
-                {isNext && !isCompleted && (
+                {isNext && (
                   <div className="absolute bottom-1 right-1">
                     <Unlock className="w-5 h-5 text-white" />
                   </div>
@@ -132,9 +138,7 @@ const LevelSelect = ({ levels, unlockedLevels, onLevelSelect }: LevelSelectProps
       <AdBanner position="top" visible={true} /> {/* Ad banner above Easy - 2x2 Grid */}
       {levelsByDifficulty.map(({ difficulty, levels }) => {
         if (levels.length === 0) return null;
-        const anyUnlockedInDifficulty = levels.some(l => unlockedLevels.includes(l.id));
-        if (difficulty === 'Hard' && !anyUnlockedInDifficulty) return null;
-
+        
         return (
           <React.Fragment key={difficulty}>
             <DifficultyCard 
