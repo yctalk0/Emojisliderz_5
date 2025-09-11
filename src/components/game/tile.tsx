@@ -131,6 +131,7 @@ const Tile = ({
       const [tileValue] = args;
       if (tap) {
         onClick(tileValue);
+        onSlide(tileValue);
         return;
       }
       
@@ -148,12 +149,14 @@ const Tile = ({
         if (canMoveHorizontal && Math.abs(mx) > threshold) {
           if ((mx > 0 && emptyCol > col) || (mx < 0 && emptyCol < col)) {
             onClick(value);
+            onSlide(value);
             return;
           }
         }
         if (canMoveVertical && Math.abs(my) > threshold) {
           if ((my > 0 && emptyRow > row) || (my < 0 && emptyRow < row)) {
             onClick(value);
+            onSlide(value);
             return;
           }
         }
@@ -179,7 +182,6 @@ const Tile = ({
   return (
     <animated.div
       {...bind(value)}
-      onClick={() => onClick(value)}
       style={{
         position: 'absolute',
         width: `${tileSize}px`,
