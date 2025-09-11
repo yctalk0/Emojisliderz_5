@@ -47,17 +47,14 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
     setCurrentPage(current => Math.max(current - 1, 0));
   }
   
-  // Find all levels in this difficulty that have been completed.
-  const completedLevelsInDifficulty = levels.filter(level => unlockedLevels.includes(level.id));
-  
-  // Find the highest completed level number in this difficulty.
-  const lastCompletedLevelNumber = completedLevelsInDifficulty.reduce((max, l) => Math.max(max, l.levelNumber), 0);
-
-  // The next level to play is the one after the highest completed one.
-  const nextLevelToPlay = levels.find(l => l.levelNumber === lastCompletedLevelNumber + 1);
+  // Find the first level in this difficulty that is NOT in unlockedLevels (i.e., not completed)
+  // This will be our "next" level to play.
+  const nextLevelToPlay = levels.find(level => !unlockedLevels.includes(level.id));
   
   const anyUnlockedInDifficulty = levels.some(l => unlockedLevels.includes(l.id));
-  if (difficulty === 'Hard' && !anyUnlockedInDifficulty) return null;
+
+  // A special check for hard mode: don't render it at all if the first hard level isn't unlocked.
+  if (difficulty === 'Hard' && !unlockedLevels.includes('hard-1')) return null;
 
   return (
     <Card className={cn("overflow-hidden border-2 shadow-lg rounded-2xl z-10", config.cardClass)}>
@@ -74,10 +71,11 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
         )}
         <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-2 flex-grow">
           {paginatedLevels.map((level) => {
-            const isUnlocked = unlockedLevels.includes(level.id);
-            // A level is "next" if it's the next one to be played in this difficulty
+            const isCompleted = unlockedLevels.includes(level.id);
+            // The "next" level is the one we identified above. It should be blinking.
             const isNext = nextLevelToPlay?.id === level.id;
-            const isCompleted = isUnlocked && !isNext;
+            // A level is playable if it's been completed (can be replayed) OR if it's the next one to play.
+            const isUnlocked = isCompleted || isNext;
 
             return (
               <Button
@@ -88,6 +86,7 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
                 className={cn(
                   "h-16 w-full text-4xl font-bold flex items-center justify-center transition-all duration-200 ease-in-out hover:scale-110 p-0 relative overflow-hidden",
                   isUnlocked ? config.levelButtonClass : "bg-slate-700/50",
+                  // Apply blinking animation only if it's the next level to play
                   isNext && "animate-pulse shadow-lg shadow-yellow-400/50"
                 )}
                 aria-label={`Level ${level.levelNumber}`}
@@ -98,7 +97,11 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
                   width={64}
                   height={64}
                   priority={level.levelNumber === 1}
-                  className={cn("w-full h-full object-contain p-1", !isUnlocked && "opacity-60")}
+                  className={cn(
+                    "w-full h-full object-contain p-1",
+                     // Adjust opacity for locked levels to make the emoji visible
+                    !isUnlocked && "opacity-60"
+                  )}
                 />
                 
                 {isNext && (
@@ -128,6 +131,7 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
 const LevelSelect = ({ levels, unlockedLevels, onLevelSelect }: LevelSelectProps) => {
   const difficulties: ('Easy' | 'Hard')[] = ['Easy', 'Hard'];
   
+  // Sort levels by levelNumber within each difficulty group
   const levelsByDifficulty = difficulties.map(difficulty => ({
     difficulty,
     levels: levels.filter(level => level.difficulty === difficulty).sort((a,b) => a.levelNumber - b.levelNumber),
@@ -156,3 +160,5 @@ const LevelSelect = ({ levels, unlockedLevels, onLevelSelect }: LevelSelectProps
 };
 
 export default LevelSelect;
+
+    

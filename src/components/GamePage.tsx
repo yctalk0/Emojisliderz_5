@@ -116,7 +116,7 @@ export default function GamePage() {
   const handleGameWin = useCallback(() => {
     if (currentLevel) {
       pauseBgMusic(); // Pause background music when game is won
-
+  
       if (currentLevel.difficulty === 'Easy' && currentLevel.gridSize === 2) {
         setEasyLevelsCompleted(prev => {
           const newCount = prev + 1;
@@ -127,33 +127,33 @@ export default function GamePage() {
           return newCount;
         });
       }
-
-      // If Easy Level 1 is completed, unlock Hard Level 1
-      if (currentLevel.id === 'easy-1') {
-          setUnlockedLevels(prev => {
-              const newUnlocked = [...new Set([...prev, 'hard-1'])];
-              localStorage.setItem('unlockedLevels', JSON.stringify(newUnlocked));
-              return newUnlocked;
-          });
-      }
-
-      const levelsInDifficulty = levels.filter(l => l.difficulty === currentLevel.difficulty).sort((a,b) => a.levelNumber - b.levelNumber);
-      const currentIndexInDifficulty = levelsInDifficulty.findIndex(l => l.id === currentLevel.id);
-      
-      // Add the current level (just completed) to unlocked levels
-      setUnlockedLevels(prev => {
-        let newUnlocked = [...new Set([...prev, currentLevel.id])]; // Add current completed level
-
+  
+      setUnlockedLevels(prevUnlocked => {
+        const newUnlocked = new Set(prevUnlocked);
+  
+        // Add the just-completed level to the set.
+        newUnlocked.add(currentLevel.id);
+  
+        // Find the next level in the same difficulty and unlock it.
+        const levelsInDifficulty = levels.filter(l => l.difficulty === currentLevel.difficulty).sort((a, b) => a.levelNumber - b.levelNumber);
+        const currentIndexInDifficulty = levelsInDifficulty.findIndex(l => l.id === currentLevel.id);
+  
         if (currentIndexInDifficulty < levelsInDifficulty.length - 1) {
           const nextLevelInDifficulty = levelsInDifficulty[currentIndexInDifficulty + 1];
-          newUnlocked.push(nextLevelInDifficulty.id); // Also add the next level to unlock it
+          newUnlocked.add(nextLevelInDifficulty.id);
         }
-        
-        localStorage.setItem('unlockedLevels', JSON.stringify(newUnlocked));
-        return newUnlocked;
+  
+        // If Easy Level 1 is completed, unlock Hard Level 1.
+        if (currentLevel.id === 'easy-1') {
+          newUnlocked.add('hard-1');
+        }
+  
+        const updatedUnlocked = Array.from(newUnlocked);
+        localStorage.setItem('unlockedLevels', JSON.stringify(updatedUnlocked));
+        return updatedUnlocked;
       });
     }
-  }, [currentLevel, levels, pauseBgMusic, showInterstitial]);
+  }, [currentLevel, pauseBgMusic, showRewarded]);
 
 
   const handleExitGame = () => {
@@ -339,3 +339,5 @@ export default function GamePage() {
     </div>
   );
 }
+
+    
