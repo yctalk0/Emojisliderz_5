@@ -1,3 +1,4 @@
+
 'use client';
 import { Button } from '@/components/ui/button';
 import { Clock, Medal, Move, Play, SkipForward, X } from 'lucide-react';
@@ -46,10 +47,8 @@ const WinModal = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="absolute inset-0 z-[60]">
-        <Confetti isOpen={isOpen} />
-      </div>
-      <div className="bg-[#121d2e] text-white rounded-2xl shadow-xl w-full max-w-sm relative border-2 border-gray-700">
+      <Confetti isOpen={isOpen} />
+      <div className="bg-[#121d2e] text-white rounded-2xl shadow-xl w-full max-w-sm relative border-2 border-gray-700 z-[51]">
         <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-red-600 rounded-full p-3 border-4 border-[#121d2e] blinking-badge">
           <Medal className="w-8 h-8 text-white" />
         </div>
