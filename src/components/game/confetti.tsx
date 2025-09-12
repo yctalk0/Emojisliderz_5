@@ -18,26 +18,26 @@ const Confetti = ({ isOpen }: ConfettiProps) => {
     return {
       x: random(0, containerWidth), // Start anywhere along the width
       y: -20, // Start just above the viewport
-      endX: random(-150, 150), // Horizontal drift
+      endX: random(-50, 50), // Reduced Horizontal drift
       endY: window.innerHeight + 50, // Fall past the bottom of the screen
       color: `hsl(${random(0, 360)}, 100%, 70%)`,
       rotation: random(0, 720),
       scale: random(0.5, 1.2),
       shape: Math.random() > 0.5 ? 'square' : 'circle',
-      mass: random(1, 4),
-      friction: random(20, 50),
-      delay: random(0, 1500), // Stagger the fall
+      mass: random(2, 5), // Heavier pieces
+      friction: random(30, 60), // More friction for a steadier fall
+      delay: random(0, 2000), // Stagger the fall over 2 seconds
     };
   };
 
   useEffect(() => {
     if (isOpen) {
-      const newConfettiPieces = Array.from({ length: 150 }).map(generateConfettiPiece);
+      const newConfettiPieces = Array.from({ length: 300 }).map(generateConfettiPiece);
       setConfettiPieces(newConfettiPieces);
 
       const timer = setTimeout(() => {
         setConfettiPieces([]);
-      }, 4000); // Let them fall for a few seconds
+      }, 5000); // Let them fall for a few seconds
 
       return () => clearTimeout(timer);
     } else {
@@ -60,7 +60,7 @@ const Confetti = ({ isOpen }: ConfettiProps) => {
       config: {
         mass: p.mass,
         friction: p.friction,
-        tension: 120,
+        tension: 100, // Lower tension for a slower, more graceful fall
       },
       delay: p.delay,
     }))
