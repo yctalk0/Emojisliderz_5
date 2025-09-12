@@ -15,18 +15,22 @@ const Confetti = ({ isOpen }: ConfettiProps) => {
 
   const generateConfettiPiece = () => {
     const containerWidth = containerRef.current?.clientWidth || window.innerWidth;
+    const containerHeight = containerRef.current?.clientHeight || window.innerHeight;
+    const angle = random(0, 360);
+    const distance = random(containerWidth / 4, containerWidth / 2);
+    const endX = Math.cos(angle * (Math.PI / 180)) * distance;
+    const endY = Math.sin(angle * (Math.PI / 180)) * distance;
+    
     return {
-      x: random(0, containerWidth), // Start anywhere along the width
-      y: -20, // Start just above the viewport
-      endX: random(-50, 50), // Reduced Horizontal drift
-      endY: window.innerHeight + 50, // Fall past the bottom of the screen
+      startX: containerWidth / 2,
+      startY: containerHeight / 2,
+      endX: containerWidth / 2 + endX,
+      endY: containerHeight / 2 + endY,
       color: `hsl(${random(0, 360)}, 100%, 70%)`,
       rotation: random(0, 720),
       scale: random(0.5, 1.2),
       shape: Math.random() > 0.5 ? 'square' : 'circle',
-      mass: random(2, 5), // Heavier pieces
-      friction: random(30, 60), // More friction for a steadier fall
-      delay: random(0, 2000), // Stagger the fall over 2 seconds
+      delay: random(0, 200),
     };
   };
 
@@ -37,7 +41,7 @@ const Confetti = ({ isOpen }: ConfettiProps) => {
 
       const timer = setTimeout(() => {
         setConfettiPieces([]);
-      }, 5000); // Let them fall for a few seconds
+      }, 5000); // Let them exist for a few seconds
 
       return () => clearTimeout(timer);
     } else {
@@ -51,16 +55,15 @@ const Confetti = ({ isOpen }: ConfettiProps) => {
     confettiPieces.map(p => ({
       from: {
         opacity: 1,
-        transform: `translate3d(${p.x}px, ${p.y}px, 0px) rotate(0deg) scale(${p.scale})`,
+        transform: `translate3d(${p.startX}px, ${p.startY}px, 0px) rotate(0deg) scale(1)`,
       },
       to: {
         opacity: 0,
-        transform: `translate3d(${p.x + p.endX}px, ${p.endY}px, 0px) rotate(${p.rotation}deg) scale(${p.scale})`,
+        transform: `translate3d(${p.endX}px, ${p.endY}px, 0px) rotate(${p.rotation}deg) scale(${p.scale})`,
       },
       config: {
-        mass: p.mass,
-        friction: p.friction,
-        tension: 100, // Lower tension for a slower, more graceful fall
+        tension: 120, 
+        friction: 20, 
       },
       delay: p.delay,
     }))
