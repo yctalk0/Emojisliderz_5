@@ -1,19 +1,10 @@
-
 'use client';
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import Confetti from './confetti';
-import { Award, Clock, Move, Play, SkipForward, X } from 'lucide-react';
+import { Clock, Medal, Move, Play, SkipForward, X } from 'lucide-react';
 import Image from 'next/image';
 import AdBanner from './ad-banner';
-import { useEffect, RefObject } from 'react';
+import { useEffect } from 'react';
+import Confetti from './confetti';
 
 interface WinModalProps {
   isOpen: boolean;
@@ -27,8 +18,8 @@ interface WinModalProps {
   isLastLevelOfDifficulty: boolean;
   difficulty: 'Easy' | 'Hard';
   isMuted: boolean;
-  pauseBgMusic: () => void; // New prop
-  resumeBgMusic: () => void; // New prop
+  pauseBgMusic: () => void;
+  resumeBgMusic: () => void;
 }
 
 const WinModal = ({
@@ -40,87 +31,98 @@ const WinModal = ({
   onExit,
   hasNextLevel,
   imageSrc,
-  isLastLevelOfDifficulty,
-  difficulty,
-  isMuted,
-  pauseBgMusic,
-  resumeBgMusic,
 }: WinModalProps) => {
-
+  if (!isOpen) {
+    return null;
+  }
 
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
-    const secs = (seconds % 60).toString().padStart(2, '0');
-    return `${mins}:${secs}`;
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds
+      .toString()
+      .padStart(2, '0')}`;
   };
 
-  useEffect(() => {
-    if (isOpen) {
-      pauseBgMusic();
-    } else {
-      resumeBgMusic();
-    }
-  }, [isOpen, pauseBgMusic, resumeBgMusic]);
-
-  if (!isOpen) return null;
-
   return (
-    <AlertDialog open={isOpen} onOpenChange={onExit}>
-      <AlertDialogContent className="text-center p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+      <div className="absolute inset-0 z-[60]">
         <Confetti isOpen={isOpen} />
-         <Button
-            size="icon"
-            onClick={onExit}
-            className="absolute top-2 right-2 bg-cyan-500 text-black hover:bg-cyan-600 rounded-full"
-          >
-            <X className="h-6 w-6" />
-            <span className="sr-only">Close</span>
-          </Button>
-        <AlertDialogHeader className="p-0">
-          <div className="mx-auto bg-accent rounded-full p-3 w-fit -mt-12 border-4 border-background blinking-badge">
-            <Award className="w-10 h-10 text-accent-foreground" />
-          </div>
-          <AlertDialogTitle className="text-2xl font-bold mt-2 blinking-text">
-            {isLastLevelOfDifficulty ? 'Congratulations!' : 'You Win!'}
-          </AlertDialogTitle>
-          <AlertDialogDescription className="text-base">
-            {isLastLevelOfDifficulty
-              ? `You've finished all the ${difficulty} levels!`
-              : 'Congratulations, you solved the puzzle!'}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-
-        <div className="flex justify-center my-2 p-2 rounded-lg overflow-hidden border-2 border-primary/50 shadow-lg">
-            <Image src={imageSrc} alt="Solved puzzle" width={128} height={128} className="w-32 h-32 object-contain" />
+      </div>
+      <div className="bg-[#121d2e] text-white rounded-2xl shadow-xl w-full max-w-sm relative border-2 border-gray-700">
+        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-red-600 rounded-full p-3 border-4 border-[#121d2e] blinking-badge">
+          <Medal className="w-8 h-8 text-white" />
         </div>
 
-        <div className="flex justify-center gap-8 my-2 text-sm">
-          <div className="flex items-center gap-2">
-            <Move className="w-4 h-4 text-white" />
-            <div><span className="font-bold text-white blinking-value">{moves}</span> <span className="text-white">Moves</span></div>
+        <button
+          onClick={onExit}
+          className="absolute top-3 right-3 bg-cyan-500 rounded-full p-1.5 hover:bg-cyan-600 transition-colors"
+        >
+          <X className="w-5 h-5 text-white" />
+        </button>
+
+        <div className="pt-12 pb-6 px-6">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-red-500 blinking-text">You Win!</h2>
+            <p className="text-gray-400 mt-1">
+              Congratulations, you solved the puzzle!
+            </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-white" />
-            <div><span className="font-bold text-white blinking-value">{formatTime(time)}</span></div>
+
+          <div className="my-5 border-2 border-gray-600 rounded-lg flex items-center justify-center p-4 bg-black bg-opacity-20 h-32">
+            <Image
+              src={imageSrc}
+              alt="Winner"
+              width={96}
+              height={96}
+              className="animate-bounce"
+            />
+          </div>
+
+          <div className="flex justify-center items-center space-x-8 text-lg text-gray-300">
+            <div className="flex items-center space-x-2">
+              <Move className="w-6 h-6 text-red-500" />
+              <span className="font-semibold">{moves} Moves</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Clock className="w-6 h-6 text-red-500" />
+              <span className="font-semibold">{formatTime(time)}</span>
+            </div>
+          </div>
+
+          <div className="mt-6 space-y-3 flex flex-col">
+            {hasNextLevel && (
+              <Button
+                onClick={onNextLevel}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 text-lg rounded-lg"
+              >
+                <SkipForward className="w-5 h-5 mr-2" />
+                Next Level
+              </Button>
+            )}
+            <div className="bg-gray-700 text-gray-400 text-center py-2 rounded-lg">
+              Ad Banner - bottom
+            </div>
+            <Button
+              onClick={onPlayAgain}
+              className="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 text-lg rounded-lg"
+            >
+              <Play className="w-5 h-5 mr-2" />
+              Play Again
+            </Button>
+            <Button
+              onClick={onExit}
+              className="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 text-lg rounded-lg"
+            >
+              Back to Levels
+            </Button>
+            <div className="bg-gray-700 text-gray-400 text-center py-2 rounded-lg">
+              Ad Banner - bottom
+            </div>
           </div>
         </div>
-        <AlertDialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0 p-0">
-          <Button onClick={onNextLevel} disabled={!hasNextLevel} className="w-full h-11">
-              <SkipForward className="mr-2 h-5 w-5" />
-              Next Level
-          </Button>
-          <AdBanner position="bottom" visible={true} /> {/* Ad banner under Next Level button */}
-          <Button onClick={onPlayAgain} variant="secondary" className="w-full h-11">
-            <Play className="mr-2 h-5 w-5" />
-            Play Again
-          </Button>
-          <Button onClick={onExit} variant="secondary" className="w-full h-11">
-            Back to Levels
-          </Button>
-          <AdBanner position="bottom" visible={true} />
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+      </div>
+    </div>
   );
 };
 

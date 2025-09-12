@@ -46,7 +46,7 @@ const useSound = (
         if (error.name === "NotAllowedError") {
           console.warn("Autoplay prevented. User interaction required.");
         } else {
-          console.error("Error playing sound:", error);
+          console.error("Error playing sound:", JSON.stringify(error));
         }
       });
     }
@@ -64,7 +64,7 @@ const useSound = (
         if (error.name === "NotAllowedError") {
           console.warn("Autoplay prevented. User interaction required.");
         } else {
-          console.error("Error playing sound:", error);
+          console.error("Error playing sound:", JSON.stringify(error));
         }
       });
     }

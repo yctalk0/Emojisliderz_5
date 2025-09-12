@@ -130,37 +130,46 @@
 
 @keyframes multicolor-blink-text {
   0% { color: #ff0000; } /* Red */
-  20% { color: #ff7f00; } /* Orange */
-  40% { color: #ffff00; } /* Yellow */
-  60% { color: #00ff00; } /* Green */
-  80% { color: #0000ff; } /* Blue */
+  16% { color: #ff7f00; } /* Orange */
+  33% { color: #ffff00; } /* Yellow */
+  50% { color: #00ff00; } /* Green */
+  66% { color: #0000ff; } /* Blue */
+  83% { color: #4b0082; } /* Indigo */
   100% { color: #8b00ff; } /* Violet */
 }
 
 .blinking-badge {
-  animation: vivid-blink-badge 1s infinite;
+  animation: multicolor-blink-badge 1s infinite;
 }
 
-@keyframes vivid-blink-badge {
+@keyframes multicolor-blink-badge {
   0% {
     background-color: #ff0000; /* Red */
-    box-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000;
+    box-shadow: 0 0 8px #ff0000, 0 0 16px #ff0000; /* Subtle glow */
   }
-  25% {
+  16% {
+    background-color: #ff7f00; /* Orange */
+    box-shadow: 0 0 8px #ff7f00, 0 0 16px #ff7f00;
+  }
+  33% {
     background-color: #ffff00; /* Yellow */
-    box-shadow: 0 0 5px #ffff00, 0 0 10px #ffff00;
+    box-shadow: 0 0 8px #ffff00, 0 0 16px #ffff00;
   }
   50% {
     background-color: #00ff00; /* Green */
-    box-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00;
+    box-shadow: 0 0 8px #00ff00, 0 0 16px #00ff00;
   }
-  75% {
+  66% {
     background-color: #0000ff; /* Blue */
-    box-shadow: 0 0 5px #0000ff, 0 0 10px #0000ff;
+    box-shadow: 0 0 8px #0000ff, 0 0 16px #0000ff;
+  }
+  83% {
+    background-color: #4b0082; /* Indigo */
+    box-shadow: 0 0 8px #4b0082, 0 0 16px #4b0082;
   }
   100% {
-    background-color: #ff0000; /* Red */
-    box-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000;
+    background-color: #8b00ff; /* Violet */
+    box-shadow: 0 0 8px #8b00ff, 0 0 16px #8b00ff;
   }
 }
 
