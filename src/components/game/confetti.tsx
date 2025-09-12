@@ -16,21 +16,17 @@ const Confetti = ({ isOpen }: ConfettiProps) => {
   const generateConfettiPiece = () => {
     const containerWidth = containerRef.current?.clientWidth || window.innerWidth;
     const containerHeight = containerRef.current?.clientHeight || window.innerHeight;
-    const angle = random(0, 360);
-    const distance = random(containerWidth / 4, containerWidth / 2);
-    const endX = Math.cos(angle * (Math.PI / 180)) * distance;
-    const endY = Math.sin(angle * (Math.PI / 180)) * distance;
     
     return {
-      startX: containerWidth / 2,
-      startY: containerHeight / 2,
-      endX: containerWidth / 2 + endX,
-      endY: containerHeight / 2 + endY,
+      startX: random(0, containerWidth),
+      startY: -20,
+      endX: random(0, containerWidth),
+      endY: containerHeight + 20,
       color: `hsl(${random(0, 360)}, 100%, 70%)`,
       rotation: random(0, 720),
       scale: random(0.5, 1.2),
       shape: Math.random() > 0.5 ? 'square' : 'circle',
-      delay: random(0, 200),
+      delay: random(0, 4000), // Stagger the start of the fall
     };
   };
 
@@ -41,7 +37,7 @@ const Confetti = ({ isOpen }: ConfettiProps) => {
 
       const timer = setTimeout(() => {
         setConfettiPieces([]);
-      }, 5000); // Let them exist for a few seconds
+      }, 8000); // Allow more time for slow confetti to fall
 
       return () => clearTimeout(timer);
     } else {
@@ -62,8 +58,8 @@ const Confetti = ({ isOpen }: ConfettiProps) => {
         transform: `translate3d(${p.endX}px, ${p.endY}px, 0px) rotate(${p.rotation}deg) scale(${p.scale})`,
       },
       config: {
-        tension: 120, 
-        friction: 20, 
+        tension: 30, // Lower tension for slower movement
+        friction: 50, // Higher friction to slow it down
       },
       delay: p.delay,
     }))
