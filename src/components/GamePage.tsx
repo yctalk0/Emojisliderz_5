@@ -7,7 +7,7 @@ import { levels } from '@/lib/game-data';
 import LevelSelect from '@/components/game/level-select';
 import Game from '@/components/game/game';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Volume1, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, Volume1, Volume2, VolumeX, Info } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import Image from 'next/image';
 import { Card } from './ui/card';
@@ -18,6 +18,7 @@ import { Capacitor } from '@capacitor/core';
 import { BannerAdPosition } from '@capacitor-community/admob';
 import useSound from '@/hooks/use-sound'; // Import the custom hook
 import Confetti from './game/confetti';
+import InfoDialog from './game/info-dialog';
 
 export default function GamePage() {
   const [showConfetti, setShowConfetti] = useState(false);
@@ -29,13 +30,14 @@ export default function GamePage() {
   const [hintsUsedCount, setHintsUsedCount] = useState(0); // New state for hints used
   const [volume, setVolume] = useState(0.2);
   const [lastVolume, setLastVolume] = useState(0.2);
+  const [showInfoModal, setShowInfoModal] = useState(false);
   const isMuted = volume === 0;
   const { showBanner, hideBanner, showInterstitial, showRewarded } = useAdMob();
 
   // Use the custom useSound hook for all audio
-  const { play: playMenuMusic, stop: stopMenuMusic } = useSound('/assets/emoji/music/Opening.mp3', volume, 'music', isMuted, true); // Loop menu music
-  const { play: playBgMusic, pause: pauseBgMusic, resume: resumeBgMusic, stop: stopBgMusic } = useSound('/assets/emoji/music/bgmusic.mp3', volume, 'music', isMuted, true); // Loop background music
-  const { play: playLevelCompleteSound } = useSound('/assets/emoji/music/level_complete.mp3', volume, 'effect');
+  const { play: playMenuMusic, stop: stopMenuMusic } = useSound('/assets/music/opening.mp3', volume, 'music', isMuted, true); // Loop menu music
+  const { play: playBgMusic, pause: pauseBgMusic, resume: resumeBgMusic, stop: stopBgMusic } = useSound('/assets/music/bgmusic.mp3', volume, 'music', isMuted, true); // Loop background music
+  const { play: playLevelCompleteSound } = useSound('/assets/music/level_complete.mp3', volume, 'effect');
   const { play: playTileSlideSound } = useSound('/assets/sounds/slide_1.mp3', volume, 'effect'); // Assuming slide_1.mp3 is the tile sliding sound
 
   // Consolidated effect to manage audio playback
@@ -54,7 +56,9 @@ export default function GamePage() {
   }, [currentLevel, isLoading, isAppStarted, playMenuMusic, stopMenuMusic, playBgMusic, stopBgMusic]);
 
   useEffect(() => {
-      const showBottomBanner = async () => {
+    if (!isAppStarted) return; // Don't show banner until app is started by user
+
+    const showBottomBanner = async () => {
       if (Capacitor.getPlatform() !== 'web') {
         await showBanner(BannerAdPosition.BOTTOM_CENTER);
       }
@@ -70,7 +74,7 @@ export default function GamePage() {
       };
       hide();
     };
-  }, [showBanner, hideBanner]);
+  }, [showBanner, hideBanner, isAppStarted]);
 
   useEffect(() => {
     const savedProgress = localStorage.getItem('unlockedLevels');
@@ -113,6 +117,8 @@ export default function GamePage() {
   
   const handleLevelSelect = (level: Level) => {
     setCurrentLevel(level);
+    setShowConfetti(true);
+    setTimeout(() => setShowConfetti(false), 4000);
   };
 
   const handleGameWin = useCallback(() => {
@@ -263,6 +269,7 @@ export default function GamePage() {
   return (
     <div className="flex flex-col text-foreground font-body flex-grow">
       <Confetti isOpen={showConfetti} />
+      <InfoDialog isOpen={showInfoModal} onClose={() => setShowInfoModal(false)} />
       <div className="w-full mx-auto flex flex-col px-4 sm:px-6 lg:px-8 flex-grow">
           <header className="relative text-center pt-8 mb-4">
             {currentLevel && (
@@ -282,6 +289,9 @@ export default function GamePage() {
                 <p className="text-muted-foreground text-lg">Slide the tiles to solve the emoji puzzle!</p>
               )}
             </div>
+             <Button variant="ghost" size="icon" className="absolute top-1/2 right-0 -translate-y-1/2" onClick={() => setShowInfoModal(true)}>
+                <Info className="h-8 w-8" strokeWidth={2.5} />
+            </Button>
           </header>
           
           <main className="flex-grow flex flex-col justify-center">
