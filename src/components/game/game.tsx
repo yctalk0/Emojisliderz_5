@@ -27,6 +27,7 @@ interface GameProps {
   resumeBgMusic: () => void;
   onHintUsedInLevel: (levelId: string) => void;
   hintsUsedCount: number;
+  onPlayAgain: () => void;
 }
 
 const Game = ({
@@ -46,6 +47,7 @@ const Game = ({
   pauseBgMusic,
   resumeBgMusic,
   onHintUsedInLevel,
+  onPlayAgain
 }: GameProps) => {
   const [hintUsedInCurrentLevel, setHintUsedInCurrentLevel] = useState(false);
   const { toast } = useToast();
@@ -101,6 +103,7 @@ const Game = ({
   }, [level]);
 
   const handleRestart = () => {
+    onPlayAgain();
     resetGame();
     setShowWinModal(false);
     setHintUsedInCurrentLevel(false);

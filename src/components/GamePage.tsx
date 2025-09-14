@@ -18,6 +18,7 @@ import { Capacitor } from '@capacitor/core';
 import { BannerAdPosition } from '@capacitor-community/admob';
 import useSound from '@/hooks/use-sound'; // Import the custom hook
 import InfoDialog from './game/info-dialog';
+import Confetti from './game/confetti';
 
 export default function GamePage() {
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
@@ -29,14 +30,14 @@ export default function GamePage() {
   const [volume, setVolume] = useState(0.2);
   const [lastVolume, setLastVolume] = useState(0.2);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [showWinConfetti, setShowWinConfetti] = useState(false);
   const isMuted = volume === 0;
   const { showBanner, hideBanner, showInterstitial, showRewarded } = useAdMob();
 
   // Use the custom useSound hook for all audio
-  const { play: playMenuMusic, stop: stopMenuMusic } = useSound('/assets/music/Opening.mp3', volume, 'music', isMuted, true); // Loop menu music
-  const { play: playBgMusic, pause: pauseBgMusic, resume: resumeBgMusic, stop: stopBgMusic } = useSound('/assets/music/bgmusic.mp3', volume, 'music', isMuted, true); // Loop background music
-  const { play: playLevelCompleteSound } = useSound('/assets/music/level_complete.mp3', volume, 'effect');
-  const { play: playTileSlideSound } = useSound('/assets/music/slide_1.mp3', volume, 'effect'); // Assuming slide_1.mp3 is the tile sliding sound
+  const { play: playMenuMusic, stop: stopMenuMusic } = useSound('/assets/emoji/music/Opening.mp3', volume, 'music', isMuted, true); // Loop menu music
+  const { play: playBgMusic, pause: pauseBgMusic, resume: resumeBgMusic, stop: stopBgMusic } = useSound('/assets/emoji/music/bgmusic.mp3', volume, 'music', isMuted, true); // Loop background music
+  const { play: playTileSlideSound } = useSound('/assets/emoji/music/slide_1.mp3', volume, 'effect'); // Assuming slide_1.mp3 is the tile sliding sound
 
   // Consolidated effect to manage audio playback
   useEffect(() => {
@@ -113,12 +114,8 @@ export default function GamePage() {
     });
   }, []);
   
-  const handleLevelSelect = (level: Level) => {
-    setCurrentLevel(level);
-  };
-
   const handleGameWin = useCallback(() => {
-    playLevelCompleteSound();
+    setShowWinConfetti(true);
     if (currentLevel) {
       pauseBgMusic();
   
@@ -154,11 +151,12 @@ export default function GamePage() {
         return updatedUnlocked;
       });
     }
-  }, [currentLevel, pauseBgMusic, showRewarded, playLevelCompleteSound]);
+  }, [currentLevel, pauseBgMusic, showRewarded]);
 
 
   const handleExitGame = () => {
     setCurrentLevel(null);
+    setShowWinConfetti(false);
   }
 
   const handleNextLevel = () => {
@@ -170,6 +168,7 @@ export default function GamePage() {
             const nextLevel = levelsInDifficulty[currentIndexInDifficulty + 1];
             if (unlockedLevels.includes(nextLevel.id)) {
               setCurrentLevel(nextLevel);
+              setShowWinConfetti(false);
             }
         }
     }
@@ -245,6 +244,10 @@ export default function GamePage() {
     playMenuMusic();
   };
 
+  const handlePlayAgain = () => {
+    setShowWinConfetti(false);
+  }
+
   if (!isAppStarted) {
     return (
       <div 
@@ -261,7 +264,8 @@ export default function GamePage() {
   }
 
   return (
-    <div className="flex flex-col text-foreground font-body flex-grow">
+    <div className="flex flex-col text-foreground font-body flex-grow relative">
+      <Confetti isOpen={showWinConfetti} />
       <InfoDialog isOpen={showInfoModal} onClose={() => setShowInfoModal(false)} />
       <div className="w-full mx-auto flex flex-col px-4 sm:px-6 lg:px-8 flex-grow">
           <header className="relative text-center pt-8 mb-4">
@@ -311,6 +315,7 @@ export default function GamePage() {
                 unlockedLevels={unlockedLevels}
                 pauseBgMusic={pauseBgMusic} // Pass pause function
                 resumeBgMusic={resumeBgMusic} // Pass resume function
+                onPlayAgain={handlePlayAgain}
               />
             ) : (
               <LevelSelect 
