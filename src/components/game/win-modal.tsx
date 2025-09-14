@@ -5,7 +5,7 @@ import { Clock, Medal, Move, Play, SkipForward, X } from 'lucide-react';
 import Image from 'next/image';
 import AdBanner from './ad-banner';
 import { useEffect } from 'react';
-import Confetti from './confetti';
+import useSound from '@/hooks/use-sound';
 
 interface WinModalProps {
   isOpen: boolean;
@@ -32,7 +32,20 @@ const WinModal = ({
   onExit,
   hasNextLevel,
   imageSrc,
+  pauseBgMusic,
+  resumeBgMusic,
 }: WinModalProps) => {
+  const { play: playWinSound } = useSound('/assets/music/level_complete.mp3');
+
+  useEffect(() => {
+    if (isOpen) {
+      pauseBgMusic();
+      playWinSound();
+    } else {
+      resumeBgMusic();
+    }
+  }, [isOpen, pauseBgMusic, resumeBgMusic, playWinSound]);
+
   if (!isOpen) {
     return null;
   }
@@ -47,7 +60,6 @@ const WinModal = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <Confetti isOpen={isOpen} />
       <div className="bg-[#121d2e] text-white rounded-2xl shadow-xl w-full max-w-sm relative border-2 border-gray-700 z-[51]">
         <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-red-600 rounded-full p-3 border-4 border-[#121d2e] blinking-badge">
           <Medal className="w-8 h-8 text-white" />

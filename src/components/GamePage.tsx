@@ -35,10 +35,10 @@ export default function GamePage() {
   const { showBanner, hideBanner, showInterstitial, showRewarded } = useAdMob();
 
   // Use the custom useSound hook for all audio
-  const { play: playMenuMusic, stop: stopMenuMusic } = useSound('/assets/music/opening.mp3', volume, 'music', isMuted, true); // Loop menu music
+  const { play: playMenuMusic, stop: stopMenuMusic } = useSound('/assets/music/Opening.mp3', volume, 'music', isMuted, true); // Loop menu music
   const { play: playBgMusic, pause: pauseBgMusic, resume: resumeBgMusic, stop: stopBgMusic } = useSound('/assets/music/bgmusic.mp3', volume, 'music', isMuted, true); // Loop background music
   const { play: playLevelCompleteSound } = useSound('/assets/music/level_complete.mp3', volume, 'effect');
-  const { play: playTileSlideSound } = useSound('/assets/sounds/slide_1.mp3', volume, 'effect'); // Assuming slide_1.mp3 is the tile sliding sound
+  const { play: playTileSlideSound } = useSound('/assets/music/slide_1.mp3', volume, 'effect'); // Assuming slide_1.mp3 is the tile sliding sound
 
   // Consolidated effect to manage audio playback
   useEffect(() => {
@@ -117,8 +117,6 @@ export default function GamePage() {
   
   const handleLevelSelect = (level: Level) => {
     setCurrentLevel(level);
-    setShowConfetti(true);
-    setTimeout(() => setShowConfetti(false), 4000);
   };
 
   const handleGameWin = useCallback(() => {

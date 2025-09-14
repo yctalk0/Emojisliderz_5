@@ -1,5 +1,5 @@
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
 const useSound = (
   src: string,
@@ -15,9 +15,11 @@ const useSound = (
   useEffect(() => {
     // Create the audio element only if it doesn't exist.
     if (!audioRef.current) {
+      console.log('Attempting to load audio from:', src); // Log the source
       const audio = new Audio(src);
       audio.loop = loop;
       audioRef.current = audio;
+      audio.load(); // Explicitly call load()
     }
 
     // Cleanup function to pause and nullify the audio element on component unmount.
@@ -39,43 +41,55 @@ const useSound = (
     }
   }, [volume, isMuted]);
 
-  const play = () => {
+  const play = useCallback(() => {
     if (audioRef.current && !(soundType === 'music' && isMuted)) {
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch(error => {
-        if (error.name === "NotAllowedError") {
-          console.warn("Autoplay prevented. User interaction required.");
+        if (error.name === 'NotAllowedError') {
+          console.warn('Autoplay prevented. User interaction required.');
         } else {
-          console.error("Error playing sound:", JSON.stringify(error));
+          console.error(
+            'Error playing sound:',
+            error.name,
+            error.message,
+            'for src:',
+            src
+          ); // More comprehensive logging
         }
       });
     }
-  };
+  }, [isMuted, soundType, src]);
 
-  const pause = () => {
+  const pause = useCallback(() => {
     if (audioRef.current) {
       audioRef.current.pause();
     }
-  };
+  }, []);
 
-  const resume = () => {
+  const resume = useCallback(() => {
     if (audioRef.current && !(soundType === 'music' && isMuted)) {
       audioRef.current.play().catch(error => {
-        if (error.name === "NotAllowedError") {
-          console.warn("Autoplay prevented. User interaction required.");
+        if (error.name === 'NotAllowedError') {
+          console.warn('Autoplay prevented. User interaction required.');
         } else {
-          console.error("Error playing sound:", JSON.stringify(error));
+          console.error(
+            'Error playing sound:',
+            error.name,
+            error.message,
+            'for src:',
+            src
+          ); // More comprehensive logging
         }
       });
     }
-  };
+  }, [isMuted, soundType, src]);
 
-  const stop = () => {
+  const stop = useCallback(() => {
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
-  };
+  }, []);
 
   return { play, pause, resume, stop };
 };
