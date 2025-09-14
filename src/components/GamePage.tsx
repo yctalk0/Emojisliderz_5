@@ -17,11 +17,9 @@ import useAdMob from '@/hooks/use-admob';
 import { Capacitor } from '@capacitor/core';
 import { BannerAdPosition } from '@capacitor-community/admob';
 import useSound from '@/hooks/use-sound'; // Import the custom hook
-import Confetti from './game/confetti';
 import InfoDialog from './game/info-dialog';
 
 export default function GamePage() {
-  const [showConfetti, setShowConfetti] = useState(false);
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
   const [unlockedLevels, setUnlockedLevels] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -120,8 +118,6 @@ export default function GamePage() {
   };
 
   const handleGameWin = useCallback(() => {
-    setShowConfetti(true);
-    setTimeout(() => setShowConfetti(false), 4000);
     playLevelCompleteSound();
     if (currentLevel) {
       pauseBgMusic();
@@ -266,7 +262,6 @@ export default function GamePage() {
 
   return (
     <div className="flex flex-col text-foreground font-body flex-grow">
-      <Confetti isOpen={showConfetti} />
       <InfoDialog isOpen={showInfoModal} onClose={() => setShowInfoModal(false)} />
       <div className="w-full mx-auto flex flex-col px-4 sm:px-6 lg:px-8 flex-grow">
           <header className="relative text-center pt-8 mb-4">
