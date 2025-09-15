@@ -97,7 +97,7 @@ const solvePuzzle = (startTiles: TileType[], gridSize: number): TileType[][] | n
 };
 
 
-const useGameLogic = (gridSize: number, onWin: () => void, isMuted: boolean, pauseBgMusic: () => void, resumeBgMusic: () => void) => {
+const useGameLogic = (gridSize: number, onWin: (moves: number, time: number) => void, isMuted: boolean, pauseBgMusic: () => void, resumeBgMusic: () => void) => {
   const totalTiles = gridSize * gridSize;
   const emptyTileValue = 0;
 
@@ -118,7 +118,7 @@ const useGameLogic = (gridSize: number, onWin: () => void, isMuted: boolean, pau
   const [hasShownRewardedAdForCurrentLevel, setHasShownRewardedAdForCurrentLevel] = useState(false);
 
   const { showRewarded, prepareRewarded } = useAdMob();
-  const { play: playSlideSound } = useSound('/assets/music/slide_1.mp3', 0.5, 'effect', isMuted); // Corrected path
+  const { play: playSlideSound } = useSound('/assets/music/slide_1.mp3', 0.5, 'effect', isMuted);
 
   const isSolvable = (arr: TileType[]): boolean => {
     if (gridSize % 2 === 1) { // Odd grid
@@ -197,9 +197,9 @@ const useGameLogic = (gridSize: number, onWin: () => void, isMuted: boolean, pau
       setIsSolved(true);
       setIsStarted(false);
       setIsSolving(false);
-      onWin();
+      onWin(moves, time);
     }
-  }, [tiles, totalTiles, isStarted, onWin, isSolved]);
+  }, [tiles, totalTiles, isStarted, onWin, isSolved, moves, time]);
 
   useEffect(() => {
     checkWin();

@@ -66,7 +66,7 @@ const Confetti = ({ isOpen }: ConfettiProps) => {
   );
 
   return (
-    <div ref={containerRef} className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-[100]">
+    <div ref={containerRef} className="fixed inset-0 w-full h-full overflow-hidden pointer-events-none z-[9999]">
       {springs.map((props, i) => (
         <animated.div
           key={`confetti-${i}`}
