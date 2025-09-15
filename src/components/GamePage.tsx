@@ -37,7 +37,7 @@ export default function GamePage() {
   // Use the custom useSound hook for all audio
   const { play: playMenuMusic, stop: stopMenuMusic } = useSound('/assets/emoji/music/Opening.mp3', volume, 'music', isMuted, true); // Loop menu music
   const { play: playBgMusic, pause: pauseBgMusic, resume: resumeBgMusic, stop: stopBgMusic } = useSound('/assets/emoji/music/bgmusic.mp3', volume, 'music', isMuted, true); // Loop background music
-  const { play: playTileSlideSound } = useSound('/assets/emoji/music/slide_1.mp3', volume, 'effect'); // Assuming slide_1.mp3 is the tile sliding sound
+  const { play: playTileSlideSound } = useSound('/assets/music/slide_1.mp3', volume, 'effect'); // Assuming slide_1.mp3 is the tile sliding sound
 
   // Consolidated effect to manage audio playback
   useEffect(() => {
@@ -114,6 +114,10 @@ export default function GamePage() {
     });
   }, []);
   
+  const handleLevelSelect = (level: Level) => {
+    setCurrentLevel(level);
+  };
+
   const handleGameWin = useCallback(() => {
     setShowWinConfetti(true);
     if (currentLevel) {
@@ -255,7 +259,7 @@ export default function GamePage() {
         onClick={handleStartApp}
       >
         <div className="flex justify-center items-center gap-2">
-          <Image src="/assets/emoji/music/logo/logo.png" alt="Emoji sliderz Logo" width={64} height={64} />
+          <Image src="/assets/emoji/logo/logo.png" alt="Emoji sliderz Logo" width={64} height={64} />
           <h1 className="text-6xl font-extrabold tracking-tighter text-primary font-headline">Emoji sliderz</h1>
         </div>
         <p className="mt-4 text-2xl text-muted-foreground font-bold blinking-text">Tap to start</p>
@@ -277,7 +281,7 @@ export default function GamePage() {
             
             <div className="flex flex-col items-center">
               <div className="flex justify-center items-center gap-2">
-                <Image src="/assets/emoji/music/logo/logo.png" alt="Emoji sliderz Logo" width={52} height={52} />
+                <Image src="/assets/emoji/logo/logo.png" alt="Emoji sliderz Logo" width={52} height={52} />
                 <h1 className="text-5xl font-extrabold tracking-tighter text-primary font-headline">Emoji sliderz</h1>
               </div>
               {currentLevel ? (

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Clock, Medal, Move, Play, SkipForward, X } from 'lucide-react';
 import Image from 'next/image';
 import AdBanner from './ad-banner';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import useSound from '@/hooks/use-sound';
 import Confetti from './confetti';
 
@@ -37,14 +37,19 @@ const WinModal = ({
   resumeBgMusic,
   isMuted
 }: WinModalProps) => {
-  const { play: playWinSound } = useSound('/assets/emoji/music/level_complete.mp3', 1, 'effect', isMuted);
+  const { play: playWinSound } = useSound('/assets/music/level_complete.mp3', 1, 'effect', isMuted);
+  const hasPlayedWinSound = useRef(false);
 
   useEffect(() => {
     if (isOpen) {
       pauseBgMusic();
-      playWinSound();
+      if (!hasPlayedWinSound.current) {
+        playWinSound();
+        hasPlayedWinSound.current = true;
+      }
     } else {
       resumeBgMusic();
+      hasPlayedWinSound.current = false;
     }
   }, [isOpen, pauseBgMusic, resumeBgMusic, playWinSound]);
 

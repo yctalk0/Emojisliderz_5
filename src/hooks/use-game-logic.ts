@@ -118,7 +118,7 @@ const useGameLogic = (gridSize: number, onWin: () => void, isMuted: boolean, pau
   const [hasShownRewardedAdForCurrentLevel, setHasShownRewardedAdForCurrentLevel] = useState(false);
 
   const { showRewarded, prepareRewarded } = useAdMob();
-  const { play: playSlideSound } = useSound('/assets/emoji/music/slide_1.mp3', 0.5, 'effect', isMuted); // Corrected path
+  const { play: playSlideSound } = useSound('/assets/music/slide_1.mp3', 0.5, 'effect', isMuted); // Corrected path
 
   const isSolvable = (arr: TileType[]): boolean => {
     if (gridSize % 2 === 1) { // Odd grid
