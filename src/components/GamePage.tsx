@@ -19,7 +19,6 @@ import { BannerAdPosition } from '@capacitor-community/admob';
 import useSound from '@/hooks/use-sound'; // Import the custom hook
 import InfoDialog from './game/info-dialog';
 import WinModal from './game/win-modal';
-import Confetti from './game/confetti';
 
 export default function GamePage() {
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
@@ -38,7 +37,7 @@ export default function GamePage() {
   const { showBanner, hideBanner, showInterstitial, showRewarded } = useAdMob();
 
   // Use the custom useSound hook for all audio
-  const { play: playMenuMusic, stop: stopMenuMusic } = useSound('/assets/emoji/music/Opening.mp3', volume, 'music', isMuted, true); // Loop menu music
+  const { play: playMenuMusic, stop: stopMenuMusic } = useSound('/assets/emoji/music/opening.mp3', volume, 'music', isMuted, true); // Loop menu music
   const { play: playBgMusic, pause: pauseBgMusic, resume: resumeBgMusic, stop: stopBgMusic } = useSound('/assets/emoji/music/bgmusic.mp3', volume, 'music', isMuted, true); // Loop background music
   const { play: playTileSlideSound } = useSound('/assets/emoji/music/slide_1.mp3', volume, 'effect');
   const { play: playWinSound } = useSound('/assets/emoji/music/level_complete.mp3', volume, 'effect');
@@ -275,7 +274,6 @@ export default function GamePage() {
 
   return (
     <div className="flex flex-col text-foreground font-body flex-grow relative">
-      <Confetti isOpen={showWinModal} />
       <InfoDialog isOpen={showInfoModal} onClose={() => setShowInfoModal(false)} />
       {currentLevel && (
         <WinModal
