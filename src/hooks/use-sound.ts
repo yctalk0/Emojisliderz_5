@@ -42,12 +42,12 @@ const useSound = (
   }, [volume, isMuted]);
 
   const play = useCallback(() => {
-    if (audioRef.current && !(soundType === 'music' && isMuted)) {
+    if (audioRef.current && audioRef.current.paused && !(soundType === 'music' && isMuted)) {
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch(error => {
         if (error.name === 'NotAllowedError') {
           console.warn('Autoplay prevented. User interaction required.');
-        } else {
+        } else if (error.name !== 'AbortError') { // Don't log AbortError
           console.error(
             'Error playing sound:',
             error.name,
@@ -67,11 +67,11 @@ const useSound = (
   }, []);
 
   const resume = useCallback(() => {
-    if (audioRef.current && !(soundType === 'music' && isMuted)) {
+    if (audioRef.current && audioRef.current.paused && !(soundType === 'music' && isMuted)) {
       audioRef.current.play().catch(error => {
         if (error.name === 'NotAllowedError') {
           console.warn('Autoplay prevented. User interaction required.');
-        } else {
+        } else if (error.name !== 'AbortError') {
           console.error(
             'Error playing sound:',
             error.name,

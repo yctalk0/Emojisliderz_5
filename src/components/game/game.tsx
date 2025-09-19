@@ -82,6 +82,7 @@ const Game = ({
     resetGame,
     autoSolve,
     getNextMoveHint,
+    isCalculatingSolution,
   } = useGameLogic(level.gridSize, handleGameWinLogic, isMuted, pauseBgMusic, resumeBgMusic);
 
   const [isHintModalOpen, setIsHintModalOpen] = useState(false);
@@ -154,6 +155,7 @@ const Game = ({
         canSolve={canSolve}
         easyLevelsCompleted={easyLevelsCompleted}
         showRewarded={showRewarded}
+        isCalculatingSolution={isCalculatingSolution}
       />
       <AdBanner position="bottom" visible={!isSolved} />
       <GameBoard
@@ -169,6 +171,7 @@ const Game = ({
           showPersistentRippleHint={showPersistentRippleHint}
           onTileSlide={onTileSlide}
           emptyTileIndex={emptyTileIndex}
+          isCalculatingSolution={isCalculatingSolution}
       />
 
       <WinModal

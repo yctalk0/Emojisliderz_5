@@ -1,99 +1,15 @@
 
 'use client';
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import useAdMob, { UseAdMob } from '@/hooks/use-admob';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import useAdMob from '@/hooks/use-admob';
 import useSound from '@/hooks/use-sound';
+import type { TileType } from '@/workers/solver.worker';
 
-export interface TileType {
-  value: number;
-}
+export type { TileType };
 
 export type Hint = {
   tileValue: number;
   direction: 'up' | 'down' | 'left' | 'right';
-}
-
-// A* search algorithm to find the solution path
-const solvePuzzle = (startTiles: TileType[], gridSize: number): TileType[][] | null => {
-  const totalTiles = gridSize * gridSize;
-  const emptyTileValue = 0;
-  const solvedState = Array.from({ length: totalTiles }, (_, i) => ({ value: (i + 1) % totalTiles }));
-  const solvedStateStr = JSON.stringify(solvedState.map(t => t.value));
-
-  const manhattanDistance = (tiles: TileType[]) => {
-    let distance = 0;
-    for (let i = 0; i < tiles.length; i++) {
-      const tileValue = tiles[i].value;
-      if (tileValue !== emptyTileValue) {
-        const correctIndex = tileValue - 1;
-        const currentRow = Math.floor(i / gridSize);
-        const currentCol = i % gridSize;
-        const correctRow = Math.floor(correctIndex / gridSize);
-        const correctCol = correctIndex % gridSize;
-        distance += Math.abs(currentRow - correctRow) + Math.abs(currentCol - correctCol);
-      }
-    }
-    return distance;
-  };
-
-  const openSet = new Map<string, { path: TileType[][], g: number, h: number, f: number }>();
-  const startStateStr = JSON.stringify(startTiles.map(t => t.value));
-  const startHeuristic = manhattanDistance(startTiles);
-  openSet.set(startStateStr, { path: [startTiles], g: 0, h: startHeuristic, f: startHeuristic });
-  
-  const closedSet = new Set<string>();
-
-  while (openSet.size > 0) {
-    let bestNodeKey = '';
-    let minF = Infinity;
-
-    for (const [key, node] of openSet.entries()) {
-      if (node.f < minF) {
-        minF = node.f;
-        bestNodeKey = key;
-      }
-    }
-
-    const { path, g } = openSet.get(bestNodeKey)!;
-    const currentTiles = path[path.length - 1];
-    const currentStateStr = JSON.stringify(currentTiles.map(t => t.value));
-    
-    if (currentStateStr === solvedStateStr) {
-      return path;
-    }
-    
-    openSet.delete(bestNodeKey);
-    closedSet.add(currentStateStr);
-    
-    const emptyIndex = currentTiles.findIndex(t => t.value === emptyTileValue);
-    const emptyRow = Math.floor(emptyIndex / gridSize);
-    const emptyCol = emptyIndex % gridSize;
-
-    const neighbors = [];
-    if (emptyRow > 0) neighbors.push(emptyIndex - gridSize);
-    if (emptyRow < gridSize - 1) neighbors.push(emptyIndex + gridSize);
-    if (emptyCol > 0) neighbors.push(emptyIndex - 1);
-    if (emptyCol < gridSize - 1) neighbors.push(emptyIndex + 1);
-
-    for (const moveIndex of neighbors) {
-      const newTiles = [...currentTiles];
-      [newTiles[emptyIndex], newTiles[moveIndex]] = [newTiles[moveIndex], newTiles[emptyIndex]];
-      const newStateStr = JSON.stringify(newTiles.map(t => t.value));
-
-      if (closedSet.has(newStateStr)) continue;
-
-      const newG = g + 1;
-      const existingNode = openSet.get(newStateStr);
-
-      if (!existingNode || newG < existingNode.g) {
-        const h = manhattanDistance(newTiles);
-        const f = newG + h;
-        openSet.set(newStateStr, { path: [...path, newTiles], g: newG, h, f });
-      }
-    }
-  }
-
-  return null; // No solution found
 };
 
 
@@ -113,64 +29,52 @@ const useGameLogic = (gridSize: number, onWin: (moves: number, time: number) => 
   const [isSolved, setIsSolved] = useState(false);
   const [isStarted, setIsStarted] = useState(false);
   const [isSolving, setIsSolving] = useState(false);
+  const [isCalculatingSolution, setIsCalculatingSolution] = useState(false);
   const [history, setHistory] = useState<TileType[][]>([]);
   const [hint, setHint] = useState<Hint | null>(null);
   const [hasShownRewardedAdForCurrentLevel, setHasShownRewardedAdForCurrentLevel] = useState(false);
+  const workerRef = useRef<Worker | null>(null);
 
   const { showRewarded, prepareRewarded } = useAdMob();
   const { play: playSlideSound } = useSound('/assets/music/slide_1.mp3', 0.5, 'effect', isMuted);
 
-  const isSolvable = (arr: TileType[]): boolean => {
-    if (gridSize % 2 === 1) { // Odd grid
-      let inversions = 0;
-      for (let i = 0; i < totalTiles; i++) {
-        for (let j = i + 1; j < totalTiles; j++) {
-          if (arr[i].value !== emptyTileValue && arr[j].value !== emptyTileValue && arr[i].value > arr[j].value) {
-            inversions++;
-          }
-        }
-      }
-      return inversions % 2 === 0;
-    } else {
-      return true; 
-    }
-  };
-
   const shuffleTiles = useCallback(() => {
     setIsSolving(false);
-    let shuffledTiles: TileType[];
-    let isAlreadySolved = false;
+    
+    let shuffledTiles = createSolvedTiles();
+    let emptyIndex = shuffledTiles.findIndex(t => t.value === emptyTileValue);
+    
+    const shuffleIterations = gridSize * gridSize * 50; // Increased iterations for better shuffling
+    let prevEmptyIndex = -1;
 
-    do {
-      if (gridSize % 2 === 0) {
-        let tempTiles = createSolvedTiles();
-        let emptyIndex = tempTiles.findIndex(t => t.value === emptyTileValue);
-        // Increase iterations for a more thorough shuffle, especially for 2x2
-        const shuffleIterations = gridSize * gridSize * 20;
+    for (let i = 0; i < shuffleIterations; i++) {
+      const emptyRow = Math.floor(emptyIndex / gridSize);
+      const emptyCol = emptyIndex % gridSize;
 
-        for (let i = 0; i < shuffleIterations; i++) {
-          const emptyRow = Math.floor(emptyIndex / gridSize);
-          const emptyCol = emptyIndex % gridSize;
+      const possibleMoves = [];
+      if (emptyRow > 0) possibleMoves.push(emptyIndex - gridSize); // Up
+      if (emptyRow < gridSize - 1) possibleMoves.push(emptyIndex + gridSize); // Down
+      if (emptyCol > 0) possibleMoves.push(emptyIndex - 1); // Left
+      if (emptyCol < gridSize - 1) possibleMoves.push(emptyIndex + 1); // Right
 
-          const possibleMoves = [];
-          if (emptyRow > 0) possibleMoves.push(emptyIndex - gridSize);
-          if (emptyRow < gridSize - 1) possibleMoves.push(emptyIndex + gridSize);
-          if (emptyCol > 0) possibleMoves.push(emptyIndex - 1);
-          if (emptyCol < gridSize - 1) possibleMoves.push(emptyIndex + 1);
-
-          const moveIndex = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
-          [tempTiles[emptyIndex], tempTiles[moveIndex]] = [tempTiles[moveIndex], tempTiles[emptyIndex]];
-          emptyIndex = moveIndex;
-        }
-        shuffledTiles = tempTiles;
-      } else {
-        shuffledTiles = [...createSolvedTiles()].sort(() => Math.random() - 0.5);
-      }
+      // Filter out the move that would undo the previous move
+      const validMoves = possibleMoves.filter(move => move !== prevEmptyIndex);
       
-      const solvedState = createSolvedTiles();
-      isAlreadySolved = JSON.stringify(shuffledTiles.map(t => t.value)) === JSON.stringify(solvedState.map(t => t.value));
+      const moveIndex = validMoves[Math.floor(Math.random() * validMoves.length)];
+      
+      prevEmptyIndex = emptyIndex;
+      [shuffledTiles[emptyIndex], shuffledTiles[moveIndex]] = [shuffledTiles[moveIndex], shuffledTiles[emptyIndex]];
+      emptyIndex = moveIndex;
+    }
 
-    } while (!isSolvable(shuffledTiles) || isAlreadySolved);
+    const solvedState = createSolvedTiles();
+    const isAlreadySolved = JSON.stringify(shuffledTiles.map(t => t.value)) === JSON.stringify(solvedState.map(t => t.value));
+
+    if (isAlreadySolved) {
+      if (shuffledTiles.length > 2) {
+        [shuffledTiles[0], shuffledTiles[1]] = [shuffledTiles[1], shuffledTiles[0]];
+      }
+    }
 
     setTiles(shuffledTiles);
     setMoves(0);
@@ -187,6 +91,15 @@ const useGameLogic = (gridSize: number, onWin: (moves: number, time: number) => 
   useEffect(() => {
     shuffleTiles();
   }, [shuffleTiles, gridSize]);
+
+  useEffect(() => {
+    // Initialize the worker
+    workerRef.current = new Worker(new URL('../workers/solver.worker.ts', import.meta.url));
+    return () => {
+      // Terminate the worker on cleanup
+      workerRef.current?.terminate();
+    };
+  }, []);
 
   const checkWin = useCallback(() => {
     if (isSolved) return;
@@ -264,70 +177,82 @@ const useGameLogic = (gridSize: number, onWin: (moves: number, time: number) => 
     if (isSolved || isSolving) return;
     setHint(null);
     
-    if(gridSize > 3) {
+    if (gridSize > 3) {
       alert("Auto-solve is only available for 2x2 and 3x3 puzzles for now!");
       return;
     }
 
-    const solutionPath = solvePuzzle(tiles, gridSize);
-    if (solutionPath) {
-      setIsSolving(true);
-      if(!isStarted) startGame();
-      pauseBgMusic();
+    setIsCalculatingSolution(true);
+    workerRef.current?.postMessage({ tiles, gridSize });
 
-      solutionPath.forEach((state, index) => {
-        setTimeout(() => {
-          setHistory(prev => [...prev, tiles]);
-          setTiles(state);
-          setMoves(moves + index);
-          playSlideSound();
-          if (index === solutionPath.length - 1) {
-            resumeBgMusic();
-          }
-        }, index * 300);
-      });
-    } else {
-      console.error("No solution found!");
-    }
+    workerRef.current!.onmessage = (e: MessageEvent<TileType[][] | null>) => {
+      const solutionPath = e.data;
+      setIsCalculatingSolution(false);
+      if (solutionPath) {
+        setIsSolving(true);
+        if (!isStarted) startGame();
+        pauseBgMusic();
+
+        solutionPath.forEach((state, index) => {
+          setTimeout(() => {
+            setHistory(prev => [...prev, tiles]);
+            setTiles(state);
+            setMoves(moves + index);
+            playSlideSound();
+            if (index === solutionPath.length - 1) {
+              resumeBgMusic();
+            }
+          }, index * 300);
+        });
+      } else {
+        console.error("No solution found!");
+      }
+    };
   };
 
   const getNextMoveHint = useCallback(async () => {
-    if (isSolved || isSolving) return;
+    if (isSolved || isSolving || isCalculatingSolution) return;
 
     if (!hasShownRewardedAdForCurrentLevel) {
       await showRewarded();
       setHasShownRewardedAdForCurrentLevel(true);
     }
 
-    const solutionPath = solvePuzzle(tiles, gridSize);
-    if (solutionPath && solutionPath.length > 1) {
-      const currentTiles = solutionPath[0];
-      const nextTiles = solutionPath[1];
+    setIsCalculatingSolution(true);
+    workerRef.current?.postMessage({ tiles, gridSize });
 
-      const currentEmptyIndex = currentTiles.findIndex(t => t.value === emptyTileValue);
-      const nextEmptyIndex = nextTiles.findIndex(t => t.value === emptyTileValue);
+    workerRef.current!.onmessage = (e: MessageEvent<TileType[][] | null>) => {
+      const solutionPath = e.data;
+      setIsCalculatingSolution(false);
+      if (solutionPath && solutionPath.length > 1) {
+        const currentTiles = solutionPath[0];
+        const nextTiles = solutionPath[1];
 
-      const tileToMoveValue = nextTiles[currentEmptyIndex].value;
-      
-      const diff = nextEmptyIndex - currentEmptyIndex;
-      let direction: Hint['direction'] = 'right';
-      if (diff === 1) direction = 'left';
-      else if (diff === -1) direction = 'right';
-      else if (diff === gridSize) direction = 'up';
-      else if (diff === -gridSize) direction = 'down';
+        const currentEmptyIndex = currentTiles.findIndex(t => t.value === emptyTileValue);
+        const nextEmptyIndex = nextTiles.findIndex(t => t.value === emptyTileValue);
 
-      setHint({
-        tileValue: tileToMoveValue,
-        direction: direction,
-      });
-    }
+        const tileToMoveValue = nextTiles[currentEmptyIndex].value;
+
+        const diff = nextEmptyIndex - currentEmptyIndex;
+        let direction: Hint['direction'] = 'right';
+        if (diff === 1) direction = 'left';
+        else if (diff === -1) direction = 'right';
+        else if (diff === gridSize) direction = 'up';
+        else if (diff === -gridSize) direction = 'down';
+
+        setHint({
+          tileValue: tileToMoveValue,
+          direction: direction,
+        });
+      }
+    };
   }, [tiles, gridSize, isSolved, isSolving, hasShownRewardedAdForCurrentLevel, showRewarded]);
 
   const canUndo = useMemo(() => history.length > 0 && !isSolving, [history, isSolving]);
-  const canSolve = useMemo(() => !isSolved && !isSolving, [isSolved, isSolving]);
+  const canSolve = useMemo(() => !isSolved && !isSolving && !isCalculatingSolution, [isSolved, isSolving, isCalculatingSolution]);
   const emptyTileIndex = useMemo(() => tiles.findIndex(t => t.value === emptyTileValue), [tiles]);
 
-  return { tiles, moves, time, isSolved, isStarted, isSolving, canUndo, canSolve, hint, emptyTileIndex, startGame, handleTileClick, undoMove, resetGame, autoSolve, getNextMoveHint, hasShownRewardedAdForCurrentLevel };
+  return { tiles, moves, time, isSolved, isStarted, isSolving, canUndo, canSolve, hint, emptyTileIndex, startGame, handleTileClick, undoMove, resetGame, autoSolve, getNextMoveHint, hasShownRewardedAdForCurrentLevel, isCalculatingSolution };
 };
 
 export default useGameLogic;

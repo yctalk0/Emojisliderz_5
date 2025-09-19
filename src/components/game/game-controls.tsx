@@ -17,9 +17,10 @@ interface GameControlsProps {
   canSolve: boolean;
   easyLevelsCompleted: number; // New prop
   showRewarded: () => void; // New prop
+  isCalculatingSolution: boolean;
 }
 
-const GameControls = ({ level, moves, time, onHint, onUndo, onRestart, onSolve, canUndo, canSolve, easyLevelsCompleted, showRewarded }: GameControlsProps) => {
+const GameControls = ({ level, moves, time, onHint, onUndo, onRestart, onSolve, canUndo, canSolve, easyLevelsCompleted, showRewarded, isCalculatingSolution }: GameControlsProps) => {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
     const secs = (seconds % 60).toString().padStart(2, '0');
@@ -51,10 +52,10 @@ const GameControls = ({ level, moves, time, onHint, onUndo, onRestart, onSolve, 
         </CardContent>
       </Card>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <Button variant="secondary" onClick={onHint} className="h-12 text-base font-bold">
-          <HelpCircle className="w-5 h-5 mr-2" /> Hint
+        <Button variant="secondary" onClick={onHint} disabled={isCalculatingSolution} className="h-12 text-base font-bold">
+          <HelpCircle className="w-5 h-5 mr-2" /> {isCalculatingSolution ? 'Thinking...' : 'Hint'}
         </Button>
-        <Button variant="secondary" onClick={onUndo} disabled={!canUndo} className="h-12 text-base font-bold">
+        <Button variant="secondary" onClick={onUndo} disabled={!canUndo || isCalculatingSolution} className="h-12 text-base font-bold">
           <Undo2 className="w-5 h-5 mr-2" /> Undo
         </Button>
         <Button variant="secondary" onClick={onRestart} className="h-12 text-base font-bold">
@@ -65,8 +66,8 @@ const GameControls = ({ level, moves, time, onHint, onUndo, onRestart, onSolve, 
           if (level.difficulty === 'Easy' && level.gridSize === 2 && easyLevelsCompleted > 0 && easyLevelsCompleted % 3 === 0) {
             showRewarded(); // Show rewarded ad after every 3 easy 2x2 solves
           }
-        }} disabled={!canSolve} className="h-12 text-base font-bold">
-          <WandSparkles className="w-5 h-5 mr-2" /> Solve
+        }} disabled={!canSolve || isCalculatingSolution} className="h-12 text-base font-bold">
+          <WandSparkles className="w-5 h-5 mr-2" /> {isCalculatingSolution ? 'Solving...' : 'Solve'}
         </Button>
       </div>
     </div>

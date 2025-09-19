@@ -20,9 +20,10 @@ interface GameBoardProps {
   showPersistentRippleHint: boolean;
   onTileSlide: (tileValue: number) => void;
   emptyTileIndex: number;
+  isCalculatingSolution: boolean;
 }
 
-const GameBoard = ({ level, tiles, gridSize, onTileClick, imageSrc, hint, difficulty, isSolving, isGameWon, showPersistentRippleHint, onTileSlide, emptyTileIndex }: GameBoardProps) => {
+const GameBoard = ({ level, tiles, gridSize, onTileClick, imageSrc, hint, difficulty, isSolving, isGameWon, showPersistentRippleHint, onTileSlide, emptyTileIndex, isCalculatingSolution }: GameBoardProps) => {
   const boardRef = useRef<HTMLDivElement>(null);
   const [boardSize, setBoardSize] = useState(300);
 
@@ -59,6 +60,11 @@ const GameBoard = ({ level, tiles, gridSize, onTileClick, imageSrc, hint, diffic
         className="relative w-full aspect-square rounded-lg shadow-lg bg-secondary"
         style={{ padding: `${PADDING}px` }}
       >
+        {isCalculatingSolution && (
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10 rounded-lg">
+            <div className="text-white text-2xl font-bold">Calculating...</div>
+          </div>
+        )}
         {isGameWon ? (
           <Image
             src={imageSrc}

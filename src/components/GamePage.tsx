@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { Level } from '@/lib/game-data';
 import { levels } from '@/lib/game-data';
 import LevelSelect from '@/components/game/level-select';
@@ -30,17 +30,16 @@ export default function GamePage() {
   const [volume, setVolume] = useState(0.2);
   const [lastVolume, setLastVolume] = useState(0.2);
   const [showInfoModal, setShowInfoModal] = useState(false);
-  const [showWinModal, setShowWinModal] = useState(false);
-  const [winModalData, setWinModalData] = useState({ moves: 0, time: 0 });
+  const [gameResetKey, setGameResetKey] = useState(0);
 
   const isMuted = volume === 0;
   const { showBanner, hideBanner, showInterstitial, showRewarded } = useAdMob();
 
   // Use the custom useSound hook for all audio
-  const { play: playMenuMusic, stop: stopMenuMusic } = useSound('/assets/emoji/music/opening.mp3', volume, 'music', isMuted, true); // Loop menu music
-  const { play: playBgMusic, pause: pauseBgMusic, resume: resumeBgMusic, stop: stopBgMusic } = useSound('/assets/emoji/music/bgmusic.mp3', volume, 'music', isMuted, true); // Loop background music
-  const { play: playTileSlideSound } = useSound('/assets/emoji/music/slide_1.mp3', volume, 'effect');
-  const { play: playWinSound } = useSound('/assets/emoji/music/level_complete.mp3', volume, 'effect');
+  const { play: playMenuMusic, stop: stopMenuMusic } = useSound('/assets/music/Opening.mp3', volume, 'music', isMuted, true); // Loop menu music
+  const { play: playBgMusic, pause: pauseBgMusic, resume: resumeBgMusic, stop: stopBgMusic } = useSound('/assets/music/bgmusic.mp3', volume, 'music', isMuted, true); // Loop background music
+  const { play: playTileSlideSound } = useSound('/assets/music/slide_1.mp3', volume, 'effect');
+  const { play: playWinSound } = useSound('/assets/music/level_complete.mp3', volume, 'effect');
 
   // Consolidated effect to manage audio playback
   useEffect(() => {
@@ -117,10 +116,8 @@ export default function GamePage() {
     });
   }, []);
   
-  const handleGameWin = useCallback((moves: number, time: number) => {
+  const handleGameWin = useCallback(() => {
     playWinSound();
-    setShowWinModal(true);
-    setWinModalData({ moves, time });
 
     if (currentLevel) {
       if (currentLevel.difficulty === 'Easy' && currentLevel.gridSize === 2) {
@@ -160,7 +157,7 @@ export default function GamePage() {
 
   const handleExitGame = () => {
     setCurrentLevel(null);
-    setShowWinModal(false);
+    setShowInfoModal(false);
   }
 
   const handleNextLevel = () => {
@@ -172,7 +169,7 @@ export default function GamePage() {
             const nextLevel = levelsInDifficulty[currentIndexInDifficulty + 1];
             if (unlockedLevels.includes(nextLevel.id)) {
               setCurrentLevel(nextLevel);
-              setShowWinModal(false);
+              setShowInfoModal(false);
             }
         }
     }
@@ -249,7 +246,7 @@ export default function GamePage() {
   };
 
   const handlePlayAgain = () => {
-    setShowWinModal(false);
+    setGameResetKey(prev => prev + 1);
   }
   
   const handleLevelSelect = (level: Level) => {
@@ -275,26 +272,6 @@ export default function GamePage() {
   return (
     <div className="flex flex-col text-foreground font-body flex-grow relative">
       <InfoDialog isOpen={showInfoModal} onClose={() => setShowInfoModal(false)} />
-      {currentLevel && (
-        <WinModal
-          isOpen={showWinModal}
-          moves={winModalData.moves}
-          time={winModalData.time}
-          onPlayAgain={() => {
-            handlePlayAgain();
-            // We need a way to tell the Game component to reset
-          }}
-          onNextLevel={handleNextLevel}
-          onExit={handleExitGame}
-          hasNextLevel={isNextLevelAvailable}
-          imageSrc={currentLevel.imageSrc}
-          isLastLevelOfDifficulty={isLastLevelOfDifficulty}
-          difficulty={currentLevel.difficulty}
-          isMuted={isMuted}
-          pauseBgMusic={pauseBgMusic}
-          resumeBgMusic={resumeBgMusic}
-        />
-      )}
       <div className="w-full mx-auto flex flex-col px-4 sm:px-6 lg:px-8 flex-grow">
           <header className="relative text-center pt-8 mb-4">
             {currentLevel && (
@@ -325,7 +302,7 @@ export default function GamePage() {
               renderLoadingSkeleton()
             ) : currentLevel ? (
               <Game 
-                key={currentLevel.id}
+                key={`${currentLevel.id}-${gameResetKey}`}
                 level={currentLevel} 
                 onWin={handleGameWin}
                 onExit={handleExitGame}
