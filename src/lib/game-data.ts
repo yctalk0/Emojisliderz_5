@@ -9,12 +9,14 @@ export interface Level {
 }
 
 const levelsPerDifficulty = 405;
+const totalEmojiImages = 405; // Assuming you have 405 emoji images (1.png to 405.png)
 
-const generateLevels = (difficulty: 'Easy' | 'Hard', count: number, gridSize: number, startIndex: number): Level[] => {
+const generateLevels = (difficulty: 'Easy' | 'Hard', count: number, gridSize: number): Level[] => {
   const levels: Level[] = [];
   for (let i = 1; i <= count; i++) {
     const levelNumber = i;
-    const imageIndex = startIndex + i;
+    // Calculate image index to cycle through available emoji images
+    const imageIndex = (i - 1) % totalEmojiImages + 1;
     levels.push({
       id: `${difficulty.toLowerCase()}-${levelNumber}`,
       difficulty,
@@ -28,6 +30,6 @@ const generateLevels = (difficulty: 'Easy' | 'Hard', count: number, gridSize: nu
 };
 
 export const levels: Level[] = [
-  ...generateLevels('Easy', levelsPerDifficulty, 2, 0),
-  ...generateLevels('Hard', levelsPerDifficulty, 3, 0), // Corrected startIndex to 0
+  ...generateLevels('Easy', levelsPerDifficulty, 2),
+  ...generateLevels('Hard', levelsPerDifficulty, 3),
 ];

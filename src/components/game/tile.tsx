@@ -131,7 +131,6 @@ const Tile = ({
       const [tileValue] = args;
       if (tap) {
         onClick(tileValue);
-        onSlide(tileValue);
         return;
       }
       
@@ -157,14 +156,12 @@ const Tile = ({
         if (canMoveHorizontal && Math.abs(mx) > threshold) {
           if ((mx > 0 && emptyCol > col) || (mx < 0 && emptyCol < col)) {
             onClick(value);
-            onSlide(value);
             return;
           }
         }
         if (canMoveVertical && Math.abs(my) > threshold) {
           if ((my > 0 && emptyRow > row) || (my < 0 && emptyRow < row)) {
             onClick(value);
-            onSlide(value);
             return;
           }
         }
@@ -246,11 +243,11 @@ const Tile = ({
       {shouldShowPersistentRipple && (
         <div className="ripple-container" style={{ width: tileSize, height: tileSize }}>
           <div className="ripple" />
-          <span className="font-bold text-lg">Tap here</span>
+          <span className="font-bold text-lg" style={{ color: 'white', textShadow: '0 0 5px red, 0 0 10px red' }}>Tap here</span>
         </div>
       )}
       {shouldShowArrowHint && <ArrowHint direction={hint!.direction} size={tileSize} level={level} />}
-      <span className="absolute bottom-1 right-2 text-2xl font-bold text-black" style={{ textShadow: '1px 1px 2px white' }}>
+      <span className="absolute bottom-1 right-2 text-2xl font-bold text-black" style={{ textShadow: '1px 1px 2px white', zIndex: 10 }}>
           {value}
       </span>
     </animated.div>

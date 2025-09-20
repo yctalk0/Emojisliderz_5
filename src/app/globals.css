@@ -69,6 +69,7 @@
   justify-content: center;
   overflow: hidden;
   border-radius: inherit;
+  z-index: 30;
 }
 
 .ripple {
@@ -95,6 +96,8 @@
   z-index: 20;
   position: relative;
   font-weight: bold;
+  color: white;
+  text-shadow: 0 0 5px red, 0 0 10px red;
   animation: vivid-blinking 1s infinite;
 }
 

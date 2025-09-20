@@ -53,7 +53,7 @@ const GameControls = ({ level, moves, time, onHint, onUndo, onRestart, onSolve, 
       </Card>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <Button variant="secondary" onClick={onHint} disabled={isCalculatingSolution} className="h-12 text-base font-bold">
-          <HelpCircle className="w-5 h-5 mr-2" /> {isCalculatingSolution ? 'Thinking...' : 'Hint'}
+          <HelpCircle className="w-5 h-5 mr-2" /> Hint
         </Button>
         <Button variant="secondary" onClick={onUndo} disabled={!canUndo || isCalculatingSolution} className="h-12 text-base font-bold">
           <Undo2 className="w-5 h-5 mr-2" /> Undo
@@ -67,7 +67,7 @@ const GameControls = ({ level, moves, time, onHint, onUndo, onRestart, onSolve, 
             showRewarded(); // Show rewarded ad after every 3 easy 2x2 solves
           }
         }} disabled={!canSolve || isCalculatingSolution} className="h-12 text-base font-bold">
-          <WandSparkles className="w-5 h-5 mr-2" /> {isCalculatingSolution ? 'Solving...' : 'Solve'}
+          <WandSparkles className="w-5 h-5 mr-2" /> Solve
         </Button>
       </div>
     </div>

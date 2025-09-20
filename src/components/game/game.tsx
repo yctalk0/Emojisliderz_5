@@ -1,4 +1,3 @@
-'use client';
 import { useState, useEffect, useRef, RefObject } from 'react';
 import type { Level } from '@/lib/game-data';
 import useGameLogic from '@/hooks/use-game-logic';
@@ -72,6 +71,8 @@ const Game = ({
     isSolved,
     isStarted,
     isSolving,
+    isCalculatingHint,
+    isInitialHint,
     canUndo,
     canSolve,
     hint,
@@ -82,42 +83,60 @@ const Game = ({
     resetGame,
     autoSolve,
     getNextMoveHint,
-    isCalculatingSolution,
-  } = useGameLogic(level.gridSize, handleGameWinLogic, isMuted, pauseBgMusic, resumeBgMusic);
+    setIsCalculatingHint,
+    clearHint,
+    reEvaluateHint,
+  } = useGameLogic(level.gridSize, level.levelNumber, handleGameWinLogic, isMuted, pauseBgMusic, resumeBgMusic);
 
   const [isHintModalOpen, setIsHintModalOpen] = useState(false);
-  
-  useEffect(() => {
-    if (level.levelNumber === 1 && !isSolved) {
-      getNextMoveHint();
-    }
-  }, [level.levelNumber, isSolved, getNextMoveHint, level.id]);
-  
+
   useEffect(() => {
     setShowWinModal(false);
     setHintUsedInCurrentLevel(false);
+    // Show persistent ripple hint for the first level by default
     if (level.levelNumber === 1) {
       setShowPersistentRippleHint(true);
+      // Only fetch hint if not already calculating and no hint exists
+      if (!isCalculatingHint && !hint) {
+        getNextMoveHint();
+      }
     } else {
       setShowPersistentRippleHint(false);
+      clearHint(); // Clear hint if not on the first level
     }
-  }, [level]);
+  }, [level, isSolved, isCalculatingHint, hint, getNextMoveHint, clearHint]);
 
   const handleRestart = () => {
     onPlayAgain();
     resetGame();
     setShowWinModal(false);
     setHintUsedInCurrentLevel(false);
+    clearHint();
+    if (level.levelNumber === 1) {
+      setShowPersistentRippleHint(true);
+      // Re-fetch hint for the first level on restart
+      getNextMoveHint();
+    }
     toast({ title: "Game Restarted", description: "The puzzle has been shuffled." });
   }
 
-  const handleHintRequest = () => {
+  const handleHintRequest = async () => {
     if (level.gridSize > 3) {
       alert("Hints are only available for 2x2 and 3x3 puzzles for now!");
       return;
     }
-    setHintUsedInCurrentLevel(true);
-    getNextMoveHint();
+
+    try {
+      const adResult = await showRewarded();
+      if (adResult && adResult.rewarded) {
+        getNextMoveHint();
+      } else {
+        toast({ title: "Ad not completed", description: "You need to watch the ad to get a hint.", variant: "destructive" });
+      }
+    } catch (error) {
+      console.error("Error showing rewarded ad:", error);
+      toast({ title: "Error", description: "Failed to show ad. Please try again.", variant: "destructive" });
+    }
   }
 
   const handleSolveRequest = async () => {
@@ -139,6 +158,11 @@ const Game = ({
     }
     handleTileClick(tileValue);
     onTileSlide();
+
+    // After a tile slide, re-evaluate the hint for the first level
+    if (level.levelNumber === 1 && !isSolved) {
+      reEvaluateHint();
+    }
   }
   
   return (
@@ -155,7 +179,7 @@ const Game = ({
         canSolve={canSolve}
         easyLevelsCompleted={easyLevelsCompleted}
         showRewarded={showRewarded}
-        isCalculatingSolution={isCalculatingSolution}
+        isCalculatingSolution={(isCalculatingHint && !isInitialHint) || isSolving}
       />
       <AdBanner position="bottom" visible={!isSolved} />
       <GameBoard
@@ -171,7 +195,7 @@ const Game = ({
           showPersistentRippleHint={showPersistentRippleHint}
           onTileSlide={onTileSlide}
           emptyTileIndex={emptyTileIndex}
-          isCalculatingSolution={isCalculatingSolution}
+          isCalculatingSolution={(isCalculatingHint && !isInitialHint) || isSolving}
       />
 
       <WinModal
