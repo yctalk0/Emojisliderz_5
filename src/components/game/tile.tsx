@@ -121,9 +121,9 @@ const Tile = ({
     api.start({
       x: col * (tileSize + gap),
       y: row * (tileSize + gap),
-      immediate: isSolving
+      immediate: false // Always animate
     });
-  }, [currentPosition, tileSize, gap, api, col, row, isSolving]);
+  }, [currentPosition, tileSize, gap, api, col, row]);
 
 
   const bind = useDrag(
@@ -239,8 +239,7 @@ const Tile = ({
         'flex items-center justify-center',
         isCorrectPosition 
           ? 'shadow-green-500/90 shadow-[0_0_12px_4px_rgba(74,222,128,0.9)]' 
-          : 'shadow-red-500/90 shadow-[0_0_12px_4px_rgba(239,68,68,0.9)]',
-        isSolving && 'transition-none'
+          : 'shadow-red-500/90 shadow-[0_0_12px_4px_rgba(239,68,68,0.9)]'
       )}
     >
       {shouldShowPersistentRipple && (

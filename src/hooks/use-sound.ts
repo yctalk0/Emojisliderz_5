@@ -42,7 +42,7 @@ const useSound = (
   }, [volume, isMuted]);
 
   const play = useCallback(() => {
-    if (audioRef.current && audioRef.current.paused && !(soundType === 'music' && isMuted)) {
+    if (audioRef.current && !(soundType === 'music' && isMuted)) {
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch(error => {
         if (error.name === 'NotAllowedError') {

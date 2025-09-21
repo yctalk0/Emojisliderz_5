@@ -197,7 +197,7 @@ const useGameLogic = (gridSize: number, onWin: (moves: number, time: number) => 
           setTimeout(() => {
             setHistory(prev => [...prev, tiles]);
             setTiles(state);
-            setMoves(moves + index);
+            setMoves(prev => prev + 1);
             playSlideSound();
             if (index === solutionPath.length - 1) {
               resumeBgMusic();
