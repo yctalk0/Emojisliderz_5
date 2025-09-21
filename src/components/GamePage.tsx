@@ -354,7 +354,6 @@ export default function GamePage() {
                 isNextLevelAvailable={isNextLevelAvailable}
                 isPreviousLevelAvailable={isPreviousLevelAvailable}
                 isLastLevelOfDifficulty={isLastLevelOfDifficulty}
-                onTileSlide={playTileSlideSound}
                 isMuted={isMuted}
                 easyLevelsCompleted={easyLevelsCompleted}
                 hintsUsedCount={hintsUsedCount} // Pass hintsUsedCount

@@ -18,7 +18,6 @@ interface GameProps {
   isNextLevelAvailable: boolean;
   isPreviousLevelAvailable: boolean;
   isLastLevelOfDifficulty: boolean;
-  onTileSlide: () => void;
   isMuted: boolean;
   easyLevelsCompleted: number;
   showRewarded: () => Promise<{ rewarded: boolean }>;
@@ -39,7 +38,6 @@ const Game = ({
   isNextLevelAvailable,
   isPreviousLevelAvailable,
   isLastLevelOfDifficulty,
-  onTileSlide,
   isMuted,
   easyLevelsCompleted,
   showRewarded,
@@ -138,7 +136,6 @@ const Game = ({
         startGame();
     }
     handleTileClick(tileValue);
-    onTileSlide();
   }
   
   return (
@@ -169,7 +166,6 @@ const Game = ({
           isSolving={isSolving}
           isGameWon={isSolved}
           showPersistentRippleHint={showPersistentRippleHint}
-          onTileSlide={onTileSlide}
           emptyTileIndex={emptyTileIndex}
           isCalculatingSolution={isCalculatingSolution}
       />

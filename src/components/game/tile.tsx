@@ -73,7 +73,6 @@ interface TileProps {
   gridSize: number;
   imageSrc: string;
   onClick: (tileValue: number) => void;
-  onSlide: (tileValue: number) => void;
   tileSize: number;
   correctPosition: number;
   currentPosition: number;
@@ -92,7 +91,6 @@ const Tile = ({
   gridSize, 
   imageSrc, 
   onClick,
-  onSlide,
   tileSize, 
   correctPosition, 
   currentPosition, 
@@ -131,7 +129,6 @@ const Tile = ({
       const [tileValue] = args;
       if (tap) {
         onClick(tileValue);
-        onSlide(tileValue);
         return;
       }
       
@@ -157,14 +154,12 @@ const Tile = ({
         if (canMoveHorizontal && Math.abs(mx) > threshold) {
           if ((mx > 0 && emptyCol > col) || (mx < 0 && emptyCol < col)) {
             onClick(value);
-            onSlide(value);
             return;
           }
         }
         if (canMoveVertical && Math.abs(my) > threshold) {
           if ((my > 0 && emptyRow > row) || (my < 0 && emptyRow < row)) {
             onClick(value);
-            onSlide(value);
             return;
           }
         }

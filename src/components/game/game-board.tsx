@@ -18,12 +18,11 @@ interface GameBoardProps {
   isSolving: boolean;
   isGameWon: boolean;
   showPersistentRippleHint: boolean;
-  onTileSlide: (tileValue: number) => void;
   emptyTileIndex: number;
   isCalculatingSolution: boolean;
 }
 
-const GameBoard = ({ level, tiles, gridSize, onTileClick, imageSrc, hint, difficulty, isSolving, isGameWon, showPersistentRippleHint, onTileSlide, emptyTileIndex, isCalculatingSolution }: GameBoardProps) => {
+const GameBoard = ({ level, tiles, gridSize, onTileClick, imageSrc, hint, difficulty, isSolving, isGameWon, showPersistentRippleHint, emptyTileIndex, isCalculatingSolution }: GameBoardProps) => {
   const boardRef = useRef<HTMLDivElement>(null);
   const [boardSize, setBoardSize] = useState(300);
 
@@ -105,7 +104,6 @@ const GameBoard = ({ level, tiles, gridSize, onTileClick, imageSrc, hint, diffic
                     gridSize={gridSize}
                     imageSrc={imageSrc}
                     onClick={onTileClick}
-                    onSlide={onTileSlide}
                     tileSize={tileSize}
                     correctPosition={tile.value - 1}
                     currentPosition={index}
