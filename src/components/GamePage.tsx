@@ -24,6 +24,7 @@ import OpeningMp3 from '../../public/assets/music/Opening.mp3';
 import BgMusicMp3 from '../../public/assets/music/bgmusic.mp3';
 import Slide1Mp3 from '../../public/assets/music/slide_1.mp3';
 import LevelCompleteMp3 from '../../public/assets/music/level_complete.mp3';
+import { App } from '@capacitor/app'; // Import App plugin
 
 export default function GamePage() {
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
@@ -36,7 +37,7 @@ export default function GamePage() {
   const [lastVolume, setLastVolume] = useState(0.2);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [gameResetKey, setGameResetKey] = useState(0);
-  const [showTermsModal, setShowTermsModal] = useState(true);
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   const isMuted = volume === 0;
   const { showBanner, hideBanner, showInterstitial, showRewarded } = useAdMob();
@@ -61,6 +62,28 @@ export default function GamePage() {
       playMenuMusic();
     }
   }, [currentLevel, isLoading, isAppStarted, playMenuMusic, stopMenuMusic, playBgMusic, stopBgMusic]);
+
+  // Effect to handle app state changes (minimize/maximize)
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      App.addListener('appStateChange', ({ isActive }) => {
+        if (!isActive) {
+          // App is in the background
+          pauseBgMusic();
+          stopMenuMusic();
+        } else {
+          // App is in the foreground
+          if (isAppStarted && !isMuted) { // Only resume if app was started and not muted
+            if (currentLevel) {
+              resumeBgMusic();
+            } else {
+              playMenuMusic();
+            }
+          }
+        }
+      });
+    }
+  }, [isAppStarted, isMuted, currentLevel, playMenuMusic, pauseBgMusic, resumeBgMusic, stopMenuMusic]);
 
   useEffect(() => {
     if (!isAppStarted) return; // Don't show banner until app is started by user
@@ -109,6 +132,11 @@ export default function GamePage() {
     const savedHintsUsed = localStorage.getItem('hintsUsedCount');
     if(savedHintsUsed) {
         setHintsUsedCount(JSON.parse(savedHintsUsed));
+    }
+
+    const termsAccepted = localStorage.getItem('termsAccepted');
+    if (!termsAccepted) {
+      setShowTermsModal(true);
     }
     
     setIsLoading(false);
@@ -252,6 +280,7 @@ export default function GamePage() {
   };
 
   const handleAgree = () => {
+    localStorage.setItem('termsAccepted', 'true');
     setShowTermsModal(false);
   };
 

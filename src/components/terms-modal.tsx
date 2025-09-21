@@ -13,7 +13,7 @@ export default function TermsModal({ onAgree }: TermsModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <Card className="w-full max-w-md mx-4">
+      <Card className="w-full max-w-md mx-4 bg-black text-white">
         <CardHeader>
           <CardTitle> Terms & Conditions and Privacy Policy for Emoji Sliderz</CardTitle>
         </CardHeader>
@@ -113,7 +113,6 @@ export default function TermsModal({ onAgree }: TermsModalProps) {
                 effectively.
               </p>
               <p>You can control ad personalization through your device settings.</p>
-              <p>On Android: Settings &gt; Google &gt; Ads &gt; Opt out of Ads Personalization</p>
               <p>On iOS: Settings &gt; Privacy &gt; Advertising</p>
               <h3 className="font-bold mt-4">Data Sharing</h3>
               <p>We do not sell, rent, or trade your information.</p>
