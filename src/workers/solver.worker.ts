@@ -2,14 +2,6 @@ export interface TileType {
   value: number;
 }
 
-interface Node {
-  state: TileType[];
-  parent: Node | null;
-  g: number;
-  h: number;
-  f: number;
-}
-
 // A* search algorithm to find the solution path
 const solvePuzzle = (startTiles: TileType[], gridSize: number): TileType[][] | null => {
   const totalTiles = gridSize * gridSize;
@@ -33,18 +25,11 @@ const solvePuzzle = (startTiles: TileType[], gridSize: number): TileType[][] | n
     return distance;
   };
 
-  const startNode: Node = {
-    state: startTiles,
-    parent: null,
-    g: 0,
-    h: manhattanDistance(startTiles),
-    f: manhattanDistance(startTiles)
-  };
-
-  const openSet = new Map<string, Node>();
+  const openSet = new Map<string, { path: TileType[][], g: number, h: number, f: number }>();
   const startStateStr = JSON.stringify(startTiles.map(t => t.value));
-  openSet.set(startStateStr, startNode);
-
+  const startHeuristic = manhattanDistance(startTiles);
+  openSet.set(startStateStr, { path: [startTiles], g: 0, h: startHeuristic, f: startHeuristic });
+  
   const closedSet = new Set<string>();
 
   while (openSet.size > 0) {
@@ -58,23 +43,17 @@ const solvePuzzle = (startTiles: TileType[], gridSize: number): TileType[][] | n
       }
     }
 
-    const currentNode = openSet.get(bestNodeKey)!;
-    const currentStateStr = bestNodeKey;
-
+    const { path, g } = openSet.get(bestNodeKey)!;
+    const currentTiles = path[path.length - 1];
+    const currentStateStr = JSON.stringify(currentTiles.map(t => t.value));
+    
     if (currentStateStr === solvedStateStr) {
-      const path: TileType[][] = [];
-      let tempNode: Node | null = currentNode;
-      while (tempNode) {
-        path.unshift(tempNode.state);
-        tempNode = tempNode.parent;
-      }
       return path;
     }
-
+    
     openSet.delete(bestNodeKey);
     closedSet.add(currentStateStr);
-
-    const { state: currentTiles, g } = currentNode;
+    
     const emptyIndex = currentTiles.findIndex(t => t.value === emptyTileValue);
     const emptyRow = Math.floor(emptyIndex / gridSize);
     const emptyCol = emptyIndex % gridSize;
@@ -98,14 +77,7 @@ const solvePuzzle = (startTiles: TileType[], gridSize: number): TileType[][] | n
       if (!existingNode || newG < existingNode.g) {
         const h = manhattanDistance(newTiles);
         const f = newG + h;
-        const newNode: Node = {
-          state: newTiles,
-          parent: currentNode,
-          g: newG,
-          h,
-          f
-        };
-        openSet.set(newStateStr, newNode);
+        openSet.set(newStateStr, { path: [...path, newTiles], g: newG, h, f });
       }
     }
   }

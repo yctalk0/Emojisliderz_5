@@ -19,6 +19,11 @@ import { BannerAdPosition } from '@capacitor-community/admob';
 import useSound from '@/hooks/use-sound'; // Import the custom hook
 import InfoDialog from './game/info-dialog';
 import WinModal from './game/win-modal';
+import TermsModal from './terms-modal';
+import OpeningMp3 from '../../public/assets/music/Opening.mp3';
+import BgMusicMp3 from '../../public/assets/music/bgmusic.mp3';
+import Slide1Mp3 from '../../public/assets/music/slide_1.mp3';
+import LevelCompleteMp3 from '../../public/assets/music/level_complete.mp3';
 
 export default function GamePage() {
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
@@ -31,15 +36,16 @@ export default function GamePage() {
   const [lastVolume, setLastVolume] = useState(0.2);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [gameResetKey, setGameResetKey] = useState(0);
+  const [showTermsModal, setShowTermsModal] = useState(true);
 
   const isMuted = volume === 0;
   const { showBanner, hideBanner, showInterstitial, showRewarded } = useAdMob();
 
   // Use the custom useSound hook for all audio
-  const { play: playMenuMusic, stop: stopMenuMusic } = useSound('/assets/music/Opening.mp3', volume, 'music', isMuted, true); // Loop menu music
-  const { play: playBgMusic, pause: pauseBgMusic, resume: resumeBgMusic, stop: stopBgMusic } = useSound('/assets/music/bgmusic.mp3', volume, 'music', isMuted, true); // Loop background music
-  const { play: playTileSlideSound } = useSound('/assets/music/slide_1.mp3', volume, 'effect');
-  const { play: playWinSound } = useSound('/assets/music/level_complete.mp3', volume, 'effect');
+  const { play: playMenuMusic, stop: stopMenuMusic } = useSound(OpeningMp3, volume, 'music', isMuted, true); // Loop menu music
+  const { play: playBgMusic, pause: pauseBgMusic, resume: resumeBgMusic, stop: stopBgMusic } = useSound(BgMusicMp3, volume, 'music', isMuted, true); // Loop background music
+  const { play: playTileSlideSound } = useSound(Slide1Mp3, volume, 'effect');
+  const { play: playWinSound } = useSound(LevelCompleteMp3, volume, 'effect');
 
   // Consolidated effect to manage audio playback
   useEffect(() => {
@@ -245,6 +251,10 @@ export default function GamePage() {
     playMenuMusic();
   };
 
+  const handleAgree = () => {
+    setShowTermsModal(false);
+  };
+
   const handlePlayAgain = () => {
     setGameResetKey(prev => prev + 1);
   }
@@ -253,6 +263,10 @@ export default function GamePage() {
     setCurrentLevel(level);
   };
 
+
+  if (showTermsModal) {
+    return <TermsModal onAgree={handleAgree} />;
+  }
 
   if (!isAppStarted) {
     return (

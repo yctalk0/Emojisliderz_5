@@ -37,7 +37,7 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
   const levelsPerPage = 9;
   const totalPages = Math.ceil(levels.length / levelsPerPage);
 
-  const paginatedLevels = levels.slice(currentPage * levelsPerPage, currentPage * levelsPerPage + levelsPerPage);
+  const paginatedLevels = levels.slice(currentPage * levelsPerPage, (currentPage + 1) * levelsPerPage);
 
   const goToNextPage = () => {
     setCurrentPage(current => Math.min(current + 1, totalPages - 1));
@@ -155,3 +155,4 @@ const LevelSelect = ({ levels, unlockedLevels, onLevelSelect }: LevelSelectProps
 };
 
 export default LevelSelect;
+    

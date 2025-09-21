@@ -61,8 +61,8 @@ const GameBoard = ({ level, tiles, gridSize, onTileClick, imageSrc, hint, diffic
         style={{ padding: `${PADDING}px` }}
       >
         {isCalculatingSolution && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10 rounded-lg">
-            <div className="text-white text-2xl font-bold">Calculating...</div>
+          // This div prevents user interaction while the solution is being calculated.
+          <div className="absolute inset-0 bg-transparent flex items-center justify-center z-10 rounded-lg">
           </div>
         )}
         {isGameWon ? (

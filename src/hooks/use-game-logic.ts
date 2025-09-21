@@ -13,7 +13,7 @@ export type Hint = {
 };
 
 
-const useGameLogic = (gridSize: number, levelNumber: number, onWin: (moves: number, time: number) => void, isMuted: boolean, pauseBgMusic: () => void, resumeBgMusic: () => void) => {
+const useGameLogic = (gridSize: number, onWin: (moves: number, time: number) => void, isMuted: boolean, pauseBgMusic: () => void, resumeBgMusic: () => void) => {
   const totalTiles = gridSize * gridSize;
   const emptyTileValue = 0;
 
@@ -29,20 +29,11 @@ const useGameLogic = (gridSize: number, levelNumber: number, onWin: (moves: numb
   const [isSolved, setIsSolved] = useState(false);
   const [isStarted, setIsStarted] = useState(false);
   const [isSolving, setIsSolving] = useState(false);
-  const [isCalculatingHint, setIsCalculatingHint] = useState(false);
-  const [isInitialHint, setIsInitialHint] = useState(true);
+  const [isCalculatingSolution, setIsCalculatingSolution] = useState(false);
   const [history, setHistory] = useState<TileType[][]>([]);
   const [hint, setHint] = useState<Hint | null>(null);
   const [hasShownRewardedAdForCurrentLevel, setHasShownRewardedAdForCurrentLevel] = useState(false);
-  const initialHintTriggered = useRef(false);
   const workerRef = useRef<Worker | null>(null);
-  const clearHint = () => setHint(null);
-  const processingWorkerMessage = useRef<'hint' | 'solve' | null>(null); // To track what the worker is currently doing
-
-  const tilesRef = useRef(tiles);
-  useEffect(() => {
-    tilesRef.current = tiles;
-  }, [tiles]);
 
   const { showRewarded, prepareRewarded } = useAdMob();
   const { play: playSlideSound } = useSound('/assets/music/slide_1.mp3', 0.5, 'effect', isMuted);
@@ -143,25 +134,96 @@ const useGameLogic = (gridSize: number, levelNumber: number, onWin: (moves: numb
     }
   };
 
-  const getNextMoveHint = useCallback((isInitial = false) => {
-    if (isSolved || isSolving || processingWorkerMessage.current) return;
-
-    if (!isInitial) {
-      setIsCalculatingHint(true);
+  const handleTileClick = (tileValue: number) => {
+    if (isSolved || isSolving) return;
+    if (!isStarted) startGame();
+  
+    const tileIndex = tiles.findIndex(t => t.value === tileValue);
+    const emptyIndex = tiles.findIndex(t => t.value === emptyTileValue);
+  
+    const tileRow = Math.floor(tileIndex / gridSize);
+    const tileCol = tileIndex % gridSize;
+    const emptyRow = Math.floor(emptyIndex / gridSize);
+    const emptyCol = emptyIndex % gridSize;
+  
+    const isAdjacent = Math.abs(tileRow - emptyRow) + Math.abs(tileCol - emptyCol) === 1;
+  
+    if (isAdjacent) {
+      setHint(null);
+      const newTiles = [...tiles];
+      setHistory(prev => [...prev, tiles]);
+      [newTiles[tileIndex], newTiles[emptyIndex]] = [newTiles[emptyIndex], newTiles[tileIndex]];
+      setTiles(newTiles);
+      setMoves(prev => prev + 1);
+      playSlideSound();
     }
-    processingWorkerMessage.current = 'hint';
+  };
 
-    workerRef.current?.postMessage({ tiles: tilesRef.current, gridSize });
+  const undoMove = () => {
+    if (history.length > 0 && !isSolving) {
+      setHint(null);
+      const lastState = history[history.length - 1];
+      setTiles(lastState);
+      setHistory(prev => prev.slice(0, -1));
+      setMoves(prev => prev - 1);
+    }
+  };
+
+  const resetGame = useCallback(() => {
+    shuffleTiles();
+  }, [shuffleTiles]);
+  
+  const autoSolve = () => {
+    if (isSolved || isSolving) return;
+    setHint(null);
+    
+    if (gridSize > 3) {
+      alert("Auto-solve is only available for 2x2 and 3x3 puzzles for now!");
+      return;
+    }
+
+    setIsCalculatingSolution(true);
+    workerRef.current?.postMessage({ tiles, gridSize });
 
     workerRef.current!.onmessage = (e: MessageEvent<TileType[][] | null>) => {
       const solutionPath = e.data;
-      processingWorkerMessage.current = null;
-      if (!isInitialHint) {
-        setIsCalculatingHint(false);
-      } else {
-        setIsInitialHint(false);
-      }
+      setIsCalculatingSolution(false);
+      if (solutionPath) {
+        setIsSolving(true);
+        if (!isStarted) startGame();
+        pauseBgMusic();
 
+        solutionPath.forEach((state, index) => {
+          setTimeout(() => {
+            setHistory(prev => [...prev, tiles]);
+            setTiles(state);
+            setMoves(moves + index);
+            playSlideSound();
+            if (index === solutionPath.length - 1) {
+              resumeBgMusic();
+            }
+          }, index * 300);
+        });
+      } else {
+        console.error("No solution found!");
+      }
+    };
+  };
+
+  const getNextMoveHint = useCallback(async () => {
+    if (isSolved || isSolving || isCalculatingSolution) return;
+
+    if (!hasShownRewardedAdForCurrentLevel) {
+      await showRewarded();
+      setHasShownRewardedAdForCurrentLevel(true);
+    }
+
+    setIsCalculatingSolution(true);
+    workerRef.current?.postMessage({ tiles, gridSize });
+
+    workerRef.current!.onmessage = (e: MessageEvent<TileType[][] | null>) => {
+      const solutionPath = e.data;
+      setIsCalculatingSolution(false);
       if (solutionPath && solutionPath.length > 1) {
         const currentTiles = solutionPath[0];
         const nextTiles = solutionPath[1];
@@ -172,152 +234,25 @@ const useGameLogic = (gridSize: number, levelNumber: number, onWin: (moves: numb
         const tileToMoveValue = nextTiles[currentEmptyIndex].value;
 
         const diff = nextEmptyIndex - currentEmptyIndex;
-        let direction: Hint['direction'] = 'right'; // Default, will be overwritten
-        if (diff === 1) direction = 'left'; // Empty moved right, so tile moved left
-        else if (diff === -1) direction = 'right'; // Empty moved left, so tile moved right
-        else if (diff === gridSize) direction = 'up'; // Empty moved down, so tile moved up
-        else if (diff === -gridSize) direction = 'down'; // Empty moved up, so tile moved down
+        let direction: Hint['direction'] = 'right';
+        if (diff === 1) direction = 'left';
+        else if (diff === -1) direction = 'right';
+        else if (diff === gridSize) direction = 'up';
+        else if (diff === -gridSize) direction = 'down';
 
         setHint({
           tileValue: tileToMoveValue,
           direction: direction,
         });
-      } else {
-        console.error("No solution found for hint!");
-        setHint(null); // Clear hint if no solution
       }
     };
-  }, [gridSize, isSolved, isSolving, setIsCalculatingHint]);
+  }, [tiles, gridSize, isSolved, isSolving, hasShownRewardedAdForCurrentLevel, showRewarded]);
 
-  const handleTileClick = (tileValue: number) => {
-    if (isSolved || isSolving || isCalculatingHint) return;
-    if (!isStarted) startGame();
-
-    setTiles(currentTiles => {
-      const tileIndex = currentTiles.findIndex(t => t.value === tileValue);
-      const emptyIndex = currentTiles.findIndex(t => t.value === emptyTileValue);
-
-      if (tileIndex === -1 || emptyIndex === -1) {
-        return currentTiles;
-      }
-
-      const tileRow = Math.floor(tileIndex / gridSize);
-      const tileCol = tileIndex % gridSize;
-      const emptyRow = Math.floor(emptyIndex / gridSize);
-      const emptyCol = emptyIndex % gridSize;
-
-      const isAdjacent = Math.abs(tileRow - emptyRow) + Math.abs(tileCol - emptyCol) === 1;
-
-      if (isAdjacent) {
-        setHint(null);
-        const newTiles = [...currentTiles];
-        setHistory(prev => [...prev, currentTiles]);
-        [newTiles[tileIndex], newTiles[emptyIndex]] = [newTiles[emptyIndex], newTiles[tileIndex]];
-        
-        setMoves(prev => prev + 1);
-        playSlideSound();
-
-        if (levelNumber === 1 && !isSolved) {
-          // Re-evaluate hint after a move on level 1
-        }
-        
-        return newTiles;
-      }
-
-      return currentTiles;
-    });
-  };
-
-  const undoMove = () => {
-    if (history.length > 0 && !isSolving && !isCalculatingHint) {
-      setHint(null); // Clear hint on undo
-      const lastState = history[history.length - 1];
-      setTiles(lastState);
-      setHistory(prev => prev.slice(0, -1));
-      setMoves(prev => prev - 1);
-    }
-  };
-
-  const resetGame = useCallback(() => {
-    initialHintTriggered.current = false;
-    shuffleTiles();
-  }, [shuffleTiles]);
-  
-  const autoSolve = () => {
-    if (isSolved || isSolving || isCalculatingHint || processingWorkerMessage.current) return; // Prevent multiple worker calls
-    setHint(null); // Clear hint on solve
-    
-    if (gridSize > 3) {
-      alert("Auto-solve is only available for 2x2 and 3x3 puzzles for now!");
-      return;
-    }
-
-    processingWorkerMessage.current = 'solve'; // Mark worker as busy for solving
-    setIsSolving(true); // Indicate that auto-solve is in progress
-    workerRef.current?.postMessage({ tiles: tilesRef.current, gridSize });
-
-    workerRef.current!.onmessage = (e: MessageEvent<TileType[][] | null>) => {
-      const solutionPath = e.data;
-      processingWorkerMessage.current = null; // Worker is free
-      if (solutionPath) {
-        if (!isStarted) startGame();
-        pauseBgMusic();
-
-        let currentMoveIndex = 0;
-        const executeMove = () => {
-          if (currentMoveIndex < solutionPath.length) {
-            setHistory(prev => [...prev, tilesRef.current]); // Use ref for latest tiles
-            setTiles(solutionPath[currentMoveIndex]);
-            setMoves(prevMoves => prevMoves + 1);
-            playSlideSound();
-            currentMoveIndex++;
-            setTimeout(executeMove, 300);
-          } else {
-            resumeBgMusic();
-            setIsSolving(false); // Solution complete, not solving anymore
-          }
-        };
-        executeMove();
-      } else {
-        console.error("No solution found!");
-        setIsSolving(false); // Reset solving state on no solution
-      }
-    };
-  };
-
-  // This effect is for triggering the initial hint on level 1, and also for re-evaluating hints on subsequent moves.
-  // The logic for re-evaluating hints on moves will be handled by `game.tsx` calling `reEvaluateHint` via `onTileSlide`.
-  useEffect(() => {
-    if (levelNumber === 1 && !initialHintTriggered.current && !isSolved) {
-      const isSolvedState = tiles.every((t, i) => t.value === (i + 1) % (gridSize * gridSize));
-      if (!isSolvedState) {
-        const timer = setTimeout(() => {
-          getNextMoveHint(true);
-          initialHintTriggered.current = true;
-        }, 500);
-        return () => clearTimeout(timer);
-      }
-    }
-    if (levelNumber !== 1 || isSolved) {
-      initialHintTriggered.current = false;
-      setHint(null);
-    }
-  }, [levelNumber, tiles, getNextMoveHint, gridSize, isSolved]);
-
-  const reEvaluateHint = useCallback(() => {
-    if (levelNumber === 1 && !isSolved) {
-      if (!isCalculatingHint && !processingWorkerMessage.current) {
-        setHint(null);
-        getNextMoveHint(true);
-      }
-    }
-  }, [levelNumber, isSolved, isCalculatingHint, getNextMoveHint, processingWorkerMessage, setIsCalculatingHint, setHint]);
-
-  const canUndo = useMemo(() => history.length > 0 && !isSolving && !isCalculatingHint, [history, isSolving, isCalculatingHint]);
-  const canSolve = useMemo(() => !isSolved && !isSolving && !isCalculatingHint, [isSolved, isSolving, isCalculatingHint]);
+  const canUndo = useMemo(() => history.length > 0 && !isSolving, [history, isSolving]);
+  const canSolve = useMemo(() => !isSolved && !isSolving && !isCalculatingSolution, [isSolved, isSolving, isCalculatingSolution]);
   const emptyTileIndex = useMemo(() => tiles.findIndex(t => t.value === emptyTileValue), [tiles]);
 
-  return { tiles, moves, time, isSolved, isStarted, isSolving, isCalculatingHint, canUndo, canSolve, hint, emptyTileIndex, startGame, handleTileClick, undoMove, resetGame, autoSolve, getNextMoveHint, hasShownRewardedAdForCurrentLevel, setHasShownRewardedAdForCurrentLevel, setIsCalculatingHint, clearHint, reEvaluateHint, isInitialHint };
+  return { tiles, moves, time, isSolved, isStarted, isSolving, canUndo, canSolve, hint, emptyTileIndex, startGame, handleTileClick, undoMove, resetGame, autoSolve, getNextMoveHint, hasShownRewardedAdForCurrentLevel, isCalculatingSolution };
 };
 
 export default useGameLogic;

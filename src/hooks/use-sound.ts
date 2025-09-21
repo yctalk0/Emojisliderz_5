@@ -8,59 +8,32 @@ const useSound = (
   isMuted: boolean = false,
   loop: boolean = false
 ) => {
+  // Use a ref to store the audio element. This will persist across re-renders.
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Effect to initialize and configure the audio element once.
   useEffect(() => {
+    // Create the audio element only if it doesn't exist.
     if (!audioRef.current) {
-      console.log('Attempting to load audio from:', src);
-      const audio = new Audio();
-      const source = document.createElement('source');
-      source.src = src;
-      if (src.endsWith('.mp3')) {
-        source.type = 'audio/mpeg';
-      }
-      // Add more types here if needed, e.g., '.ogg', '.wav'
-      audio.appendChild(source);
-      
+      console.log('Attempting to load audio from:', src); // Log the source
+      const audio = new Audio(src);
       audio.loop = loop;
-      audio.volume = volume;
-      audio.muted = isMuted;
       audioRef.current = audio;
-
-      audio.onerror = (e) => {
-        console.error('Error loading audio:', e);
-        if (audio.error) {
-          switch (audio.error.code) {
-            case audio.error.MEDIA_ERR_ABORTED:
-              console.error('You aborted the audio playback.');
-              break;
-            case audio.error.MEDIA_ERR_NETWORK:
-              console.error('A network error caused the audio download to fail.');
-              break;
-            case audio.error.MEDIA_ERR_DECODE:
-              console.error('The audio playback was aborted due to a corruption problem or because the media used features your browser does not support.');
-              break;
-            case audio.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
-              console.error('The audio source is not supported by your browser.');
-              break;
-            default:
-              console.error('An unknown audio error occurred.');
-              break;
-          }
-        }
-      };
-      audio.load();
+      audio.load(); // Explicitly call load()
     }
 
+    // Cleanup function to pause and nullify the audio element on component unmount.
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
-        audioRef.current.onerror = null;
+        // Setting to null is important for cleanup.
+        // The audio element will be re-created if the component mounts again.
         audioRef.current = null;
       }
     };
-  }, [src, loop, volume, isMuted]);
+  }, [src, loop]); // Dependencies ensure this runs only if src or loop changes.
 
+  // Effect to update volume and muted state.
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = volume;
@@ -74,14 +47,14 @@ const useSound = (
       audioRef.current.play().catch(error => {
         if (error.name === 'NotAllowedError') {
           console.warn('Autoplay prevented. User interaction required.');
-        } else if (error.name !== 'AbortError') {
+        } else if (error.name !== 'AbortError') { // Don't log AbortError
           console.error(
             'Error playing sound:',
             error.name,
             error.message,
             'for src:',
             src
-          );
+          ); // More comprehensive logging
         }
       });
     }
@@ -105,7 +78,7 @@ const useSound = (
             error.message,
             'for src:',
             src
-          );
+          ); // More comprehensive logging
         }
       });
     }
