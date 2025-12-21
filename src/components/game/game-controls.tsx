@@ -15,12 +15,13 @@ interface GameControlsProps {
   onSolve: () => void;
   canUndo: boolean;
   canSolve: boolean;
-  easyLevelsCompleted: number; // New prop
-  showRewarded: () => void; // New prop
   isCalculatingSolution: boolean;
+  // Optional props passed from parent but not used directly here
+  easyLevelsCompleted?: number;
+  showRewarded?: () => Promise<{ rewarded: boolean }>;
 }
 
-const GameControls = ({ level, moves, time, onHint, onUndo, onRestart, onSolve, canUndo, canSolve, easyLevelsCompleted, showRewarded, isCalculatingSolution }: GameControlsProps) => {
+const GameControls = ({ level, moves, time, onHint, onUndo, onRestart, onSolve, canUndo, canSolve, isCalculatingSolution }: GameControlsProps) => {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
     const secs = (seconds % 60).toString().padStart(2, '0');
@@ -61,12 +62,7 @@ const GameControls = ({ level, moves, time, onHint, onUndo, onRestart, onSolve, 
         <Button variant="secondary" onClick={onRestart} className="h-12 text-base font-bold">
           <RotateCw className="w-5 h-5 mr-2" /> Restart
         </Button>
-         <Button variant="secondary" onClick={() => {
-          onSolve(); // Always call onSolve
-          if (level.difficulty === 'Easy' && level.gridSize === 2 && easyLevelsCompleted > 0 && easyLevelsCompleted % 3 === 0) {
-            showRewarded(); // Show rewarded ad after every 3 easy 2x2 solves
-          }
-        }} disabled={!canSolve || isCalculatingSolution} className="h-12 text-base font-bold">
+         <Button variant="secondary" onClick={onSolve} disabled={!canSolve || isCalculatingSolution} className="h-12 text-base font-bold">
           <WandSparkles className="w-5 h-5 mr-2" /> Solve
         </Button>
       </div>

@@ -12,8 +12,7 @@ export type Hint = {
   direction: 'up' | 'down' | 'left' | 'right';
 };
 
-
-const useGameLogic = (gridSize: number, onWin: (moves: number, time: number) => void, isMuted: boolean, pauseBgMusic: () => void, resumeBgMusic: () => void) => {
+const useGameLogic = (gridSize: number, onWin: (moves: number, time: number) => void, isMuted: boolean, pauseBgMusic: () => void, resumeBgMusic: () => void, difficulty?: 'Easy' | 'Hard') => {
   const totalTiles = gridSize * gridSize;
   const emptyTileValue = 0;
 
@@ -176,7 +175,7 @@ const useGameLogic = (gridSize: number, onWin: (moves: number, time: number) => 
   const autoSolve = () => {
     if (isSolved || isSolving) return;
     setHint(null);
-    
+
     if (gridSize > 3) {
       alert("Auto-solve is only available for 2x2 and 3x3 puzzles for now!");
       return;
@@ -210,12 +209,16 @@ const useGameLogic = (gridSize: number, onWin: (moves: number, time: number) => 
     };
   };
 
-  const getNextMoveHint = useCallback(async () => {
+  const getNextMoveHint = useCallback(async (opts?: { skipRewarded?: boolean }) => {
     if (isSolved || isSolving || isCalculatingSolution) return;
 
-    if (!hasShownRewardedAdForCurrentLevel) {
-      await showRewarded();
-      setHasShownRewardedAdForCurrentLevel(true);
+    if (!hasShownRewardedAdForCurrentLevel && !opts?.skipRewarded) {
+      const adResult = await showRewarded();
+      if (adResult && adResult.rewarded) {
+        setHasShownRewardedAdForCurrentLevel(true);
+      } else {
+        return; // Don't proceed to show hint if ad wasn't watched
+      }
     }
 
     setIsCalculatingSolution(true);

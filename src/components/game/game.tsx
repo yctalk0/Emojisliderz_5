@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect, useRef, RefObject } from 'react';
 import type { Level } from '@/lib/game-data';
@@ -20,13 +21,17 @@ interface GameProps {
   isLastLevelOfDifficulty: boolean;
   isMuted: boolean;
   easyLevelsCompleted: number;
-  showRewarded: () => Promise<{ rewarded: boolean }>;
+  showRewarded: (adId?: string) => Promise<{ rewarded: boolean }>;
+  prepareInterstitial?: (adId?: string) => Promise<void>;
+  showInterstitial?: (adId?: string) => Promise<void>;
   unlockedLevels: string[];
   pauseBgMusic: () => void;
   resumeBgMusic: () => void;
   onHintUsedInLevel: (levelId: string) => void;
   hintsUsedCount: number;
   onPlayAgain: () => void;
+  easyHintsForLevel?: string | null;
+  onConsumeEasyHint?: () => void;
 }
 
 const Game = ({
@@ -41,11 +46,15 @@ const Game = ({
   isMuted,
   easyLevelsCompleted,
   showRewarded,
+  prepareInterstitial,
+  showInterstitial,
   unlockedLevels,
   pauseBgMusic,
   resumeBgMusic,
   onHintUsedInLevel,
-  onPlayAgain
+  onPlayAgain,
+  easyHintsForLevel,
+  onConsumeEasyHint,
 }: GameProps) => {
   const [hintUsedInCurrentLevel, setHintUsedInCurrentLevel] = useState(false);
   const { toast } = useToast();
@@ -81,7 +90,7 @@ const Game = ({
     autoSolve,
     getNextMoveHint,
     isCalculatingSolution,
-  } = useGameLogic(level.gridSize, handleGameWinLogic, isMuted, pauseBgMusic, resumeBgMusic);
+  } = useGameLogic(level.gridSize, handleGameWinLogic, isMuted, pauseBgMusic, resumeBgMusic, level.difficulty);
 
   const [isHintModalOpen, setIsHintModalOpen] = useState(false);
   
@@ -109,25 +118,34 @@ const Game = ({
     toast({ title: "Game Restarted", description: "The puzzle has been shuffled." });
   }
 
-  const handleHintRequest = () => {
+  const handleHintRequest = async () => {
     if (level.gridSize > 3) {
       alert("Hints are only available for 2x2 and 3x3 puzzles for now!");
       return;
     }
+
+    // If a free Easy hint reward has been assigned to this level, consume it and skip the rewarded ad.
+    if (easyHintsForLevel && easyHintsForLevel === level.id) {
+      setHintUsedInCurrentLevel(true);
+      await getNextMoveHint({ skipRewarded: true });
+      if (onConsumeEasyHint) onConsumeEasyHint();
+      return;
+    }
+
     setHintUsedInCurrentLevel(true);
-    getNextMoveHint();
+    await getNextMoveHint();
   }
 
   const handleSolveRequest = async () => {
-    if (level.difficulty === 'Hard' && level.gridSize === 3) {
-      const adResult = await showRewarded();
-      if (adResult && adResult.rewarded) {
-        autoSolve();
-      } else {
-        toast({ title: "Ad not completed", description: "You need to watch the ad to solve the level.", variant: "destructive" });
-      }
-    } else {
+    const adResult = await showRewarded();
+    if (adResult && adResult.rewarded) {
       autoSolve();
+    } else {
+      toast({
+        title: 'Ad Required',
+        description: 'You need to watch an ad to use the solve feature.',
+        variant: 'destructive',
+      });
     }
   };
   

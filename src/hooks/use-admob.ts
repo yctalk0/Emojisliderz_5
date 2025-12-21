@@ -4,18 +4,23 @@ import { Capacitor } from '@capacitor/core';
 
 interface UseAdMob {
   isInitialized: boolean;
-  prepareInterstitial: () => Promise<void>;
-  showInterstitial: () => Promise<void>;
-  prepareRewarded: () => Promise<void>;
-  showRewarded: () => Promise<{ rewarded: boolean }>; // Updated return type
+  prepareInterstitial: (adId?: string) => Promise<void>;
+  showInterstitial: (adId?: string) => Promise<void>;
+  prepareRewarded: (adId?: string) => Promise<void>;
+  showRewarded: (adId?: string) => Promise<{ rewarded: boolean }>; // Optional adId to support multiple rewarded units
   showBanner: (position: BannerAdPosition) => Promise<void>;
   hideBanner: () => Promise<void>;
+  loadNative: (adId?: string) => Promise<any>;
 }
 
 const TEST_IDS = {
   INTERSTITIAL: 'ca-app-pub-3940256099942544/1033173712',
-  REWARDED: 'ca-app-pub-3940256099942544/5224354917',
-  BANNER: 'ca-app-pub-3940256099942544/6300978111',
+  REWARDED: 'ca-app-pub-6516108479140141/1295540142',
+  // Updated banner ad unit IDs (top, middle, bottom)
+  BANNER_TOP: 'ca-app-pub-6516108479140141/1527474439',
+  BANNER_MIDDLE: 'ca-app-pub-6516108479140141/3395638617',
+  BANNER_BOTTOM: 'ca-app-pub-6516108479140141/3417964198',
+  NATIVE: 'ca-app-pub-6516108479140141/7005198874',
 };
 
 const useAdMob = (): UseAdMob => {
@@ -36,7 +41,7 @@ const useAdMob = (): UseAdMob => {
     initialize();
   }, []);
 
-  const prepareInterstitial = useCallback(async (): Promise<void> => {
+  const prepareInterstitial = useCallback(async (adId?: string): Promise<void> => {
     if (!isInitialized || Capacitor.getPlatform() === 'web') return;
 
     try {
@@ -53,7 +58,7 @@ const useAdMob = (): UseAdMob => {
         (AdMob as any).prepareAd;
 
       if (prepareFn) {
-        await prepareFn({ adId: TEST_IDS.INTERSTITIAL });
+        await prepareFn({ adId: adId ?? TEST_IDS.INTERSTITIAL });
       }
 
       try {
@@ -68,7 +73,7 @@ const useAdMob = (): UseAdMob => {
     }
   }, [isInitialized]);
 
-  const showInterstitial = useCallback(async (): Promise<void> => {
+  const showInterstitial = useCallback(async (adId?: string): Promise<void> => {
     if (!isInitialized || Capacitor.getPlatform() === 'web') return;
 
     try {
@@ -78,14 +83,18 @@ const useAdMob = (): UseAdMob => {
         (AdMob as any).showAd;
 
       if (showFn) {
-        await showFn();
+        try {
+          await showFn({ adId: adId ?? TEST_IDS.INTERSTITIAL });
+        } catch {
+          await showFn();
+        }
       }
     } catch (e) {
       console.error('showInterstitial failed', e);
     }
   }, [isInitialized]);
 
-  const showRewarded = useCallback(async (): Promise<{ rewarded: boolean }> => {
+  const showRewarded = useCallback(async (adId?: string): Promise<{ rewarded: boolean }> => {
     if (!isInitialized || Capacitor.getPlatform() === 'web') {
       // For web, simulate a successful ad watch after a short delay
       return new Promise(resolve => setTimeout(() => resolve({ rewarded: true }), 1000));
@@ -113,7 +122,7 @@ const useAdMob = (): UseAdMob => {
 
       const failedToShowListener = await AdMob.addListener(
         RewardAdPluginEvents.FailedToShow,
-        (err) => {
+        (err: any) => {
           console.error('Rewarded ad failed to show:', err);
           rewardedListener.remove();
           dismissedListener.remove();
@@ -125,21 +134,27 @@ const useAdMob = (): UseAdMob => {
       try {
         // Ensure ad is prepared before showing
         const prepareRewardFn =
-        (AdMob as any).prepareRewarded ??
-        (AdMob as any).prepareRewardVideoAd ??
-        (AdMob as any).prepareRewardAd;
+          (AdMob as any).prepareRewarded ??
+          (AdMob as any).prepareRewardVideoAd ??
+          (AdMob as any).prepareRewardAd;
 
-      if (prepareRewardFn) {
-        await prepareRewardFn({ adId: TEST_IDS.REWARDED });
-      }
+        const rewardAdId = adId ?? TEST_IDS.REWARDED;
 
-      const showRewardFn =
-        (AdMob as any).showRewarded ??
-        (AdMob as any).showRewardVideoAd ??
-        (AdMob as any).showRewardAd;
+        if (prepareRewardFn) {
+          await prepareRewardFn({ adId: rewardAdId });
+        }
+
+        const showRewardFn =
+          (AdMob as any).showRewarded ??
+          (AdMob as any).showRewardVideoAd ??
+          (AdMob as any).showRewardAd;
 
         if (showRewardFn) {
-          await showRewardFn();
+          try {
+            await showRewardFn({ adId: rewardAdId });
+          } catch {
+            await showRewardFn();
+          }
         } else {
           console.error('showRewarded function not found on AdMob plugin.');
           rewardedListener.remove();
@@ -157,7 +172,7 @@ const useAdMob = (): UseAdMob => {
     });
   }, [isInitialized]);
 
-  const prepareRewarded = useCallback(async (): Promise<void> => {
+  const prepareRewarded = useCallback(async (adId?: string): Promise<void> => {
     if (!isInitialized || Capacitor.getPlatform() === 'web') return;
     try {
       const prepareRewardFn =
@@ -165,8 +180,10 @@ const useAdMob = (): UseAdMob => {
         (AdMob as any).prepareRewardVideoAd ??
         (AdMob as any).prepareRewardAd;
 
+      const rewardAdId = adId ?? TEST_IDS.REWARDED;
+
       if (prepareRewardFn) {
-        await prepareRewardFn({ adId: TEST_IDS.REWARDED });
+        await prepareRewardFn({ adId: rewardAdId });
       }
     } catch (e) {
       console.error('prepareRewarded failed', e);
@@ -177,10 +194,17 @@ const useAdMob = (): UseAdMob => {
     if (!isInitialized || Capacitor.getPlatform() === 'web') return;
 
     try {
+      // Select ad unit ID based on requested position
+      let adId = TEST_IDS.BANNER_MIDDLE;
+      if (position === BannerAdPosition.TOP_CENTER) {
+        adId = TEST_IDS.BANNER_TOP;
+      } else if (position === BannerAdPosition.BOTTOM_CENTER) {
+        adId = TEST_IDS.BANNER_BOTTOM;
+      }
+
       await (AdMob as any).showBanner({
-        adId: TEST_IDS.BANNER,
+        adId,
         position,
-        isTesting: true,
       });
     } catch (error) {
       console.error('Failed to show banner ad', error);
@@ -197,6 +221,21 @@ const useAdMob = (): UseAdMob => {
     }
   }, [isInitialized]);
 
+  const loadNative = useCallback(async (adId?: string): Promise<any> => {
+    if (!isInitialized || Capacitor.getPlatform() === 'web') return null;
+
+    try {
+      const loadFn = (AdMob as any).loadNativeAd ?? (AdMob as any).loadNative;
+      if (loadFn) {
+        const result = await loadFn({ adId: adId ?? TEST_IDS.NATIVE });
+        return result;
+      }
+    } catch (e) {
+      console.error('loadNative failed', e);
+    }
+    return null;
+  }, [isInitialized]);
+
   return {
     isInitialized,
     prepareInterstitial,
@@ -205,6 +244,7 @@ const useAdMob = (): UseAdMob => {
     showRewarded,
     showBanner,
     hideBanner,
+    loadNative,
   };
 };
 

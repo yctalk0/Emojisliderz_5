@@ -14,6 +14,9 @@ interface LevelSelectProps {
   levels: Level[];
   unlockedLevels: string[];
   onLevelSelect: (level: Level) => void;
+  // Optional reward hint info
+  easyHintsForLevel?: string | null;
+  easyHintsAvailable?: boolean;
 }
 
 const difficultyConfig = {
@@ -31,22 +34,48 @@ const difficultyConfig = {
   },
 } as const;
 
-const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: { difficulty: 'Easy' | 'Hard', levels: Level[], unlockedLevels: string[], onLevelSelect: (level: Level) => void }) => {
+const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect, easyHintsForLevel, easyHintsAvailable }: { difficulty: 'Easy' | 'Hard', levels: Level[], unlockedLevels: string[], onLevelSelect: (level: Level) => void, easyHintsForLevel?: string | null, easyHintsAvailable?: boolean }) => {
   const config = difficultyConfig[difficulty];
   const [currentPage, setCurrentPage] = React.useState(0);
+  const [userViewingPrev, setUserViewingPrev] = React.useState(false); // prevent immediate auto-advance when user manually views previous pages
   const levelsPerPage = 9;
   const totalPages = Math.ceil(levels.length / levelsPerPage);
 
   const paginatedLevels = levels.slice(currentPage * levelsPerPage, (currentPage + 1) * levelsPerPage);
 
   const goToNextPage = () => {
+    // When user explicitly goes forward, clear the manual-view guard so auto-advance may happen again
+    setUserViewingPrev(false);
     setCurrentPage(current => Math.min(current + 1, totalPages - 1));
   }
 
   const goToPrevPage = () => {
+    // When user manually views previous pages, set a temporary guard so we don't immediately auto-advance back.
+    setUserViewingPrev(true);
     setCurrentPage(current => Math.max(current - 1, 0));
+    // Clear the manual view flag after a short period (5s) so auto-advance can resume.
+    window.setTimeout(() => setUserViewingPrev(false), 5000);
   }
-  
+
+  // Auto-advance: if every level on the current page is unlocked/completed, and there's a next page,
+  // automatically move to the next page. Respect the manual-view guard so a user can inspect previous pages.
+  React.useEffect(() => {
+    if (totalPages <= 1) return;
+
+    // If user explicitly navigated to view previous pages, do not auto-advance immediately.
+    if (userViewingPrev) return;
+
+    const allCompletedOnPage = paginatedLevels.length > 0 && paginatedLevels.every(l => unlockedLevels.includes(l.id));
+    if (allCompletedOnPage && currentPage < totalPages - 1) {
+      // small delay so the UI feels natural when auto-scrolling
+      const t = window.setTimeout(() => {
+        setCurrentPage(current => Math.min(current + 1, totalPages - 1));
+      }, 300);
+      return () => clearTimeout(t);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [unlockedLevels, currentPage, totalPages, paginatedLevels, userViewingPrev]);
+
   // A special check for hard mode: don't render it at all if the first hard level isn't unlocked.
   if (difficulty === 'Hard' && !unlockedLevels.includes('hard-1')) return null;
   
@@ -63,7 +92,7 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
       </div>
       <CardContent className="p-3 flex items-center justify-center gap-2">
         {totalPages > 1 && (
-          <Button size="icon" variant="ghost" onClick={goToPrevPage} disabled={currentPage === 0} aria-label="Previous levels" className="h-10 w-10">
+          <Button onClick={goToPrevPage} disabled={currentPage === 0} aria-label="Previous levels" className="h-10 w-10 hover:bg-accent hover:text-accent-foreground">
             <ArrowLeft className="w-5 h-5" />
           </Button>
         )}
@@ -77,7 +106,6 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
             return (
               <Button
                 key={level.id}
-                variant={"secondary"}
                 disabled={!isUnlocked}
                 onClick={() => isUnlocked && onLevelSelect(level)}
                 className={cn(
@@ -99,6 +127,11 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
                   )}
                 />
                 
+                {/* Indicator for an assigned free Easy hint for this level */}
+                {easyHintsForLevel === level.id && (
+                  <div className="absolute top-1 right-1 text-yellow-300 text-sm font-bold">💡</div>
+                )}
+
                 {isBlinking && (
                   <div className="absolute bottom-1 right-1">
                     <Unlock className="w-5 h-5 text-white" />
@@ -114,7 +147,7 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
           })}
         </div>
         {totalPages > 1 && (
-          <Button size="icon" variant="ghost" onClick={goToNextPage} disabled={currentPage === totalPages - 1} aria-label="Next levels" className="h-10 w-10">
+          <Button onClick={goToNextPage} disabled={currentPage === totalPages - 1} aria-label="Next levels" className="h-10 w-10 hover:bg-accent hover:text-accent-foreground">
             <ArrowRight className="w-5 h-5" />
           </Button>
         )}
@@ -123,7 +156,7 @@ const DifficultyCard = ({ difficulty, levels, unlockedLevels, onLevelSelect }: {
   )
 }
 
-const LevelSelect = ({ levels, unlockedLevels, onLevelSelect }: LevelSelectProps) => {
+const LevelSelect = ({ levels, unlockedLevels, onLevelSelect, easyHintsForLevel, easyHintsAvailable }: LevelSelectProps) => {
   const difficulties: ('Easy' | 'Hard')[] = ['Easy', 'Hard'];
   
   // Sort levels by levelNumber within each difficulty group
@@ -145,6 +178,8 @@ const LevelSelect = ({ levels, unlockedLevels, onLevelSelect }: LevelSelectProps
               levels={levels}
               unlockedLevels={unlockedLevels}
               onLevelSelect={onLevelSelect}
+              easyHintsForLevel={easyHintsForLevel}
+              easyHintsAvailable={easyHintsAvailable}
             />
             {difficulty === 'Easy' && <AdBanner position="bottom" visible={true} />} {/* Ad banner between Easy and Hard card */}
           </React.Fragment>
@@ -155,4 +190,3 @@ const LevelSelect = ({ levels, unlockedLevels, onLevelSelect }: LevelSelectProps
 };
 
 export default LevelSelect;
-    

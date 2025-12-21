@@ -89,7 +89,6 @@ const Tile = ({
   level,
   value, 
   gridSize, 
-  imageSrc, 
   onClick,
   tileSize, 
   correctPosition, 
@@ -99,7 +98,8 @@ const Tile = ({
   hint,
   isSolving,
   showPersistentRippleHint,
-  emptyTileIndex
+  emptyTileIndex,
+  imageSrc
 }: TileProps) => {
   const row = Math.floor(currentPosition / gridSize);
   const col = currentPosition % gridSize;
@@ -220,7 +220,7 @@ const Tile = ({
         width: `${tileSize}px`,
         height: `${tileSize}px`,
         backgroundImage: `url(${imageSrc})`,
-        backgroundSize: `${gridSize * 100}% auto`,
+        backgroundSize: `${gridSize * 100}% ${gridSize * 100}%`,
         backgroundPosition: `${bgPosX}% ${bgPosY}%`,
         backgroundColor: 'white',
         touchAction: 'none',

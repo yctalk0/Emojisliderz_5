@@ -1,4 +1,3 @@
-
 'use client';
 import type { TileType, Hint } from '@/hooks/use-game-logic';
 import type { Level } from '@/lib/game-data';
@@ -94,7 +93,8 @@ const GameBoard = ({ level, tiles, gridSize, onTileClick, imageSrc, hint, diffic
               ))}
             </div>
             
-            <div className="absolute top-0 left-0 w-full h-full" style={{ padding: `${PADDING}px` }}>
+            {/* Overlay for animated tiles - removed extra padding here to avoid double-padding offset */}
+            <div className="absolute top-0 left-0 w-full h-full">
               <div className="relative w-full h-full">
                 {tiles.map((tile, index) => (
                   <Tile

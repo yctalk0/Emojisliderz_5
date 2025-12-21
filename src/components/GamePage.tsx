@@ -6,7 +6,7 @@ import type { Level } from '@/lib/game-data';
 import { levels } from '@/lib/game-data';
 import LevelSelect from '@/components/game/level-select';
 import Game from '@/components/game/game';
-import { Button } from '@/components/ui/button';
+import { Button } from './ui/button';
 import { ArrowLeft, Volume1, Volume2, VolumeX, Info } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import Image from 'next/image';
@@ -20,10 +20,10 @@ import useSound from '@/hooks/use-sound'; // Import the custom hook
 import InfoDialog from './game/info-dialog';
 import WinModal from './game/win-modal';
 import TermsModal from './terms-modal';
-import OpeningMp3 from '../../public/assets/music/Opening.mp3';
-import BgMusicMp3 from '../../public/assets/music/bgmusic.mp3';
-import Slide1Mp3 from '../../public/assets/music/slide_1.mp3';
-import LevelCompleteMp3 from '../../public/assets/music/level_complete.mp3';
+const OpeningMp3 = '/assets/music/Opening.mp3';
+const BgMusicMp3 = '/assets/music/bgmusic.mp3';
+const Slide1Mp3 = '/assets/music/slide_1.mp3';
+const LevelCompleteMp3 = '/assets/music/level_complete.mp3';
 import { App } from '@capacitor/app'; // Import App plugin
 
 export default function GamePage() {
@@ -32,7 +32,10 @@ export default function GamePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAppStarted, setIsAppStarted] = useState(false); // New state for initial interaction
   const [easyLevelsCompleted, setEasyLevelsCompleted] = useState(0);
+  const [hardLevelsCompleted, setHardLevelsCompleted] = useState(0);
   const [hintsUsedCount, setHintsUsedCount] = useState(0); // New state for hints used
+  const [easyHintsAvailable, setEasyHintsAvailable] = useState(false); // reward available to apply to next Easy 2x2 level
+  const [easyHintsForLevel, setEasyHintsForLevel] = useState<string | null>(null); // level id that has free hints unlocked
   const [volume, setVolume] = useState(0.2);
   const [lastVolume, setLastVolume] = useState(0.2);
   const [showInfoModal, setShowInfoModal] = useState(false);
@@ -40,13 +43,19 @@ export default function GamePage() {
   const [showTermsModal, setShowTermsModal] = useState(false);
 
   const isMuted = volume === 0;
-  const { showBanner, hideBanner, showInterstitial, showRewarded } = useAdMob();
+  const { showBanner, hideBanner, prepareInterstitial, showInterstitial, showRewarded } = useAdMob();
 
   // Use the custom useSound hook for all audio
   const { play: playMenuMusic, stop: stopMenuMusic } = useSound(OpeningMp3, volume, 'music', isMuted, true); // Loop menu music
   const { play: playBgMusic, pause: pauseBgMusic, resume: resumeBgMusic, stop: stopBgMusic } = useSound(BgMusicMp3, volume, 'music', isMuted, true); // Loop background music
   const { play: playTileSlideSound } = useSound(Slide1Mp3, volume, 'effect');
   const { play: playWinSound } = useSound(LevelCompleteMp3, volume, 'effect');
+
+  const adUnitIds = {
+    interstitialHard: 'ca-app-pub-6516108479140141/9804382605',
+    rewardedEasy: 'ca-app-pub-6516108479140141/5865137599',
+    rewardedSolve: 'ca-app-pub-6516108479140141/8491300937',
+  };
 
   // Consolidated effect to manage audio playback
   useEffect(() => {
@@ -125,13 +134,28 @@ export default function GamePage() {
     localStorage.setItem('unlockedLevels', JSON.stringify(initialUnlocked)); // Use initialUnlocked here
     
     const savedEasyCompleted = localStorage.getItem('easyLevelsCompleted');
-    if(savedEasyCompleted) {
-        setEasyLevelsCompleted(JSON.parse(savedEasyCompleted));
+    if (savedEasyCompleted) {
+      setEasyLevelsCompleted(JSON.parse(savedEasyCompleted));
+    }
+
+    const savedHardCompleted = localStorage.getItem('hardLevelsCompleted');
+    if (savedHardCompleted) {
+      setHardLevelsCompleted(JSON.parse(savedHardCompleted));
     }
 
     const savedHintsUsed = localStorage.getItem('hintsUsedCount');
     if(savedHintsUsed) {
         setHintsUsedCount(JSON.parse(savedHintsUsed));
+    }
+
+    const savedEasyHintsAvailable = localStorage.getItem('easyHintsAvailable');
+    if (savedEasyHintsAvailable) {
+      setEasyHintsAvailable(savedEasyHintsAvailable === 'true');
+    }
+
+    const savedEasyHintsForLevel = localStorage.getItem('easyHintsForLevel');
+    if (savedEasyHintsForLevel) {
+      setEasyHintsForLevel(savedEasyHintsForLevel);
     }
 
     const termsAccepted = localStorage.getItem('termsAccepted');
@@ -158,9 +182,12 @@ export default function GamePage() {
         setEasyLevelsCompleted(prev => {
           const newCount = prev + 1;
           localStorage.setItem('easyLevelsCompleted', JSON.stringify(newCount));
-          if (newCount % 3 === 0 && Capacitor.getPlatform() !== 'web') {
-            showRewarded();
-          }
+          return newCount;
+        });
+      } else if (currentLevel.difficulty === 'Hard' && currentLevel.gridSize === 3) {
+        setHardLevelsCompleted(prev => {
+          const newCount = prev + 1;
+          localStorage.setItem('hardLevelsCompleted', JSON.stringify(newCount));
           return newCount;
         });
       }
@@ -186,7 +213,22 @@ export default function GamePage() {
         return updatedUnlocked;
       });
     }
-  }, [currentLevel, showRewarded, playWinSound]);
+  }, [currentLevel, playWinSound]);
+
+  useEffect(() => {
+    const showAds = async () => {
+      if (hardLevelsCompleted > 0 && hardLevelsCompleted % 2 === 0) {
+        await prepareInterstitial(adUnitIds.interstitialHard);
+        await showInterstitial(adUnitIds.interstitialHard);
+      }
+
+      if (easyLevelsCompleted > 0 && easyLevelsCompleted % 3 === 0) {
+        await showRewarded(adUnitIds.rewardedEasy);
+      }
+    };
+
+    showAds();
+  }, [easyLevelsCompleted, hardLevelsCompleted, prepareInterstitial, showInterstitial, showRewarded]);
 
 
   const handleExitGame = () => {
@@ -290,6 +332,24 @@ export default function GamePage() {
   
   const handleLevelSelect = (level: Level) => {
     setCurrentLevel(level);
+    // If a free hints reward is available for Easy 2x2, assign it to this level and consume the global flag
+    if (easyHintsAvailable && level.difficulty === 'Easy' && level.gridSize === 2) {
+      setEasyHintsForLevel(level.id);
+      setEasyHintsAvailable(false);
+      localStorage.setItem('easyHintsAvailable', 'false');
+      localStorage.setItem('easyHintsForLevel', level.id);
+    }
+  };
+
+  // Called when an assigned free Easy hint for a level is consumed by the player.
+  const handleConsumeEasyHint = () => {
+    setEasyHintsForLevel(null);
+    try {
+      localStorage.removeItem('easyHintsForLevel');
+      localStorage.removeItem('easyHintsAvailable');
+    } catch (e) {
+      // ignore storage errors
+    }
   };
 
 
@@ -305,7 +365,7 @@ export default function GamePage() {
       >
         <div className="flex justify-center items-center gap-2">
           <Image src="/assets/emoji/music/logo/logo.png" alt="Emoji sliderz Logo" width={64} height={64} />
-          <h1 className="text-6xl font-extrabold tracking-tighter text-primary font-headline">Emoji sliderz</h1>
+          <h1 className="text-5xl sm:text-6xl font-extrabold tracking-tighter text-primary font-headline whitespace-nowrap">Emoji sliderz</h1>
         </div>
         <p className="mt-4 text-2xl text-muted-foreground font-bold blinking-text">Tap to start</p>
       </div>
@@ -318,7 +378,7 @@ export default function GamePage() {
       <div className="w-full mx-auto flex flex-col px-4 sm:px-6 lg:px-8 flex-grow">
           <header className="relative text-center pt-8 mb-4">
             {currentLevel && (
-                <Button variant="ghost" size="icon" className="absolute top-1/2 left-0 -translate-y-1/2" onClick={handleExitGame}>
+                <Button className="absolute top-1/2 left-0 -translate-y-1/2 h-10 w-10" onClick={() => handleExitGame()}>
                     <ArrowLeft className="h-8 w-8" strokeWidth={2.5} />
                 </Button>
             )}
@@ -326,7 +386,7 @@ export default function GamePage() {
             <div className="flex flex-col items-center">
               <div className="flex justify-center items-center gap-2">
                 <Image src="/assets/emoji/music/logo/logo.png" alt="Emoji sliderz Logo" width={52} height={52} />
-                <h1 className="text-5xl font-extrabold tracking-tighter text-primary font-headline">Emoji sliderz</h1>
+                <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tighter text-primary font-headline whitespace-nowrap">Emoji sliderz</h1>
               </div>
               {currentLevel ? (
                 <p className="text-xl font-bold text-primary">Level {currentLevel.levelNumber}</p>
@@ -334,17 +394,17 @@ export default function GamePage() {
                 <p className="text-muted-foreground text-lg">Slide the tiles to solve the emoji puzzle!</p>
               )}
             </div>
-             <Button variant="ghost" size="icon" className="absolute top-1/2 right-0 -translate-y-1/2" onClick={() => setShowInfoModal(true)}>
+             <Button className="absolute top-1/2 right-0 -translate-y-1/2 h-10 w-10" onClick={() => setShowInfoModal(true)}>
                 <Info className="h-8 w-8" strokeWidth={2.5} />
             </Button>
           </header>
           
           <main className="flex-grow flex flex-col justify-center">
 
-            {isLoading ? (
+              {isLoading ? (
               renderLoadingSkeleton()
             ) : currentLevel ? (
-              <Game 
+                <Game 
                 key={`${currentLevel.id}-${gameResetKey}`}
                 level={currentLevel} 
                 onWin={handleGameWin}
@@ -358,24 +418,33 @@ export default function GamePage() {
                 easyLevelsCompleted={easyLevelsCompleted}
                 hintsUsedCount={hintsUsedCount} // Pass hintsUsedCount
                 onHintUsedInLevel={handleHintUsed} // Pass handleHintUsed
-                showRewarded={showRewarded}
+                showRewarded={(adId) => showRewarded(adId || adUnitIds.rewardedSolve)}
+                prepareInterstitial={prepareInterstitial}
+                showInterstitial={showInterstitial}
                 unlockedLevels={unlockedLevels}
                 pauseBgMusic={pauseBgMusic} // Pass pause function
                 resumeBgMusic={resumeBgMusic} // Pass resume function
                 onPlayAgain={handlePlayAgain}
+                easyHintsForLevel={easyHintsForLevel}
+                onConsumeEasyHint={handleConsumeEasyHint}
               />
             ) : (
-              <LevelSelect 
-                levels={levels} 
-                unlockedLevels={unlockedLevels} 
-                onLevelSelect={handleLevelSelect}
-              />
+              <>
+                {easyHintsAvailable && (
+                  <div className="text-center text-sm text-yellow-400 font-bold mb-2">Free hints reward available — select an Easy 2x2 level to apply the reward.</div>
+                )}
+                <LevelSelect
+                  levels={levels}
+                  unlockedLevels={unlockedLevels}
+                  onLevelSelect={handleLevelSelect}
+                />
+              </>
             )}
           </main>
         </div>
         <footer className="bg-background/80 backdrop-blur-sm mt-auto py-2 px-4 pb-4 sm:pb-6 lg:pb-8">
             <div className="flex justify-center items-center gap-4 mb-2">
-                <Button variant="ghost" size="icon" onClick={toggleMute} className="text-muted-foreground">
+                <Button onClick={toggleMute} className="h-10 w-10 text-muted-foreground">
                   {renderVolumeIcon()}
                 </Button>
                 <Slider
@@ -386,12 +455,10 @@ export default function GamePage() {
                   className="w-full max-w-xs"
                 />
             </div>
-            <div className="mb-2">
-              <AdBanner position="bottom" visible={true} />
-            </div>
+            <AdBanner position="native" visible={true} className="mt-2" /> {/* Native Ad Placeholder */}
             {currentLevel && (
               <div className="flex justify-center mt-2">
-                <Button onClick={handleExitGame} variant="secondary">Back to Levels</Button>
+                <Button onClick={handleExitGame} className="bg-secondary text-secondary-foreground hover:bg-secondary/80">Back to Levels</Button>
               </div>
             )}
         </footer>
