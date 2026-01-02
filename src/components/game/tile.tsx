@@ -206,11 +206,30 @@ const Tile = ({
   const bgPosY = Math.floor(correctPosition / gridSize) * (100 / (gridSize - 1));
 
   if (value === 0) {
+    if (showPersistentRippleHint && !isSolving) {
+      return (
+        <animated.div
+          style={{
+            position: 'absolute',
+            width: `${tileSize}px`,
+            height: `${tileSize}px`,
+            touchAction: 'none',
+            x,
+            y,
+          }}
+          className={cn('flex items-center justify-center')}
+        >
+          <div className="ripple-container" style={{ width: tileSize, height: tileSize }}>
+            <div className="ripple" />
+            <span className="font-bold text-lg">Tap here</span>
+          </div>
+        </animated.div>
+      );
+    }
     return null;
   }
   
-  const shouldShowPersistentRipple = showPersistentRippleHint && hint?.tileValue === value && !isSolving;
-  const shouldShowArrowHint = hint?.direction && hint?.tileValue === value && !shouldShowPersistentRipple;
+  const shouldShowArrowHint = hint?.direction && hint?.tileValue === value && !isSolving;
 
   return (
     <animated.div
@@ -229,7 +248,7 @@ const Tile = ({
       }}
       className={cn(
         'rounded-md cursor-pointer select-none',
-        'shadow-lg hover:shadow-xl',
+        'shadow-lg hover-shadow-xl',
         'overflow-hidden',
         'flex items-center justify-center',
         isCorrectPosition 
@@ -237,13 +256,7 @@ const Tile = ({
           : 'shadow-red-500/90 shadow-[0_0_12px_4px_rgba(239,68,68,0.9)]'
       )}
     >
-      {shouldShowPersistentRipple && (
-        <div className="ripple-container" style={{ width: tileSize, height: tileSize }}>
-          <div className="ripple" />
-          <span className="font-bold text-lg">Tap here</span>
-        </div>
-      )}
-      {shouldShowArrowHint && <ArrowHint direction={hint!.direction} size={tileSize} level={level} />}
+      {shouldShowArrowHint && <ArrowHint direction={hint.direction} size={tileSize} level={level} />}
       <span className="absolute bottom-1 right-2 text-2xl font-bold text-black" style={{ textShadow: '1px 1px 2px white' }}>
           {value}
       </span>
